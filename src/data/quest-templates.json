@@ -1,0 +1,109 @@
+[
+  {
+    "id": "quest_01",
+    "title_kk": "Сөйлесу шебері",
+    "title_ru": "Мастер разговора",
+    "description_kk": "7 күн бойы күнделікті диалог жаттығуларын орындаңыз",
+    "description_ru": "Выполняйте ежедневные диалоговые упражнения в течение 7 дней",
+    "quest_type": "daily",
+    "tasks": [
+      {"day": 1, "task_kk": "Танысу диалогын жүргізіңіз", "task_ru": "Проведите диалог-знакомство", "type": "dialog", "topic": "greetings"},
+      {"day": 2, "task_kk": "Дүкенде сатып алу диалогы", "task_ru": "Диалог о покупках в магазине", "type": "dialog", "topic": "shopping"},
+      {"day": 3, "task_kk": "Жол сұрау диалогы", "task_ru": "Диалог о том, как спросить дорогу", "type": "dialog", "topic": "directions"},
+      {"day": 4, "task_kk": "Мейрамханада тапсырыс беру", "task_ru": "Заказ в ресторане", "type": "dialog", "topic": "restaurant"},
+      {"day": 5, "task_kk": "Дәрігерге бару диалогы", "task_ru": "Диалог о визите к врачу", "type": "dialog", "topic": "doctor"},
+      {"day": 6, "task_kk": "Телефонмен сөйлесу", "task_ru": "Телефонный разговор", "type": "dialog", "topic": "phone"},
+      {"day": 7, "task_kk": "Еркін тақырыпта сөйлесу", "task_ru": "Свободная беседа на любую тему", "type": "dialog", "topic": "free"}
+    ],
+    "xp_reward": 500,
+    "duration_days": 7,
+    "is_active": true
+  },
+  {
+    "id": "quest_02",
+    "title_kk": "Грамматика патшасы",
+    "title_ru": "Король грамматики",
+    "description_kk": "Грамматиканың негізгі тақырыптары бойынша тесттер тапсырыңыз",
+    "description_ru": "Пройдите тесты по основным темам грамматики",
+    "quest_type": "challenge",
+    "tasks": [
+      {"step": 1, "task_kk": "Көптік жалғау тесті — 80%+", "task_ru": "Тест на множественное число — 80%+", "type": "test", "topic": "plural", "min_score": 80},
+      {"step": 2, "task_kk": "Септік жалғаулар тесті — 80%+", "task_ru": "Тест на падежи — 80%+", "type": "test", "topic": "cases", "min_score": 80},
+      {"step": 3, "task_kk": "Етістік шақтары тесті — 80%+", "task_ru": "Тест на времена глагола — 80%+", "type": "test", "topic": "tenses", "min_score": 80},
+      {"step": 4, "task_kk": "Тәуелдік жалғау тесті — 80%+", "task_ru": "Тест на притяжательные — 80%+", "type": "test", "topic": "possessive", "min_score": 80},
+      {"step": 5, "task_kk": "Жалпы грамматика тесті — 85%+", "task_ru": "Общий грамматический тест — 85%+", "type": "test", "topic": "grammar_general", "min_score": 85}
+    ],
+    "xp_reward": 750,
+    "duration_days": 14,
+    "is_active": true
+  },
+  {
+    "id": "quest_03",
+    "title_kk": "Мақал-мәтел шебері",
+    "title_ru": "Знаток пословиц",
+    "description_kk": "Қазақ мақал-мәтелдерін үйреніп, қолданыңыз",
+    "description_ru": "Изучите казахские пословицы и используйте их",
+    "quest_type": "learning",
+    "tasks": [
+      {"step": 1, "task_kk": "5 мақал-мәтел жаттаңыз", "task_ru": "Выучите 5 пословиц", "type": "memorize", "count": 5},
+      {"step": 2, "task_kk": "Мақалдың мағынасын түсіндіріңіз", "task_ru": "Объясните значение пословиц", "type": "writing", "count": 5},
+      {"step": 3, "task_kk": "Мақалды сөйлемде қолданыңыз", "task_ru": "Используйте пословицу в предложении", "type": "writing", "count": 3},
+      {"step": 4, "task_kk": "Мақал-мәтел тестін тапсырыңыз — 90%+", "task_ru": "Пройдите тест по пословицам — 90%+", "type": "test", "topic": "proverbs", "min_score": 90}
+    ],
+    "xp_reward": 600,
+    "duration_days": 10,
+    "is_active": true
+  },
+  {
+    "id": "quest_04",
+    "title_kk": "Жазу шебері",
+    "title_ru": "Мастер письма",
+    "description_kk": "Жазу дағдыларыңызды жетілдіріңіз",
+    "description_ru": "Улучшите ваши навыки письма",
+    "quest_type": "skill",
+    "tasks": [
+      {"step": 1, "task_kk": "Өзіңіз туралы эссе жазыңыз (50+ сөз)", "task_ru": "Напишите эссе о себе (50+ слов)", "type": "writing", "min_words": 50},
+      {"step": 2, "task_kk": "Достыңызға хат жазыңыз (70+ сөз)", "task_ru": "Напишите письмо другу (70+ слов)", "type": "writing", "min_words": 70},
+      {"step": 3, "task_kk": "Сүйікті кітап туралы пікір жазыңыз (100+ сөз)", "task_ru": "Напишите отзыв о любимой книге (100+ слов)", "type": "writing", "min_words": 100},
+      {"step": 4, "task_kk": "Қолжазба мәтін фотосын тексертіңіз", "task_ru": "Отправьте фото рукописного текста на проверку", "type": "photo_check"},
+      {"step": 5, "task_kk": "Ресми хат жазыңыз (120+ сөз)", "task_ru": "Напишите официальное письмо (120+ слов)", "type": "writing", "min_words": 120}
+    ],
+    "xp_reward": 800,
+    "duration_days": 14,
+    "is_active": true
+  },
+  {
+    "id": "quest_05",
+    "title_kk": "Күнделікті тәртіп",
+    "title_ru": "Ежедневная дисциплина",
+    "description_kk": "30 күн бойы күнделікті белсенділік көрсетіңіз",
+    "description_ru": "Проявляйте ежедневную активность в течение 30 дней",
+    "quest_type": "streak",
+    "tasks": [
+      {"milestone": 7, "task_kk": "7 күндік серия", "task_ru": "Серия 7 дней", "type": "streak", "xp_bonus": 100},
+      {"milestone": 14, "task_kk": "14 күндік серия", "task_ru": "Серия 14 дней", "type": "streak", "xp_bonus": 200},
+      {"milestone": 21, "task_kk": "21 күндік серия", "task_ru": "Серия 21 день", "type": "streak", "xp_bonus": 300},
+      {"milestone": 30, "task_kk": "30 күндік серия!", "task_ru": "Серия 30 дней!", "type": "streak", "xp_bonus": 500}
+    ],
+    "xp_reward": 1500,
+    "duration_days": 30,
+    "is_active": true
+  },
+  {
+    "id": "quest_06",
+    "title_kk": "Сөздік қорды байыту",
+    "title_ru": "Обогащение словарного запаса",
+    "description_kk": "Жаңа сөздерді үйреніп, қолданыңыз",
+    "description_ru": "Изучайте новые слова и применяйте их",
+    "quest_type": "vocabulary",
+    "tasks": [
+      {"step": 1, "task_kk": "Отбасы тақырыбынан 20 сөз үйреніңіз", "task_ru": "Выучите 20 слов по теме «Семья»", "type": "vocabulary", "topic": "family", "count": 20},
+      {"step": 2, "task_kk": "Тамақ тақырыбынан 20 сөз үйреніңіз", "task_ru": "Выучите 20 слов по теме «Еда»", "type": "vocabulary", "topic": "food", "count": 20},
+      {"step": 3, "task_kk": "Табиғат тақырыбынан 20 сөз үйреніңіз", "task_ru": "Выучите 20 слов по теме «Природа»", "type": "vocabulary", "topic": "nature", "count": 20},
+      {"step": 4, "task_kk": "Сөздік тестін тапсырыңыз — 85%+", "task_ru": "Пройдите словарный тест — 85%+", "type": "test", "topic": "vocabulary", "min_score": 85}
+    ],
+    "xp_reward": 650,
+    "duration_days": 14,
+    "is_active": true
+  }
+]

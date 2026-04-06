@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tilkural
+      POSTGRES_PASSWORD: tilkural_secret
+      POSTGRES_DB: tilkural
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tilkural']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://tilkural:tilkural_secret@db:5432/tilkural
+      JWT_SECRET: change-me-in-production
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_DEFAULT_LOCALE: kk
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

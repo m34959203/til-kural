@@ -1,0 +1,119 @@
+[
+  {
+    "code": "first_lesson",
+    "title_kk": "Бірінші қадам",
+    "title_ru": "Первый шаг",
+    "description_kk": "Бірінші сабақты аяқтаңыз",
+    "description_ru": "Завершите первый урок",
+    "icon": "footprints",
+    "condition": {"type": "lessons_completed", "count": 1}
+  },
+  {
+    "code": "polyglot",
+    "title_kk": "Полиглот",
+    "title_ru": "Полиглот",
+    "description_kk": "10 сабақты аяқтаңыз",
+    "description_ru": "Завершите 10 уроков",
+    "icon": "book-open",
+    "condition": {"type": "lessons_completed", "count": 10}
+  },
+  {
+    "code": "grammarian",
+    "title_kk": "Грамматик",
+    "title_ru": "Грамматик",
+    "description_kk": "Грамматика тестінен 90%+ алыңыз",
+    "description_ru": "Наберите 90%+ в тесте по грамматике",
+    "icon": "check-circle",
+    "condition": {"type": "test_score", "topic": "grammar", "min_score": 90}
+  },
+  {
+    "code": "orator",
+    "title_kk": "Шешен",
+    "title_ru": "Оратор",
+    "description_kk": "20 диалог жаттығуын аяқтаңыз",
+    "description_ru": "Завершите 20 диалоговых упражнений",
+    "icon": "mic",
+    "condition": {"type": "dialogs_completed", "count": 20}
+  },
+  {
+    "code": "writer",
+    "title_kk": "Жазушы",
+    "title_ru": "Писатель",
+    "description_kk": "10 жазба жұмысын тексертіңіз",
+    "description_ru": "Отправьте на проверку 10 письменных работ",
+    "icon": "pen-tool",
+    "condition": {"type": "writing_checks", "count": 10}
+  },
+  {
+    "code": "streak_7",
+    "title_kk": "Аптаның жұлдызы",
+    "title_ru": "Звезда недели",
+    "description_kk": "7 күндік серия жасаңыз",
+    "description_ru": "Достигните серии 7 дней",
+    "icon": "flame",
+    "condition": {"type": "streak", "days": 7}
+  },
+  {
+    "code": "streak_30",
+    "title_kk": "Тұрақты оқушы",
+    "title_ru": "Постоянный ученик",
+    "description_kk": "30 күндік серия жасаңыз",
+    "description_ru": "Достигните серии 30 дней",
+    "icon": "zap",
+    "condition": {"type": "streak", "days": 30}
+  },
+  {
+    "code": "streak_100",
+    "title_kk": "Жүз күндік марафон",
+    "title_ru": "100-дневный марафон",
+    "description_kk": "100 күндік серия жасаңыз",
+    "description_ru": "Достигните серии 100 дней",
+    "icon": "trophy",
+    "condition": {"type": "streak", "days": 100}
+  },
+  {
+    "code": "certified",
+    "title_kk": "Сертификат иесі",
+    "title_ru": "Обладатель сертификата",
+    "description_kk": "Бірінші сертификатыңызды алыңыз",
+    "description_ru": "Получите свой первый сертификат",
+    "icon": "award",
+    "condition": {"type": "certificates", "count": 1}
+  },
+  {
+    "code": "photo_checker",
+    "title_kk": "Қолжазба шебері",
+    "title_ru": "Мастер рукописи",
+    "description_kk": "5 фото тексеру жасаңыз",
+    "description_ru": "Проведите 5 проверок по фото",
+    "icon": "camera",
+    "condition": {"type": "photo_checks", "count": 5}
+  },
+  {
+    "code": "quest_master",
+    "title_kk": "Квест шебері",
+    "title_ru": "Мастер квестов",
+    "description_kk": "3 квестті аяқтаңыз",
+    "description_ru": "Завершите 3 квеста",
+    "icon": "map",
+    "condition": {"type": "quests_completed", "count": 3}
+  },
+  {
+    "code": "level_b1",
+    "title_kk": "B1 деңгей",
+    "title_ru": "Уровень B1",
+    "description_kk": "B1 деңгейіне жетіңіз",
+    "description_ru": "Достигните уровня B1",
+    "icon": "trending-up",
+    "condition": {"type": "level_reached", "level": "B1"}
+  },
+  {
+    "code": "top_10",
+    "title_kk": "Үздік оншалық",
+    "title_ru": "Топ-10",
+    "description_kk": "Көшбасшылар кестесінде Топ-10-ға кіріңіз",
+    "description_ru": "Войдите в Топ-10 таблицы лидеров",
+    "icon": "star",
+    "condition": {"type": "leaderboard_rank", "rank": 10}
+  }
+]
