@@ -15,6 +15,7 @@ const STATIC_PATHS = [
   '/learn/writing',
   '/learn/pronunciation',
   '/learn/lessons',
+  '/learn/basics',
   '/test',
   '/test/level',
   '/test/kaztest',

@@ -8,6 +8,7 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
   const m = getMessages(locale);
 
   const sections = [
+    { href: `/${locale}/learn/basics`, icon: '📖', title: locale === 'kk' ? 'Тіл негіздері' : 'Основы языка', desc: locale === 'kk' ? 'Грамматиканың 21 негізгі ережесі' : '21 основное правило грамматики' },
     { href: `/${locale}/learn/lessons`, icon: '📚', title: m.learn.lessons, desc: locale === 'kk' ? 'Қадам-қадаммен интерактивті сабақтар' : 'Пошаговые интерактивные уроки' },
     { href: `/${locale}/learn/dialog`, icon: '💬', title: m.learn.dialog, desc: locale === 'kk' ? 'AI-мен сөйлесу практикасы' : 'Практика разговора с AI' },
     { href: `/${locale}/learn/writing`, icon: '✍️', title: m.learn.writing, desc: locale === 'kk' ? 'Жазба жұмысты тексеру' : 'Проверка письменных работ' },
@@ -22,7 +23,7 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
       </p>
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {sections.map((s) => (
           <Link key={s.href} href={s.href}>
             <Card hover className="text-center h-full" padding="sm">
