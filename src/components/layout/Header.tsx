@@ -10,23 +10,26 @@ interface HeaderProps {
   messages: {
     common: Record<string, string>;
   };
+  menuItems?: Array<{ href: string; label: string }>;
 }
 
-export default function Header({ locale, messages }: HeaderProps) {
+export default function Header({ locale, messages, menuItems }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const t = messages.common;
   const otherLocale = locale === 'kk' ? 'ru' : 'kk';
 
-  const navItems = [
-    { href: `/${locale}`, label: t.home },
-    { href: `/${locale}/learn`, label: t.learn },
-    { href: `/${locale}/test`, label: t.test },
-    { href: `/${locale}/photo-check`, label: locale === 'kk' ? 'Фото тексеру' : 'Фото проверка' },
-    { href: `/${locale}/game`, label: t.game },
-    { href: `/${locale}/news`, label: t.news },
-    { href: `/${locale}/about`, label: t.about },
-    { href: `/${locale}/contacts`, label: t.contacts },
-  ];
+  const navItems = menuItems?.length
+    ? [{ href: `/${locale}`, label: t.home }, ...menuItems.map((i) => ({ href: `/${locale}${i.href}`, label: i.label }))]
+    : [
+        { href: `/${locale}`, label: t.home },
+        { href: `/${locale}/learn`, label: t.learn },
+        { href: `/${locale}/test`, label: t.test },
+        { href: `/${locale}/photo-check`, label: locale === 'kk' ? 'Фото тексеру' : 'Фото проверка' },
+        { href: `/${locale}/game`, label: t.game },
+        { href: `/${locale}/news`, label: t.news },
+        { href: `/${locale}/about`, label: t.about },
+        { href: `/${locale}/contacts`, label: t.contacts },
+      ];
 
   return (
     <>

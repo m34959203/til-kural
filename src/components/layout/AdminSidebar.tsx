@@ -20,6 +20,8 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
     { href: `/${locale}/admin/users`, label: locale === 'kk' ? 'Пайдаланушылар' : 'Пользователи', icon: '👥' },
     { href: `/${locale}/admin/analytics`, label: locale === 'kk' ? 'Аналитика' : 'Аналитика', icon: '📈' },
     { href: `/${locale}/admin/banners`, label: locale === 'kk' ? 'Баннерлер' : 'Баннеры', icon: '🖼️' },
+    { href: `/${locale}/admin/media`, label: locale === 'kk' ? 'Медиатека' : 'Медиатека', icon: '🎞️' },
+    { href: `/${locale}/admin/settings`, label: locale === 'kk' ? 'Баптаулар' : 'Настройки', icon: '⚙️' },
   ];
 
   return (

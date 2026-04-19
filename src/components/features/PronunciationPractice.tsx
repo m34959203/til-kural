@@ -27,14 +27,38 @@ export default function PronunciationPractice({ locale }: PronunciationPracticeP
   const [currentIndex, setCurrentIndex] = useState(0);
   const [guide, setGuide] = useState('');
   const [loadingGuide, setLoadingGuide] = useState(false);
+  const [loadingAudio, setLoadingAudio] = useState<'normal' | 'slow' | null>(null);
   const currentWord = PRACTICE_WORDS[currentIndex];
 
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'kk-KZ';
-      utterance.rate = 0.8;
-      speechSynthesis.speak(utterance);
+  const playBrowserFallback = (text: string, rate = 0.9) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'kk-KZ';
+      u.rate = rate;
+      speechSynthesis.speak(u);
+    }
+  };
+
+  const speak = async (text: string, slow = false) => {
+    setLoadingAudio(slow ? 'slow' : 'normal');
+    try {
+      const res = await fetch('/api/learn/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: slow ? text.split('').join(' ') : text, mode: 'audio' }),
+      });
+      const data = await res.json();
+      if (data.audio?.audioBase64) {
+        const audio = new Audio(`data:${data.audio.mimeType};base64,${data.audio.audioBase64}`);
+        audio.playbackRate = slow ? 0.75 : 1;
+        await audio.play();
+      } else {
+        playBrowserFallback(text, slow ? 0.6 : 0.9);
+      }
+    } catch {
+      playBrowserFallback(text, slow ? 0.6 : 0.9);
+    } finally {
+      setLoadingAudio(null);
     }
   };
 
@@ -44,10 +68,10 @@ export default function PronunciationPractice({ locale }: PronunciationPracticeP
       const res = await fetch('/api/learn/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: currentWord.word }),
+        body: JSON.stringify({ text: currentWord.word, mode: 'guide' }),
       });
       const data = await res.json();
-      setGuide(data.guide || data.phonetic || '');
+      setGuide(data.guide || '');
     } catch {
       setGuide(locale === 'kk' ? 'Қол жетімді емес' : 'Недоступно');
     } finally {
@@ -86,10 +110,10 @@ export default function PronunciationPractice({ locale }: PronunciationPracticeP
         <p className="text-gray-500 mb-6">{currentWord.translation}</p>
 
         <div className="flex items-center justify-center gap-3 mb-6">
-          <Button variant="outline" size="lg" onClick={() => speak(currentWord.word)}>
+          <Button variant="outline" size="lg" onClick={() => speak(currentWord.word)} loading={loadingAudio === 'normal'}>
             🔊 {locale === 'kk' ? 'Тыңдау' : 'Слушать'}
           </Button>
-          <Button variant="ghost" size="lg" onClick={() => speak(currentWord.word)}>
+          <Button variant="ghost" size="lg" onClick={() => speak(currentWord.word, true)} loading={loadingAudio === 'slow'}>
             🔄 {locale === 'kk' ? 'Баяу' : 'Медленно'}
           </Button>
         </div>

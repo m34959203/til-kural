@@ -1,0 +1,41 @@
+-- Additions on top of 001_init.sql
+
+CREATE TABLE IF NOT EXISTS media (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  filename VARCHAR(500) NOT NULL,
+  original_name VARCHAR(500),
+  url TEXT NOT NULL,
+  mime_type VARCHAR(100),
+  size INTEGER,
+  uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  alt_kk TEXT,
+  alt_ru TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  endpoint TEXT UNIQUE NOT NULL,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Extend news/events with fields referenced by the CMS
+ALTER TABLE news ADD COLUMN IF NOT EXISTS excerpt_kk TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS excerpt_ru TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS video_url TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE news ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+ALTER TABLE events ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE events ADD COLUMN IF NOT EXISTS registration_url TEXT;
+
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS position VARCHAR(50) DEFAULT 'hero';
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS subtitle_kk TEXT;
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS subtitle_ru TEXT;
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+CREATE INDEX IF NOT EXISTS idx_banners_position_active ON banners(position, is_active);
+CREATE INDEX IF NOT EXISTS idx_media_created ON media(created_at DESC);

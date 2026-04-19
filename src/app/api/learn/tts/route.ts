@@ -1,17 +1,24 @@
-import { getPronunciationGuide } from '@/lib/tts';
+import { generateSpeech, getPronunciationGuide } from '@/lib/tts';
+import { apiError } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
-    const { text } = await request.json();
+    const { text, mode = 'audio' } = await request.json();
+    if (!text || typeof text !== 'string') return apiError(400, 'Text is required');
+    if (text.length > 500) return apiError(400, 'Text too long (max 500 chars)');
 
-    if (!text) {
-      return Response.json({ error: 'Text is required' }, { status: 400 });
+    if (mode === 'guide') {
+      const guide = await getPronunciationGuide(text);
+      return Response.json({ guide });
     }
 
-    const guide = await getPronunciationGuide(text);
-
-    return Response.json({ guide, phonetic: guide });
-  } catch (error) {
-    return Response.json({ error: 'TTS failed', details: String(error) }, { status: 500 });
+    const audio = await generateSpeech(text);
+    if (!audio) {
+      const guide = await getPronunciationGuide(text);
+      return Response.json({ audio: null, guide, fallback: 'browser-tts' });
+    }
+    return Response.json({ audio });
+  } catch (err) {
+    return apiError(500, 'TTS failed', String(err));
   }
 }
