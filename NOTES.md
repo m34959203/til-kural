@@ -139,7 +139,18 @@ Middleware применяет token-bucket по IP:
 - Plesk/Cloudflare: см. общую memory `feedback_zhezu_deploy.md` если будем деплоить под `*.zhezu.kz` или Hoster.kz.
 - GitHub Pages НЕ подходит (server routes есть).
 
+## КАЗТЕСТ — scoring
+
+`src/lib/kaztest-score.ts` — веса секций: L20 / R20 / G25 / V15 / W20.
+Пороги уровня: C1 ≥ 90, B2 ≥ 75, B1 ≥ 60, A2 ≥ 45, A1 ≥ 30, иначе FAIL.
+Sampling `buildQuestions()` берёт стратифицированно: 4L/4R/6G/4V/2W = 20.
+
+## Уроки ↔ Правила
+
+`src/data/lessons-meta.ts` — каталог из 10 уроков с `rule_ids[]`, маппинг на `kazakh-grammar-rules.json` (21 правило). Страница `/learn/lessons/[id]` показывает связанные правила с deep-link `/learn/basics#rule_XX`.
+
 ## История существенных изменений
 
+- **2026-04-19 (вторая сессия)** — КАЗТЕСТ 100-балльная шкала с секциями и разбором ошибок, банк вопросов 5 → 40, раздел `/learn/basics` (21 правило грамматики), каталог уроков с привязкой к правилам.
 - **2026-04-19** — Большой рефакторинг (Opus 4.7): Postgres-слой, rate-limit, SEO (sitemap/robots/JSON-LD), полный админ-CRUD (news/events/lessons/banners/settings), медиатека с реальным сохранением файлов, Gemini TTS (kk), GA4+Метрика, 2GIS/OSM карта, Web Push + email-reminders, динамическое меню из `site_settings`. Аудит до ≈ 92%.
 - **≤ 2026-04-06** — базовая платформа: i18n, AI-teacher, тесты (входной/тематические/КАЗТЕСТ), PDF-сертификаты, фото-проверка (Vision), геймификация (аватары, квесты, уровни, стрики, лидерборд).
