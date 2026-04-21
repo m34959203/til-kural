@@ -35,16 +35,7 @@ export default async function AdminUsersPage({ params }: { params: Promise<{ loc
     columns: [
       { field: 'name', label_kk: 'Аты-жөні', label_ru: 'Имя' },
       { field: 'email', label_kk: 'Email', label_ru: 'Email' },
-      {
-        field: 'role',
-        label_kk: 'Рөлі',
-        label_ru: 'Роль',
-        render: (v) => (
-          <span className={`px-2 py-0.5 rounded-full text-xs ${v === 'admin' ? 'bg-red-100 text-red-700' : v === 'editor' || v === 'moderator' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
-            {String(v)}
-          </span>
-        ),
-      },
+      { field: 'role', label_kk: 'Рөлі', label_ru: 'Роль', format: 'status' },
       { field: 'language_level', label_kk: 'Деңгей', label_ru: 'Уровень' },
       { field: 'xp_points', label_kk: 'XP', label_ru: 'XP' },
       { field: 'current_streak', label_kk: 'Стрик', label_ru: 'Стрик' },

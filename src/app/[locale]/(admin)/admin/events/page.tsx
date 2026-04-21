@@ -48,14 +48,9 @@ export default async function AdminEventsPage({ params }: { params: Promise<{ lo
     ],
     columns: [
       { field: 'title_ru', label_kk: 'Атауы', label_ru: 'Название' },
-      {
-        field: 'start_date',
-        label_kk: 'Басталу',
-        label_ru: 'Начало',
-        render: (v) => (v ? new Date(String(v)).toLocaleString() : '—'),
-      },
+      { field: 'start_date', label_kk: 'Басталу', label_ru: 'Начало', format: 'datetime' },
       { field: 'location', label_kk: 'Орны', label_ru: 'Место' },
-      { field: 'status', label_kk: 'Күйі', label_ru: 'Статус' },
+      { field: 'status', label_kk: 'Күйі', label_ru: 'Статус', format: 'status' },
     ],
   };
 

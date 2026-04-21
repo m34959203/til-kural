@@ -35,16 +35,7 @@ export default async function AdminBannersPage({ params }: { params: Promise<{ l
       { field: 'title', label_kk: 'Тақырыбы', label_ru: 'Заголовок' },
       { field: 'position', label_kk: 'Орны', label_ru: 'Позиция' },
       { field: 'sort_order', label_kk: 'Реті', label_ru: 'Порядок' },
-      {
-        field: 'is_active',
-        label_kk: 'Белсенді',
-        label_ru: 'Активный',
-        render: (v) => (
-          <span className={`px-2 py-0.5 rounded-full text-xs ${v ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-            {v ? '✓' : '—'}
-          </span>
-        ),
-      },
+      { field: 'is_active', label_kk: 'Белсенді', label_ru: 'Активный', format: 'boolean' },
     ],
   };
 

@@ -17,11 +17,14 @@ export interface CrudField {
   defaultValue?: unknown;
 }
 
+export type ColumnFormat = 'text' | 'status' | 'boolean' | 'date' | 'datetime' | 'truncate';
+
 export interface CrudColumn {
   field: string;
   label_kk: string;
   label_ru: string;
-  render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
+  format?: ColumnFormat;
+  truncate?: number;
 }
 
 export interface EntityCrudConfig {
@@ -158,7 +161,7 @@ export default function EntityCrudTable({ locale, config }: Props) {
                   <tr key={row.id} className="border-b last:border-0 hover:bg-gray-50 align-top">
                     {config.columns.map((c) => (
                       <td key={c.field} className="py-3 text-gray-800">
-                        {c.render ? c.render(row[c.field], row) : String(row[c.field] ?? '—')}
+                        {renderCell(row[c.field], c)}
                       </td>
                     ))}
                     <td className="py-3 text-right">
@@ -211,6 +214,44 @@ export default function EntityCrudTable({ locale, config }: Props) {
       )}
     </div>
   );
+}
+
+function renderCell(value: unknown, col: CrudColumn): React.ReactNode {
+  if (value === null || value === undefined || value === '') return '—';
+  switch (col.format) {
+    case 'status': {
+      const v = String(value);
+      const cls = v === 'published' || v === 'active' || v === 'upcoming'
+        ? 'bg-green-100 text-green-700'
+        : v === 'draft'
+        ? 'bg-gray-100 text-gray-600'
+        : v === 'admin'
+        ? 'bg-red-100 text-red-700'
+        : v === 'editor' || v === 'moderator'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-gray-100 text-gray-600';
+      return <span className={`px-2 py-0.5 rounded-full text-xs ${cls}`}>{v}</span>;
+    }
+    case 'boolean': {
+      const ok = !!value;
+      return (
+        <span className={`px-2 py-0.5 rounded-full text-xs ${ok ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          {ok ? '✓' : '—'}
+        </span>
+      );
+    }
+    case 'date':
+      try { return new Date(String(value)).toLocaleDateString(); } catch { return String(value); }
+    case 'datetime':
+      try { return new Date(String(value)).toLocaleString(); } catch { return String(value); }
+    case 'truncate': {
+      const s = String(value);
+      const n = col.truncate ?? 80;
+      return s.length > n ? s.slice(0, n) + '…' : s;
+    }
+    default:
+      return String(value);
+  }
 }
 
 function FormField({

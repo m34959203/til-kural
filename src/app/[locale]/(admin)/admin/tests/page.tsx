@@ -45,15 +45,7 @@ export default async function AdminTestsPage({ params }: { params: Promise<{ loc
       { field: 'test_type', label_kk: 'Түрі', label_ru: 'Тип' },
       { field: 'topic', label_kk: 'Тақырып', label_ru: 'Тема' },
       { field: 'difficulty', label_kk: 'Деңгей', label_ru: 'Уровень' },
-      {
-        field: 'question_kk',
-        label_kk: 'Сұрақ',
-        label_ru: 'Вопрос',
-        render: (v) => {
-          const s = String(v ?? '');
-          return s.length > 80 ? s.slice(0, 80) + '…' : s;
-        },
-      },
+      { field: 'question_kk', label_kk: 'Сұрақ', label_ru: 'Вопрос', format: 'truncate', truncate: 80 },
       { field: 'correct_answer', label_kk: 'Жауап', label_ru: 'Ответ' },
     ],
   };

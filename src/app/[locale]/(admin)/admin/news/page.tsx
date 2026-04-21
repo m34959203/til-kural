@@ -34,22 +34,8 @@ export default async function AdminNewsPage({ params }: { params: Promise<{ loca
     columns: [
       { field: 'title_ru', label_kk: 'Тақырыбы', label_ru: 'Заголовок' },
       { field: 'slug', label_kk: 'Slug', label_ru: 'Slug' },
-      {
-        field: 'status',
-        label_kk: 'Күйі',
-        label_ru: 'Статус',
-        render: (v) => (
-          <span className={`px-2 py-0.5 rounded-full text-xs ${v === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-            {String(v)}
-          </span>
-        ),
-      },
-      {
-        field: 'published_at',
-        label_kk: 'Жарияланған күні',
-        label_ru: 'Дата публикации',
-        render: (v) => (v ? new Date(String(v)).toLocaleDateString() : '—'),
-      },
+      { field: 'status', label_kk: 'Күйі', label_ru: 'Статус', format: 'status' },
+      { field: 'published_at', label_kk: 'Жарияланған күні', label_ru: 'Дата публикации', format: 'date' },
     ],
   };
 
