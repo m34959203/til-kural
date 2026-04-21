@@ -68,6 +68,7 @@ export async function POST(request: Request) {
 
       const user = await getUserFromRequest(request);
       let sessionId: string | null = null;
+      let levelSaved = false;
       if (user) {
         await recordTestOutcomes(user.id, outcomes);
         try {
@@ -86,6 +87,13 @@ export async function POST(request: Request) {
         } catch (dbErr) {
           console.warn('[test/evaluate adaptive] db insert skipped:', dbErr);
         }
+        // Сохраняем финальный CAT-уровень в профиль пользователя.
+        try {
+          await db.update('users', user.id, { language_level: level });
+          levelSaved = true;
+        } catch (updErr) {
+          console.warn('[test/evaluate adaptive] language_level update skipped:', updErr);
+        }
       }
 
       return Response.json({
@@ -96,6 +104,8 @@ export async function POST(request: Request) {
         level,
         details,
         sessionId,
+        level_saved: levelSaved,
+        language_level: levelSaved ? level : null,
       });
     }
 

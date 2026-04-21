@@ -46,6 +46,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
   const [finished, setFinished] = useState(false);
   const [finalLevel, setFinalLevel] = useState('');
   const [finalScore, setFinalScore] = useState(0);
+  const [levelSaved, setLevelSaved] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,6 +105,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
       const data = await res.json();
       setFinalLevel(data.level || 'A1');
       setFinalScore(typeof data.score === 'number' ? data.score : 0);
+      setLevelSaved(!!data.level_saved);
       setFinished(true);
     } catch (e) {
       console.error('[LevelTest] evaluate failed', e);
@@ -111,6 +113,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
       const fallback = localEstimate(history);
       setFinalLevel(fallback.level);
       setFinalScore(fallback.score);
+      setLevelSaved(false);
       setFinished(true);
     }
   }
@@ -168,6 +171,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
     setSelected(null);
     setFinalLevel('');
     setFinalScore(0);
+    setLevelSaved(false);
     setCurrentLevel('B1');
     setProgress({ current: 1, max: MAX_QUESTIONS });
     setError(null);
@@ -249,12 +253,33 @@ export default function LevelTest({ locale }: LevelTestProps) {
         <p className="text-gray-600 mb-1">
           {t(`Сіздің деңгейіңіз: ${finalLevel}`, `Ваш уровень: ${finalLevel}`)}
         </p>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 mb-4">
           {t(
             `${correctCount} / ${answered.length} сұраққа дұрыс жауап бердіңіз`,
             `Правильных ответов: ${correctCount} из ${answered.length}`,
           )}
         </p>
+        {levelSaved ? (
+          <div
+            role="status"
+            className="mx-auto mb-6 max-w-md rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+          >
+            {t(
+              `✓ Деңгейіңіз (${finalLevel}) профильге сақталды`,
+              `✓ Ваш уровень ${finalLevel} сохранён в профиле`,
+            )}
+          </div>
+        ) : (
+          <div
+            role="status"
+            className="mx-auto mb-6 max-w-md rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            {t(
+              'Деңгейді профильге сақтау үшін жүйеге кіріңіз',
+              'Войдите, чтобы сохранить уровень в профиле',
+            )}
+          </div>
+        )}
         <div className="flex justify-center gap-3 flex-wrap">
           <Button variant="outline" onClick={resetTest}>
             {t('Қайта тапсыру', 'Пересдать')}
