@@ -12,6 +12,9 @@ import Avatar from '@/components/ui/Avatar';
 import LevelBadge from '@/components/ui/LevelBadge';
 import MentorAvatar from '@/components/features/MentorAvatar';
 import MentorTrack from '@/components/features/MentorTrack';
+import AdminProfile from '@/components/features/AdminProfile';
+
+const ADMIN_ROLES = ['admin', 'editor', 'moderator'];
 
 interface Stats {
   user: {
@@ -145,9 +148,29 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
   const displayLevel = totals.language_level || 'A1';
   const mentor = user.mentor_avatar || 'abai';
 
+  // Админ / редактор / модератор — кабинет админ-центричный, не похожий на пользовательский
+  if (ADMIN_ROLES.includes(user.role)) {
+    return <AdminProfile locale={locale} user={user} />;
+  }
+
+  const logoutUser = async () => {
+    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+    try { localStorage.removeItem('token'); } catch {}
+    router.push(`/${locale}`);
+    setTimeout(() => router.refresh(), 100);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">{m.profile.title}</h1>
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <h1 className="text-3xl font-bold text-gray-900">{m.profile.title}</h1>
+        <button
+          onClick={logoutUser}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition"
+        >
+          ⎋ {locale === 'kk' ? 'Шығу' : 'Выход'}
+        </button>
+      </div>
 
       {/* User info */}
       <Card className="mb-8">
