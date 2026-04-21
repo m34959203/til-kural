@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: tilkural_secret
       POSTGRES_DB: tilkural
     ports:
-      - '5432:5432'
+      - '5442:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
@@ -21,12 +21,12 @@ services:
   app:
     build: .
     ports:
-      - '3000:3000'
+      - '3008:3000'
+    env_file:
+      - .env.local
     environment:
       DATABASE_URL: postgresql://tilkural:tilkural_secret@db:5432/tilkural
-      JWT_SECRET: change-me-in-production
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://100.118.110.5:3008}
       NEXT_PUBLIC_DEFAULT_LOCALE: kk
     depends_on:
       db:
