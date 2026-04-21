@@ -9,7 +9,6 @@ import {
   CheckSquare,
   Scale,
   PenSquare,
-  Newspaper,
   CalendarDays,
   Image as ImageIcon,
   FileVideo,
@@ -61,8 +60,9 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
         { href: `/${locale}/admin/lessons`, label_kk: 'Сабақтар', label_ru: 'Уроки', Icon: BookOpen },
         { href: `/${locale}/admin/tests`, label_kk: 'Тест сұрақтары', label_ru: 'Тесты', Icon: CheckSquare },
         { href: `/${locale}/admin/grammar`, label_kk: 'Грамматика ережелері', label_ru: 'Правила грамматики', Icon: Scale },
-        { href: `/${locale}/admin/editor`, label_kk: 'Мақала редакторы', label_ru: 'Редактор статей', Icon: PenSquare },
-        { href: `/${locale}/admin/news`, label_kk: 'Жаңалықтар', label_ru: 'Новости', Icon: Newspaper },
+        { href: `/${locale}/admin/editor`, label_kk: 'Жаңалықтар (редактор)', label_ru: 'Новости (редактор)', Icon: PenSquare },
+        // /admin/news — альтернативный табличный вид, убран из навигации чтобы не дублировать редактор.
+        // Доступен по прямой ссылке для быстрой модерации без TipTap-формы.
         { href: `/${locale}/admin/events`, label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', Icon: CalendarDays },
         { href: `/${locale}/admin/banners`, label_kk: 'Баннерлер', label_ru: 'Баннеры', Icon: ImageIcon },
         { href: `/${locale}/admin/media`, label_kk: 'Медиатека', label_ru: 'Медиатека', Icon: FileVideo },
