@@ -1,11 +1,36 @@
 import type { Metadata } from 'next';
 import type { SiteSettings } from './settings';
 
+/**
+ * Возвращает канонический базовый URL сайта.
+ *
+ * Порядок резолва:
+ *  1. `NEXT_PUBLIC_APP_URL` — ручная настройка в .env(.local) или prod-окружении
+ *     (Cloudflare Tunnel, собственный домен). Слэш на конце срезается.
+ *  2. `VERCEL_URL` — Vercel preview / production (без схемы, поэтому префиксуем https).
+ *  3. Dev-fallback — `http://localhost:3015`.
+ *
+ * В SSR внутри роутов HOST-хедер здесь недоступен, поэтому метаданные всегда
+ * опираются на env. В проде выставьте `NEXT_PUBLIC_APP_URL=https://til-kural.kz`.
+ */
+export function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return 'http://localhost:3015';
+}
+
 export const SITE = {
   name: 'Тіл-құрал',
   tagline_kk: 'Қазақ тілін оқыту орталығы',
   tagline_ru: 'Центр обучения казахскому языку',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'https://til-kural.kz',
+  /** @deprecated Используйте `getBaseUrl()` напрямую — оставлено для обратной совместимости. */
+  get url() {
+    return getBaseUrl();
+  },
   twitter: '@tilkural',
   // Реальные реквизиты КГУ «УМЦ Тіл-құрал» (Сатпаев, область Ұлытау).
   // Используются как fallback, если settings в БД отсутствуют.
@@ -26,7 +51,7 @@ export const SITE = {
     director: 'Игенберлина Мадинат Балтина',
     goszakupUrl: 'https://www.goszakup.gov.kz/ru/registry/show_supplier/745311',
   },
-} as const;
+};
 
 interface PageMetaInput {
   locale: string;
@@ -40,22 +65,26 @@ interface PageMetaInput {
 }
 
 export function buildMetadata(input: PageMetaInput): Metadata {
-  const url = `${SITE.url}${input.path || ''}`;
+  const base = getBaseUrl();
+  const path = input.path || '';
+  const url = new URL(path, base).toString();
   const title = `${input.title} | ${SITE.name}`;
   const description = input.description || (input.locale === 'kk' ? SITE.tagline_kk : SITE.tagline_ru);
-  const ogImage = input.image || `${SITE.url}/og-default.svg`;
+  const ogImage = input.image
+    ? (input.image.startsWith('http') ? input.image : new URL(input.image, base).toString())
+    : new URL('/og-default.svg', base).toString();
   const otherLocale = input.locale === 'kk' ? 'ru' : 'kk';
 
   return {
     title,
     description,
-    metadataBase: new URL(SITE.url),
+    metadataBase: new URL(base),
     alternates: {
       canonical: url,
       languages: {
-        kk: `${SITE.url}${input.path?.replace(/^\/ru/, '/kk') || '/kk'}`,
-        ru: `${SITE.url}${input.path?.replace(/^\/kk/, '/ru') || '/ru'}`,
-        'x-default': `${SITE.url}/kk`,
+        kk: new URL(path.replace(/^\/ru/, '/kk') || '/kk', base).toString(),
+        ru: new URL(path.replace(/^\/kk/, '/ru') || '/ru', base).toString(),
+        'x-default': new URL('/kk', base).toString(),
       },
     },
     openGraph: {
@@ -90,6 +119,7 @@ export function buildMetadata(input: PageMetaInput): Metadata {
 export function organizationJsonLd(locale: string, settings?: SiteSettings) {
   const isKk = locale === 'kk';
   const s = settings || {};
+  const base = getBaseUrl();
 
   const legalName =
     (isKk ? s.org_full_name_kk : s.org_full_name_ru) ||
@@ -105,11 +135,12 @@ export function organizationJsonLd(locale: string, settings?: SiteSettings) {
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
+    '@id': `${base}/#organization`,
     name: legalName,
     legalName,
     alternateName: SITE.org.shortName,
-    url: SITE.url,
-    logo: `${SITE.url}/logo.svg`,
+    url: base,
+    logo: `${base}/icon-512.png`,
     telephone,
     email,
     address: {
@@ -155,21 +186,24 @@ export function newsArticleJsonLd(params: {
   publishedAt: string;
   modifiedAt?: string;
 }) {
+  const base = getBaseUrl();
+  const path = `/${params.locale}/news/${params.slug}`;
   return {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
+    '@id': `${base}${path}`,
     headline: params.title,
     description: params.description,
-    image: params.image ? [params.image] : [`${SITE.url}/og-default.svg`],
+    image: params.image ? [params.image] : [`${base}/og-default.svg`],
     datePublished: params.publishedAt,
     dateModified: params.modifiedAt || params.publishedAt,
     publisher: {
       '@type': 'EducationalOrganization',
       name: SITE.name,
-      logo: { '@type': 'ImageObject', url: `${SITE.url}/logo.svg` },
+      logo: { '@type': 'ImageObject', url: `${base}/icon-512.png` },
     },
     inLanguage: params.locale === 'kk' ? 'kk-KZ' : 'ru-RU',
-    mainEntityOfPage: `${SITE.url}/${params.locale}/news/${params.slug}`,
+    mainEntityOfPage: `${base}${path}`,
   };
 }
 
@@ -183,9 +217,11 @@ export function eventJsonLd(params: {
   location?: string;
   id: string;
 }) {
+  const base = getBaseUrl();
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
+    '@id': `${base}/${params.locale}/events/${params.id}`,
     name: params.title,
     description: params.description,
     startDate: params.startDate,
@@ -198,7 +234,7 @@ export function eventJsonLd(params: {
       address: params.locale === 'kk' ? SITE.org.streetAddress_kk : SITE.org.streetAddress_ru,
     },
     image: params.image ? [params.image] : undefined,
-    organizer: { '@type': 'Organization', name: SITE.name, url: SITE.url },
+    organizer: { '@type': 'Organization', name: SITE.name, url: base },
     inLanguage: params.locale === 'kk' ? 'kk-KZ' : 'ru-RU',
   };
 }

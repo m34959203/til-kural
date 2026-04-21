@@ -1,6 +1,6 @@
 import './globals.css';
 import { Manrope, Lora } from 'next/font/google';
-import { buildMetadata, organizationJsonLd, SITE } from '@/lib/seo';
+import { buildMetadata, getBaseUrl, organizationJsonLd, SITE } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
 import Analytics from '@/components/layout/Analytics';
 
@@ -19,12 +19,17 @@ const lora = Lora({
   display: 'swap',
 });
 
-export const metadata = buildMetadata({
-  locale: 'kk',
-  title: SITE.tagline_kk,
-  description: 'Қазақ тілін оқытудың AI платформасы: ИИ-мұғалім, тест, фото-тексеру, геймификация.',
-  path: '/',
-});
+export const metadata = {
+  ...buildMetadata({
+    locale: 'kk',
+    title: SITE.tagline_kk,
+    description: 'Қазақ тілін оқытудың AI платформасы: ИИ-мұғалім, тест, фото-тексеру, геймификация.',
+    path: '/',
+  }),
+  // Явно фиксируем metadataBase на случай, если Next.js будет резолвить
+  // относительные URL где-то глубже по дереву — всегда через getBaseUrl().
+  metadataBase: new URL(getBaseUrl()),
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Pull real organisation requisites from DB settings so Organization JSON-LD

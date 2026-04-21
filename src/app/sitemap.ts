@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/lib/seo';
+import { getBaseUrl } from '@/lib/seo';
 import { db } from '@/lib/db';
 
 const STATIC_PATHS = [
@@ -29,20 +29,21 @@ const STATIC_PATHS = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = getBaseUrl();
   const entries: MetadataRoute.Sitemap = [];
   const now = new Date();
 
   for (const path of STATIC_PATHS) {
     for (const locale of ['kk', 'ru'] as const) {
       entries.push({
-        url: `${SITE.url}/${locale}${path}`,
+        url: `${base}/${locale}${path}`,
         lastModified: now,
         changeFrequency: 'weekly',
         priority: path === '' ? 1 : 0.7,
         alternates: {
           languages: {
-            kk: `${SITE.url}/kk${path}`,
-            ru: `${SITE.url}/ru${path}`,
+            kk: `${base}/kk${path}`,
+            ru: `${base}/ru${path}`,
           },
         },
       });
@@ -54,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const item of news) {
       for (const locale of ['kk', 'ru'] as const) {
         entries.push({
-          url: `${SITE.url}/${locale}/news/${item.slug}`,
+          url: `${base}/${locale}/news/${item.slug}`,
           lastModified: item.updated_at || item.published_at || now,
           changeFrequency: 'monthly',
           priority: 0.6,

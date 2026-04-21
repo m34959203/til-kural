@@ -1,12 +1,15 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/lib/seo';
+import { getBaseUrl, SITE } from '@/lib/seo';
 
 export default function manifest(): MetadataRoute.Manifest {
+  const base = getBaseUrl();
   return {
+    id: `${base}/kk`,
     name: SITE.name,
     short_name: SITE.name,
     description: SITE.tagline_kk,
     start_url: '/kk',
+    scope: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#0f766e',
