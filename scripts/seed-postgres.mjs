@@ -51,6 +51,26 @@ try {
     (q) => [q.test_type, q.topic, q.difficulty, q.question_kk, q.question_ru || null, JSON.stringify(q.options || []), q.correct_answer, q.explanation_kk || null, q.explanation_ru || null],
     { onConflict: false });
   // тут id autogen через gen_random_uuid, не требуем id в cols
+
+  // Создать первичного admin, если нет ни одного.
+  // Пароль можно передать через TIL_ADMIN_PASSWORD, email — через TIL_ADMIN_EMAIL.
+  // На проде ОБЯЗАТЕЛЬНО смените пароль через /admin/users → «Сбросить пароль».
+  const adminCount = await client
+    .query(`SELECT count(*)::int FROM users WHERE role='admin'`)
+    .then((r) => r.rows[0].count);
+  if (adminCount === 0) {
+    const email = process.env.TIL_ADMIN_EMAIL || 'admin@til-kural.kz';
+    const pwd = process.env.TIL_ADMIN_PASSWORD || 'ChangeMe2026!';
+    const bcrypt = (await import('bcryptjs')).default;
+    const hash = await bcrypt.hash(pwd, 12);
+    await client.query(
+      `INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, 'admin') ON CONFLICT (email) DO NOTHING`,
+      [email, hash, 'Admin'],
+    );
+    console.log(`[seed] admin создан: ${email} (пароль: ${pwd})`);
+  } else {
+    console.log(`[seed] admin уже есть (${adminCount}), пропускаю`);
+  }
 } catch (err) {
   console.error('[seed] FAILED', err);
   process.exitCode = 1;
