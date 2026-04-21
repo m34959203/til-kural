@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface MobileNavProps {
   locale: string;
@@ -198,31 +199,83 @@ export default function MobileNav({ locale }: MobileNavProps) {
           </div>
         </div>
 
-        {/* Drawer footer actions */}
-        <div className="p-4 border-t border-tk-beige-2 bg-white flex flex-col gap-2">
-          <Link
-            href={`/${locale}/profile`}
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark font-bold text-sm hover:bg-tk-blue-dark hover:text-white transition"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-            </svg>
-            <span>{locale === 'kk' ? 'Жеке кабинет' : 'Личный кабинет'}</span>
-          </Link>
-          <Link
-            href={`/${locale}/learn`}
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-md hover:shadow-lg hover:brightness-110 transition"
-          >
-            <span>{locale === 'kk' ? 'Оқуды бастау' : 'Начать обучение'}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+        {/* Drawer footer actions — условные по роли */}
+        <MobileActions locale={locale} close={() => setOpen(false)} />
       </aside>
     </>
+  );
+}
+
+function MobileActions({ locale, close }: { locale: string; close: () => void }) {
+  const { user, loading } = useCurrentUser();
+  const router = useRouter();
+  const isKk = locale === 'kk';
+  const isAdmin = user && ['admin', 'editor', 'moderator'].includes(user.role || '');
+
+  const logout = async () => {
+    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+    try { localStorage.removeItem('token'); } catch {}
+    close();
+    router.push(`/${locale}`);
+    setTimeout(() => router.refresh(), 100);
+  };
+
+  if (loading) {
+    return <div className="p-4 border-t border-tk-beige-2 bg-white"><div className="h-12 bg-gray-100 rounded-xl animate-pulse" /></div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="p-4 border-t border-tk-beige-2 bg-white flex flex-col gap-2">
+        <Link
+          href={`/${locale}/login`}
+          onClick={close}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark font-bold text-sm hover:bg-tk-blue-dark hover:text-white transition"
+        >
+          <span>{isKk ? 'Кіру' : 'Войти'}</span>
+        </Link>
+        <Link
+          href={`/${locale}/learn`}
+          onClick={close}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-md hover:shadow-lg hover:brightness-110 transition"
+        >
+          <span>{isKk ? 'Оқуды бастау' : 'Начать обучение'}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 border-t border-tk-beige-2 bg-white flex flex-col gap-2">
+      <div className="px-1 pb-1">
+        <div className="text-sm font-semibold text-tk-ink truncate">{user.name || user.email}</div>
+        <div className="text-xs text-tk-muted truncate">{user.email} · <span className="font-bold text-tk-blue-dark">{user.role}</span></div>
+      </div>
+      <Link
+        href={`/${locale}/profile`}
+        onClick={close}
+        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark font-bold text-sm hover:bg-tk-blue-dark hover:text-white transition"
+      >
+        <span>👤 {isKk ? 'Жеке кабинет' : 'Личный кабинет'}</span>
+      </Link>
+      {isAdmin && (
+        <Link
+          href={`/${locale}/admin`}
+          onClick={close}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-md hover:shadow-lg hover:brightness-110 transition"
+        >
+          <span>🛠 {isKk ? 'Әкімші панелі' : 'Админ-панель'}</span>
+        </Link>
+      )}
+      <button
+        onClick={logout}
+        className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-200 text-red-600 font-semibold text-sm hover:bg-red-50 transition"
+      >
+        <span>⎋ {isKk ? 'Шығу' : 'Выход'}</span>
+      </button>
+    </div>
   );
 }

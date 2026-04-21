@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MOBILE_NAV_OPEN_EVENT } from '@/components/layout/MobileNav';
 import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
+import UserMenu from '@/components/layout/UserMenu';
 
 interface HeaderProps {
   locale: string;
@@ -219,27 +220,9 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
             </NavLink>
           </nav>
 
-          {/* Actions */}
+          {/* Actions — условный блок: гость / user / admin */}
           <div className="flex items-center gap-2">
-            <Link
-              href={`/${locale}/profile`}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark font-bold text-sm hover:bg-tk-blue-dark hover:text-white transition"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-              </svg>
-              <span>{t.profile || (locale === 'kk' ? 'Жеке кабинет' : 'Личный кабинет')}</span>
-            </Link>
-            <Link
-              href={`/${locale}/learn`}
-              className="hidden sm:flex px-4 sm:px-5 py-2.5 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-md hover:shadow-lg hover:brightness-110 transition items-center gap-2"
-            >
-              <span>{locale === 'kk' ? 'Оқуды бастау' : 'Начать обучение'}</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                <path d="M5 12h14M13 5l7 7-7 7" />
-              </svg>
-            </Link>
+            <UserMenu locale={locale} />
 
             {/* Hamburger — visible below lg (где nav скрывается) */}
             <button
