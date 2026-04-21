@@ -38,12 +38,10 @@ export interface EntityCrudConfig {
   titleRu: string;
   fields: CrudField[];
   columns: CrudColumn[];
-  /**
-   * Optional Zod schema for per-field client-side validation. If omitted,
-   * the component автоматически tries SCHEMAS[apiPath] — so новые страницы
-   * подхватывают схему без изменений в EntityCrudConfig.
-   */
-  schema?: ZodType;
+  // Zod-схема подхватывается автоматически через SCHEMAS[apiPath] из
+  // src/lib/validators.ts. Поле schema удалено из публичного config, потому
+  // что Zod-инстанс (класс) нельзя передавать из server-component в
+  // client-component (Next.js ругается «Only plain objects»).
 }
 
 type Row = Record<string, unknown> & { id: string };
@@ -68,8 +66,8 @@ export default function EntityCrudTable({ locale, config }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Эффективная схема: явно заданная в config имеет приоритет, иначе — по apiPath.
-  const schema: ZodType | undefined = config.schema ?? SCHEMAS[config.apiPath];
+  // Эффективная схема: автолукап по apiPath из общего SCHEMAS-мапа.
+  const schema: ZodType | undefined = SCHEMAS[config.apiPath];
 
   // UX: search / sort / paginate (client-side)
   const [query, setQuery] = useState('');

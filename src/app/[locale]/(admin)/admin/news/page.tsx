@@ -1,5 +1,8 @@
 import EntityCrudTable, { EntityCrudConfig } from '@/components/admin/EntityCrudTable';
-import { NewsSchema } from '@/lib/validators';
+
+// NewsSchema подхватывается EntityCrudTable автоматически через SCHEMAS[apiPath].
+// Прямой импорт Zod-класса в server-component ломает Server→Client boundary
+// («Only plain objects can be passed»), см. ecc3dfe→cd3b2b1 фикс.
 
 export default async function AdminNewsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -8,7 +11,6 @@ export default async function AdminNewsPage({ params }: { params: Promise<{ loca
     apiPath: '/api/news',
     listKey: 'news',
     itemKey: 'news',
-    schema: NewsSchema,
     titleKk: 'Жаңалықтарды басқару',
     titleRu: 'Управление новостями',
     fields: [
