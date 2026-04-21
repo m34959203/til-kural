@@ -153,8 +153,19 @@ Sampling `buildQuestions()` берёт стратифицированно: 4L/4R
 
 Глобальный движок слабых тем: `src/lib/adaptive-recommender.ts` (weakness_score = 100 − avg% + decay 1.5/день, новая тема = 55). Таблица `user_topic_stats` (sql/003_topic_stats.sql, уникальность по user_id+topic_slug) апсертится из `POST /api/test/evaluate` после JWT-аутентификации. `GET /api/recommend/next` отдаёт топ-3 слабых тем + `nextAction` с маппингом на `/learn/lessons/:id`, `/test/topics/:slug` или `/learn/basics#rule_XX`. UI — блок «Сізге ұсынамыз / Рекомендуем вам» на `/learn` (`src/components/features/RecommendedTopics.tsx`) перед AITeacher; незалогиненным показывается приглашение на тест уровня.
 
+## Адаптивный входной тест (CAT) — A1→C2
+
+Движок: `src/lib/cat-engine.ts` (stateless). Вся история ответов передаётся клиентом на каждый запрос.
+- Старт: B1. Переход X→X+1 после 2 правильных подряд на X; X→X-1 после 2 неправильных подряд.
+- Длина: 10–15 вопросов; досрочный стоп при стабилизации 6 последних ответов на одном уровне.
+- Финал: mode уровней последних 4 правильных. Если ≥3 правильных C2 — итог C2 (сертификат C2 достижим).
+- API: `POST /api/test/next-question` → `{done, question?, currentLevel, progress}`; `POST /api/test/evaluate { mode:'adaptive', answered:[{questionId,correct,difficulty}] }` → итоговый `level`+`score`.
+- Банк: в `src/data/test-questions-bank.json` минимум по 8 level-вопросов на каждый уровень A1/A2/B1/B2/C1/C2.
+- UI: `src/components/features/LevelTest.tsx` — динамическое дерево, индикатор «текущий уровень» и progress bar «N / 15».
+
 ## История существенных изменений
 
+- **2026-04-21** — Адаптивный CAT-входной тест A1-C2 с branching по сложности: `cat-engine.ts`, `/api/test/next-question`, режим `adaptive` в `/api/test/evaluate`, переписанный `LevelTest.tsx` (динамические вопросы + live current level). Банк пополнен до 8+ level-вопросов на уровень. Сертификат C2 достижим при 3+ правильных C2.
 - **2026-04-19 (вторая сессия)** — КАЗТЕСТ 100-балльная шкала с секциями и разбором ошибок, банк вопросов 5 → 40, раздел `/learn/basics` (21 правило грамматики), каталог уроков с привязкой к правилам.
 - **2026-04-19** — Большой рефакторинг (Opus 4.7): Postgres-слой, rate-limit, SEO (sitemap/robots/JSON-LD), полный админ-CRUD (news/events/lessons/banners/settings), медиатека с реальным сохранением файлов, Gemini TTS (kk), GA4+Метрика, 2GIS/OSM карта, Web Push + email-reminders, динамическое меню из `site_settings`. Аудит до ≈ 92%.
 - **≤ 2026-04-06** — базовая платформа: i18n, AI-teacher, тесты (входной/тематические/КАЗТЕСТ), PDF-сертификаты, фото-проверка (Vision), геймификация (аватары, квесты, уровни, стрики, лидерборд).
