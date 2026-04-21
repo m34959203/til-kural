@@ -33,9 +33,15 @@ interface AnalyticsData {
 
 interface Props {
   locale: string;
+  /**
+   * Дополнительный контент, отображаемый после основных карточек и списков.
+   * Используется на странице /admin/analytics для рендера time-series графиков.
+   * На странице /admin проп не передаётся — поведение дашборда не меняется.
+   */
+  children?: React.ReactNode;
 }
 
-export default function AnalyticsDashboard({ locale }: Props) {
+export default function AnalyticsDashboard({ locale, children }: Props) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,6 +137,8 @@ export default function AnalyticsDashboard({ locale }: Props) {
           )}
         </Card>
       </div>
+
+      {children}
     </div>
   );
 }
