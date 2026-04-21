@@ -19,7 +19,9 @@ export async function POST(request: Request) {
       certificateId,
       testSessionId,
       download = false,
+      locale,
     } = body;
+    const certLocale: 'kk' | 'ru' = locale === 'kk' ? 'kk' : 'ru';
 
     const user = await getUserFromRequest(request);
     const certificate_number = certificateId || makeCertNumber(level);
@@ -57,8 +59,9 @@ export async function POST(request: Request) {
       userName: user?.name || userName,
       level,
       score,
-      date: formatDate(new Date(), 'ru'),
+      date: formatDate(new Date(), certLocale),
       certificateNumber: certificate_number,
+      locale: certLocale,
     });
 
     return new Response(new Uint8Array(pdfBuffer), {
