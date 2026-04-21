@@ -44,6 +44,9 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
         { href: `/${locale}/admin/events`, label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', icon: '📅' },
         { href: `/${locale}/admin/banners`, label_kk: 'Баннерлер', label_ru: 'Баннеры', icon: '🖼️' },
         { href: `/${locale}/admin/media`, label_kk: 'Медиатека', label_ru: 'Медиатека', icon: '🎞️' },
+        { href: `/${locale}/admin/departments`, label_kk: 'Бөлімдер', label_ru: 'Отделы', icon: '🏢' },
+        { href: `/${locale}/admin/staff`, label_kk: 'Қызметкерлер', label_ru: 'Сотрудники', icon: '👔' },
+        { href: `/${locale}/admin/rules`, label_kk: 'Ереже құжаттары', label_ru: 'Правила-документы', icon: '📜' },
       ],
     },
     {

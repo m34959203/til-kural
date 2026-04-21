@@ -52,6 +52,36 @@ class InMemoryDB implements DB {
     site_settings: [],
     media: [],
     push_subscriptions: [],
+    departments: [
+      {
+        id: '00000000-0000-4000-8000-000000000001',
+        name_kk: 'Әкімшілік',
+        name_ru: 'Администрация',
+        description_kk: 'Орталықтың әкімшілік-басқару тобы.',
+        description_ru: 'Административно-управленческая группа центра.',
+        head_user_id: null,
+        sort_order: 0,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    staff: [
+      {
+        id: '00000000-0000-4000-8000-000000000101',
+        name_kk: 'Игенберлина Мадинат Балтина',
+        name_ru: 'Игенберлина Мадинат Балтина',
+        position_kk: 'Директор',
+        position_ru: 'Директор',
+        department_id: '00000000-0000-4000-8000-000000000001',
+        photo_url: null,
+        email: null,
+        phone: null,
+        bio_kk: null,
+        bio_ru: null,
+        sort_order: 0,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    rules_documents: [],
   };
 
   async query(table: string, filter?: Record<string, any>, opts?: QueryOptions) {
