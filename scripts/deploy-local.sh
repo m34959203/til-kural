@@ -18,6 +18,12 @@ echo ">> build"
 npm run build 2>&1 | tail -3
 
 echo ">> linking public + static into .next/standalone"
+# Если Turbopack создал .next/standalone/public как директорию (например, чтобы
+# положить туда fonts из /public/fonts/*), ln -sfn создаёт symlink ВНУТРИ неё,
+# получается кривая вложенность. Удаляем, потом создаём правильный symlink.
+if [[ -d "$ROOT/.next/standalone/public" && ! -L "$ROOT/.next/standalone/public" ]]; then
+  rm -rf "$ROOT/.next/standalone/public"
+fi
 ln -sfn "$ROOT/public" "$ROOT/.next/standalone/public"
 mkdir -p "$ROOT/.next/standalone/.next"
 ln -sfn "$ROOT/.next/static" "$ROOT/.next/standalone/.next/static"
