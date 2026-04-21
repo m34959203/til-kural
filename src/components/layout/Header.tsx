@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import GovResourceLinks from '@/components/features/GovResourceLinks';
+import { usePathname } from 'next/navigation';
+import { MOBILE_NAV_OPEN_EVENT } from '@/components/layout/MobileNav';
 
 interface HeaderProps {
   locale: string;
@@ -13,124 +12,168 @@ interface HeaderProps {
   menuItems?: Array<{ href: string; label: string }>;
 }
 
+// Inline logo mark matching the prototype (strings 172-177)
+function LogoMark() {
+  return (
+    <div className="w-11 h-11 rounded-xl gradient-blue flex items-center justify-center shadow-md relative overflow-hidden shrink-0">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M8 24 L 20 8 L 24 12 L 12 28 Z" fill="#F5C518" stroke="#FAF6EC" strokeWidth="0.8" />
+        <path d="M20 8 L 24 12" stroke="#0B1E3D" strokeWidth="1.5" />
+        <circle cx="10" cy="26" r="1.5" fill="#0B1E3D" />
+        <path d="M 14 22 L 17 19" stroke="#0B1E3D" strokeWidth="1" />
+      </svg>
+      <div className="absolute -right-2 -bottom-2 w-8 h-8 rounded-full sun-rays opacity-30"></div>
+    </div>
+  );
+}
+
 export default function Header({ locale, messages, menuItems }: HeaderProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname() || `/${locale}`;
   const t = messages.common;
-  const otherLocale = locale === 'kk' ? 'ru' : 'kk';
+
+  // Swap current locale segment for the other — keeps the user on the same page.
+  const pathWithoutLocale = pathname.replace(/^\/(kk|ru)(?=\/|$)/, '') || '/';
+  const kkHref = `/kk${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
+  const ruHref = `/ru${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
+
+  const govLinks = [
+    { href: 'https://www.akorda.kz', label: locale === 'kk' ? 'Ақорда' : 'Акорда' },
+    { href: 'https://til.gov.kz', label: locale === 'kk' ? 'Байтұрсынұлы' : 'Байтурсынулы' },
+    { href: 'https://tilalemi.kz/', label: 'Тіл әлемі' },
+    { href: 'https://termincom.kz', label: 'Терминком.кз' },
+    { href: 'https://emle.kz', label: 'Емле.кз' },
+  ];
+
+  const defaultNav = [
+    { href: '', label: t.home || (locale === 'kk' ? 'Басты' : 'Главная') },
+    { href: '/about', label: t.about || (locale === 'kk' ? 'Біз туралы' : 'О нас') },
+    { href: '/learn', label: t.learn || (locale === 'kk' ? 'Оқу' : 'Обучение') },
+    { href: '/test', label: t.test || (locale === 'kk' ? 'Тест' : 'Тест') },
+    { href: '/photo-check', label: locale === 'kk' ? 'Фото-тексеру' : 'Фото-проверка' },
+    { href: '/game', label: t.game || (locale === 'kk' ? 'Ойын' : 'Игра') },
+    { href: '/news', label: t.news || (locale === 'kk' ? 'Жаңалықтар' : 'Новости') },
+    { href: '/resources', label: locale === 'kk' ? 'Ресурстар' : 'Ресурсы' },
+  ];
 
   const navItems = menuItems?.length
-    ? [{ href: `/${locale}`, label: t.home }, ...menuItems.map((i) => ({ href: `/${locale}${i.href}`, label: i.label }))]
-    : [
-        { href: `/${locale}`, label: t.home },
-        { href: `/${locale}/learn`, label: t.learn },
-        { href: `/${locale}/test`, label: t.test },
-        { href: `/${locale}/photo-check`, label: locale === 'kk' ? 'Фото тексеру' : 'Фото проверка' },
-        { href: `/${locale}/game`, label: t.game },
-        { href: `/${locale}/news`, label: t.news },
-        { href: `/${locale}/about`, label: t.about },
-        { href: `/${locale}/contacts`, label: t.contacts },
-      ];
+    ? [
+        { href: `/${locale}`, label: t.home || (locale === 'kk' ? 'Басты' : 'Главная') },
+        ...menuItems.map((i) => ({ href: `/${locale}${i.href}`, label: i.label })),
+      ]
+    : defaultNav.map((i) => ({ href: `/${locale}${i.href}`, label: i.label }));
+
+  const isActive = (href: string) => {
+    if (href === `/${locale}`) return pathname === `/${locale}` || pathname === `/${locale}/`;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <>
-      {/* Gov resource bar */}
-      <div className="bg-teal-900 text-white text-xs">
-        <div className="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
-          <GovResourceLinks locale={locale} />
-          <Link
-            href={`/${otherLocale}`}
-            className="text-amber-300 hover:text-amber-200 font-medium"
-          >
-            {otherLocale === 'kk' ? 'Қазақша' : 'Русский'}
-          </Link>
+      {/* ============================================= */}
+      {/* TOP BAR — state resources + language switcher   */}
+      {/* ============================================= */}
+      <div className="bg-tk-night text-white/70 text-[12px]">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-9 flex items-center justify-between">
+          <div className="hidden md:flex gap-5">
+            {govLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-tk-gold transition whitespace-nowrap"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+          <div className="flex gap-2 ml-auto items-center">
+            <Link
+              href={kkHref}
+              className={locale === 'kk' ? 'font-bold text-white' : 'hover:text-tk-gold transition'}
+              aria-current={locale === 'kk' ? 'true' : undefined}
+            >
+              KK
+            </Link>
+            <span className="opacity-30">|</span>
+            <Link
+              href={ruHref}
+              className={locale === 'ru' ? 'font-bold text-white' : 'hover:text-tk-gold transition'}
+              aria-current={locale === 'ru' ? 'true' : undefined}
+            >
+              RU
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Main header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href={`/${locale}`} className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-teal-700 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">Т</span>
+      {/* ============================================= */}
+      {/* HEADER — Logo + navigation                    */}
+      {/* ============================================= */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-tk-beige-2">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-20 flex items-center justify-between gap-6">
+          {/* Logo */}
+          <Link href={`/${locale}`} className="flex items-center gap-3 shrink-0">
+            <LogoMark />
+            <div className="hidden sm:block">
+              <div className="text-[20px] font-extrabold leading-none text-tk-night">Тіл-құрал</div>
+              <div className="text-[11px] text-tk-muted mt-0.5 tracking-wide">
+                {locale === 'kk' ? 'Қазақ тілін оқыту орталығы' : 'Учебно-методический центр'}
               </div>
-              <div className="hidden sm:block">
-                <div className="font-bold text-teal-800 text-lg leading-tight">Тіл-құрал</div>
-                <div className="text-[10px] text-gray-500 leading-tight">{t.siteDescription}</div>
-              </div>
+            </div>
+          </Link>
+
+          {/* Nav (desktop) */}
+          <nav className="hidden xl:flex items-center gap-1 text-[14px] font-semibold">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={
+                  isActive(item.href)
+                    ? 'px-3 py-2 rounded-lg text-tk-blue-dark bg-tk-blue/10'
+                    : 'px-3 py-2 rounded-lg text-tk-ink hover:bg-tk-beige-2 transition'
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/${locale}/profile`}
+              className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark font-bold text-sm hover:bg-tk-blue-dark hover:text-white transition"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
+              </svg>
+              <span>{t.profile || (locale === 'kk' ? 'Жеке кабинет' : 'Личный кабинет')}</span>
+            </Link>
+            <Link
+              href={`/${locale}/learn`}
+              className="hidden sm:flex px-4 sm:px-5 py-2.5 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-md hover:shadow-lg hover:brightness-110 transition items-center gap-2"
+            >
+              <span>{locale === 'kk' ? 'Оқуды бастау' : 'Начать обучение'}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
             </Link>
 
-            {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="px-3 py-2 text-sm text-gray-700 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Right side */}
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/${locale}/profile`}
-                className="hidden sm:inline-flex items-center px-3 py-2 text-sm text-gray-700 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors"
-              >
-                {t.profile}
-              </Link>
-              <Link
-                href={`/${locale}/learn`}
-                className="hidden sm:inline-flex bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-800 transition-colors"
-              >
-                {locale === 'kk' ? 'Оқуды бастау' : 'Начать обучение'}
-              </Link>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-gray-900"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  {mobileOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile nav */}
-          <div
-            className={cn(
-              'lg:hidden transition-all duration-300 overflow-hidden',
-              mobileOpen ? 'max-h-96 pb-4' : 'max-h-0'
-            )}
-          >
-            <nav className="flex flex-col gap-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="px-3 py-2 text-sm text-gray-700 hover:text-teal-700 hover:bg-teal-50 rounded-lg"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <Link
-                href={`/${locale}/profile`}
-                onClick={() => setMobileOpen(false)}
-                className="px-3 py-2 text-sm text-gray-700 hover:text-teal-700 hover:bg-teal-50 rounded-lg"
-              >
-                {t.profile}
-              </Link>
-            </nav>
+            {/* Hamburger — visible below xl (where desktop nav hides) */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(MOBILE_NAV_OPEN_EVENT))}
+              className="xl:hidden w-11 h-11 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark flex items-center justify-center hover:bg-tk-blue-dark hover:text-white transition"
+              aria-label={locale === 'kk' ? 'Мәзірді ашу' : 'Открыть меню'}
+              aria-controls="tk-mobile-drawer"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>

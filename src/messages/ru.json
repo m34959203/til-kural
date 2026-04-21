@@ -75,7 +75,20 @@
     "writingTitle": "Проверка письма",
     "writingDesc": "Напишите текст, AI проверит грамматику и стиль",
     "pronunciationTitle": "Практика произношения",
-    "pronunciationDesc": "Изучайте правильное произношение слов и фраз"
+    "pronunciationDesc": "Изучайте правильное произношение слов и фраз",
+    "recommendTitle": "Рекомендуем вам",
+    "recommendSubtitle": "Адаптивные рекомендации по вашим слабым темам",
+    "recommendWelcome": "Начните с теста уровня — по его результатам мы построим ваш персональный план обучения.",
+    "recommendStartTest": "Пройти тест уровня",
+    "recommendLoginHint": "Рекомендации доступны после входа в личный кабинет.",
+    "recommendNewTopic": "Новая тема",
+    "recommendWeak": "Слабое место",
+    "recommendAvg": "Средний балл",
+    "recommendLastSeen": "Последнее занятие",
+    "recommendCtaLesson": "К уроку",
+    "recommendCtaTest": "Начать тест",
+    "recommendCtaBasics": "Открыть правило",
+    "recommendEmpty": "Явных слабых тем нет — продолжайте практиковаться."
   },
   "test": {
     "title": "Платформа тестирования",

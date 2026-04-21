@@ -1,11 +1,29 @@
 import Link from 'next/link';
 import { getMessages } from '@/lib/i18n';
 import AITeacher from '@/components/features/AITeacher';
+import RecommendedTopics from '@/components/features/RecommendedTopics';
 import Card from '@/components/ui/Card';
 
 export default async function LearnPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const m = getMessages(locale);
+
+  const recommendMessages = {
+    recommendTitle: m.learn.recommendTitle,
+    recommendSubtitle: m.learn.recommendSubtitle,
+    recommendWelcome: m.learn.recommendWelcome,
+    recommendStartTest: m.learn.recommendStartTest,
+    recommendLoginHint: m.learn.recommendLoginHint,
+    recommendNewTopic: m.learn.recommendNewTopic,
+    recommendWeak: m.learn.recommendWeak,
+    recommendAvg: m.learn.recommendAvg,
+    recommendLastSeen: m.learn.recommendLastSeen,
+    recommendCtaLesson: m.learn.recommendCtaLesson,
+    recommendCtaTest: m.learn.recommendCtaTest,
+    recommendCtaBasics: m.learn.recommendCtaBasics,
+    recommendEmpty: m.learn.recommendEmpty,
+    loading: m.common.loading,
+  };
 
   const sections = [
     { href: `/${locale}/learn/basics`, icon: '📖', title: locale === 'kk' ? 'Тіл негіздері' : 'Основы языка', desc: locale === 'kk' ? 'Грамматиканың 21 негізгі ережесі' : '21 основное правило грамматики' },
@@ -34,6 +52,9 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
           </Link>
         ))}
       </div>
+
+      {/* Adaptive recommendations */}
+      <RecommendedTopics locale={locale} messages={recommendMessages} />
 
       {/* AI Teacher Chat */}
       <AITeacher locale={locale} />

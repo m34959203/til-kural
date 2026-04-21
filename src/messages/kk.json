@@ -75,7 +75,20 @@
     "writingTitle": "Жазба тексеру",
     "writingDesc": "Мәтініңізді жазыңыз, AI грамматика мен стильді тексереді",
     "pronunciationTitle": "Айтылым практикасы",
-    "pronunciationDesc": "Сөздер мен сөз тіркестерінің дұрыс айтылуын үйреніңіз"
+    "pronunciationDesc": "Сөздер мен сөз тіркестерінің дұрыс айтылуын үйреніңіз",
+    "recommendTitle": "Сізге ұсынамыз",
+    "recommendSubtitle": "Әлсіз тақырыптарыңызға бейімделген ұсыныстар",
+    "recommendWelcome": "Алдымен деңгей анықтау тестін тапсырыңыз — оның нәтижесі бойынша сізге арналған жеке жоспар жасаймыз.",
+    "recommendStartTest": "Деңгей тестін бастау",
+    "recommendLoginHint": "Ұсыныстар жеке кабинетке кіргеннен кейін қолжетімді болады.",
+    "recommendNewTopic": "Жаңа тақырып",
+    "recommendWeak": "Әлсіз жер",
+    "recommendAvg": "Орташа балл",
+    "recommendLastSeen": "Соңғы сабақ",
+    "recommendCtaLesson": "Сабаққа өту",
+    "recommendCtaTest": "Тестті бастау",
+    "recommendCtaBasics": "Ережені қарау",
+    "recommendEmpty": "Қазір нақты әлсіз тақырыптар жоқ — жаттығуды жалғастырыңыз."
   },
   "test": {
     "title": "Тестілеу платформасы",

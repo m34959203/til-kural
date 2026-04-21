@@ -22,7 +22,7 @@ export default async function PublicLayout({
   return (
     <>
       <Header locale={locale} messages={messages} menuItems={menuItems} />
-      <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+      <main className="flex-1">{children}</main>
       <Footer locale={locale} messages={messages} />
       <MobileNav locale={locale} />
     </>

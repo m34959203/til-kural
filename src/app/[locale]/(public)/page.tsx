@@ -1,157 +1,1013 @@
 import Link from 'next/link';
-import { getMessages } from '@/lib/i18n';
-import Card from '@/components/ui/Card';
+import Image from 'next/image';
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const m = getMessages(locale);
+  const isKk = locale === 'kk';
 
-  const features = [
-    { icon: '🤖', title: m.features.aiTeacher, desc: m.features.aiTeacherDesc, href: `/${locale}/learn` },
-    { icon: '📝', title: m.features.testing, desc: m.features.testingDesc, href: `/${locale}/test` },
-    { icon: '📷', title: m.features.photoCheck, desc: m.features.photoCheckDesc, href: `/${locale}/photo-check` },
-    { icon: '🎮', title: m.features.gamification, desc: m.features.gamificationDesc, href: `/${locale}/game` },
-    { icon: '💬', title: m.features.dialog, desc: m.features.dialogDesc, href: `/${locale}/learn/dialog` },
-    { icon: '🔊', title: m.features.pronunciation, desc: m.features.pronunciationDesc, href: `/${locale}/learn/pronunciation` },
+  // ────────────────── TEXT LABELS ──────────────────
+  const t = {
+    heroBadge: isKk ? '🇰🇿 AI × ҚАЗАҚ ТІЛІ · 2026' : '🇰🇿 AI × КАЗАХСКИЙ ЯЗЫК · 2026',
+    heroTitle1: isKk ? 'Қазақ тілін' : 'Учите',
+    heroTitleAi: isKk ? 'AI-мен' : 'казахский с AI',
+    heroTitle2: isKk ? 'үйреніңіз' : '',
+    heroDesc: isKk
+      ? 'Жасанды интеллект мұғалімімен қазақ тілін оңай, қызықты және тиімді үйреніңіз — A1 деңгейінен C2-ге дейін, үйден шықпай, өз ыңғайыңызбен.'
+      : 'Изучайте казахский язык с AI-учителем — легко, увлекательно и эффективно. От уровня A1 до C2, из дома, в удобном для вас ритме.',
+    ctaStart: isKk ? 'Оқуды бастау' : 'Начать обучение',
+    ctaTest: isKk ? 'Деңгейді тексеру' : 'Проверить уровень',
+    chkFree: isKk ? 'Тегін бастау' : 'Бесплатный старт',
+    chkRules: isKk ? '21 грамматика ережесі' : '21 правило грамматики',
+    chkKaztest: isKk ? 'КАЗТЕСТ дайындық' : 'Подготовка к КАЗТЕСТ',
+    chkPhoto: isKk ? 'AI-фото тексеру' : 'AI-проверка фото',
+    statStudents: isKk ? 'Білімалушы' : 'Учеников',
+    statRules: isKk ? 'Грамм. ережесі' : 'Правил грамм.',
+    statLevels: isKk ? '6 деңгей' : '6 уровней',
+    featSection: isKk ? 'Мүмкіндіктер' : 'Возможности',
+    featTitle: isKk ? 'Платформа мүмкіндіктері' : 'Возможности платформы',
+    featSubtitle: isKk
+      ? 'Қазақ тілін жан-жақты меңгеруге арналған 6 қуатты құрал'
+      : '6 мощных инструментов для всестороннего изучения языка',
+    feat1Title: isKk ? 'AI Мұғалім' : 'AI Учитель',
+    feat1Desc: isKk
+      ? 'Жасанды интеллект мұғалімімен интерактивті сабақтар. Gemini 2.5 негізінде.'
+      : 'Интерактивные уроки с AI-учителем на базе Gemini 2.5.',
+    feat1Cta: isKk ? 'Бастау' : 'Начать',
+    feat2Title: isKk ? 'Тестілеу' : 'Тестирование',
+    feat2Desc: isKk
+      ? 'A1–C2 деңгей анықтау, ҚАЗТЕСТ дайындық. 100-балдық жүйе.'
+      : 'Определение уровня A1–C2, подготовка к КАЗТЕСТ. 100-балльная система.',
+    feat3Title: isKk ? 'Фото тексеру' : 'Фото-проверка',
+    feat3Desc: isKk
+      ? 'Қолжазба мәтінді фото арқылы тексеру. Gemini Vision қатені белгілейді.'
+      : 'Проверка рукописного текста по фото. Gemini Vision отметит ошибки.',
+    feat3New: isKk ? 'Жаңа мүмкіндік' : 'Новая возможность',
+    feat4Title: isKk ? 'Геймификация' : 'Геймификация',
+    feat4Desc: isKk
+      ? 'Квесттер, XP, деңгейлер, стриктер, жарыс кестесі, бейджілер.'
+      : 'Квесты, XP, уровни, серии, таблица лидеров, бейджи.',
+    feat5Title: isKk ? 'Диалог жаттықтырғыш' : 'Тренажёр диалога',
+    feat5Desc: isKk
+      ? 'AI-мен сөйлесу практикасы. Нақты өмірлік жағдайлар.'
+      : 'Практика разговора с AI. Реальные жизненные ситуации.',
+    feat5Shop: isKk ? '🏪 Дүкенде' : '🏪 В магазине',
+    feat5Cafe: isKk ? '☕ Кафеде' : '☕ В кафе',
+    feat5Road: isKk ? '✈️ Жолда' : '✈️ В пути',
+    feat6Title: isKk ? 'Айтылым' : 'Произношение',
+    feat6Desc: isKk
+      ? 'Дұрыс айтылуды үйрену. Қазақ TTS + дыбыс анализі.'
+      : 'Обучение правильному произношению. Казахский TTS + анализ речи.',
+
+    cultSection: isKk ? 'Ел мәдениеті' : 'Культура народа',
+    cultTitle: isKk ? 'Тілді мәдениет арқылы үйреніңіз' : 'Изучайте язык через культуру',
+    cultSubtitle: isKk
+      ? 'Тіл — халықтың жан-дүниесі. Әр сабақ қазақ мәдениетінің бір қырымен таныстырады.'
+      : 'Язык — это душа народа. Каждый урок знакомит с гранью казахской культуры.',
+
+    levelsSection: isKk ? 'Деңгейлер' : 'Уровни',
+    levelsTitle: isKk ? 'Тіл деңгейлері' : 'Уровни владения языком',
+    levelsSubtitle: isKk
+      ? 'A1-ден C2-ге дейін — жүйелі түрде деңгейіңізді арттырыңыз'
+      : 'От A1 до C2 — системно повышайте свой уровень',
+
+    mentSection: isKk ? 'AI Тәлімгерлер' : 'AI Наставники',
+    mentTitle: isKk ? 'Ұлы ұстаздармен сөйлесіңіз' : 'Общайтесь с великими учителями',
+    mentSubtitle: isKk
+      ? 'Қазақ әдебиетінің жарқын тұлғалары — AI технологиясы арқылы'
+      : 'Яркие фигуры казахской литературы — через AI-технологии',
+    mentTalk: isKk ? 'Әңгімелесу' : 'Начать диалог',
+
+    mobSection: isKk ? 'Мобильді қосымша' : 'Мобильное приложение',
+    mobTitle: isKk ? 'Қалтаңыздағы қазақ тілі мұғалімі' : 'Учитель казахского у вас в кармане',
+    mobDesc: isKk
+      ? 'Кез келген жерде сабақ — көлікте, кезекте, үзіліс сәтінде. 5 минуттық уроктар, дыбыс-жаттығулар, офлайн-режим.'
+      : 'Уроки везде — в транспорте, в очереди, на перерыве. 5-минутные занятия, аудио-упражнения, офлайн-режим.',
+    mobPush: isKk ? 'Push-хабарлама' : 'Push-уведомления',
+    mobPushDesc: isKk ? 'Күнделікті еске салу — стрикті сақтаңыз' : 'Ежедневные напоминания — сохраняйте серию',
+    mobVoice: isKk ? 'Дауыспен басқару' : 'Голосовое управление',
+    mobVoiceDesc: isKk ? 'Айтылым жаттығулары, TTS' : 'Упражнения на произношение, TTS',
+    mobCam: isKk ? 'Камера + AI' : 'Камера + AI',
+    mobCamDesc: isKk ? 'Қолжазба мен кітап бетін сканерлеу' : 'Сканирование рукописи и страниц книг',
+    mobDownload: isKk ? 'Жүктеңіз' : 'Скачать в',
+
+    ctaBadge: isKk ? '🎓 ТЕГІН ТІРКЕЛУ' : '🎓 БЕСПЛАТНАЯ РЕГИСТРАЦИЯ',
+    ctaTitlePre: isKk ? 'Бүгін' : 'Начните',
+    ctaTitleAccent: isKk ? 'бастаңыз!' : 'сегодня!',
+    ctaDesc: isKk
+      ? 'Тегін тіркеліп, AI мұғалімімен қазақ тілін үйреніңіз. Банк картасы қажет емес.'
+      : 'Зарегистрируйтесь бесплатно и учите казахский с AI-учителем. Банковская карта не требуется.',
+    ctaChk1: isKk ? '✓ Несие картасы қажет емес' : '✓ Банковская карта не нужна',
+    ctaChk2: isKk ? '✓ 30 секундта тіркелу' : '✓ Регистрация за 30 секунд',
+    ctaChk3: isKk ? '✓ Барлық мүмкіндіктер ашық' : '✓ Все функции доступны',
+  };
+
+  // ────────────────── FEATURES ──────────────────
+  const levels = [
+    {
+      code: 'A1',
+      label: isKk ? 'Бастаушы' : 'Начальный',
+      sub: isKk ? 'Таныстыру, алфавит' : 'Знакомство, алфавит',
+      border: 'border-[#0F4C81]',
+      badgeBg: 'bg-[#0F4C81]',
+      badgeText: 'text-white',
+      stroke: '#0F4C81',
+      icon: (
+        <g>
+          <circle cx="24" cy="24" r="10" />
+          <path d="M14 24 L 34 24 M 24 14 L 24 34 M 17 17 L 31 31 M 31 17 L 17 31" />
+        </g>
+      ),
+    },
+    {
+      code: 'A2',
+      label: isKk ? 'Базалық' : 'Базовый',
+      sub: isKk ? 'Күнделікті сөйлеу' : 'Повседневная речь',
+      border: 'border-[#1B6FB5]',
+      badgeBg: 'bg-[#1B6FB5]',
+      badgeText: 'text-white',
+      stroke: '#1B6FB5',
+      icon: (
+        <g>
+          <ellipse cx="24" cy="32" rx="10" ry="8" />
+          <path d="M24 4 L 24 24 M 20 12 L 28 12 M 21 18 L 27 18" />
+        </g>
+      ),
+    },
+    {
+      code: 'B1',
+      label: isKk ? 'Орта' : 'Средний',
+      sub: isKk ? 'Әңгіме жүргізу' : 'Ведение беседы',
+      border: 'border-[#E8A30C]',
+      badgeBg: 'bg-[#E8A30C]',
+      badgeText: 'text-white',
+      stroke: '#E8A30C',
+      icon: (
+        <g>
+          <path d="M8 8 L 24 12 L 40 8 L 40 40 L 24 36 L 8 40 Z" />
+          <path d="M24 12 L 24 36" />
+        </g>
+      ),
+    },
+    {
+      code: 'B2',
+      label: isKk ? 'Орта+' : 'Выше среднего',
+      sub: isKk ? 'Еркін сөйлеу' : 'Свободная речь',
+      border: 'border-[#F5C518]',
+      badgeBg: 'bg-[#F5C518]',
+      badgeText: 'text-[#0B1E3D]',
+      stroke: '#F5C518',
+      icon: (
+        <g>
+          <path d="M12 36 L 30 10 L 36 14 L 18 40 Z" />
+          <path d="M30 10 L 36 14 M 14 34 L 24 24" />
+          <circle cx="15" cy="37" r="1.5" fill="#F5C518" />
+        </g>
+      ),
+    },
+    {
+      code: 'C1',
+      label: isKk ? 'Жоғары' : 'Продвинутый',
+      sub: isKk ? 'Кәсіби қарым-қатынас' : 'Профессиональное общение',
+      border: 'border-[#C2461A]',
+      badgeBg: 'bg-[#C2461A]',
+      badgeText: 'text-white',
+      stroke: '#C2461A',
+      icon: (
+        <g>
+          <path d="M8 32 L 12 16 L 20 24 L 24 12 L 28 24 L 36 16 L 40 32 Z" />
+          <path d="M8 36 L 40 36" />
+          <circle cx="24" cy="12" r="1.5" fill="#C2461A" />
+        </g>
+      ),
+    },
+  ];
+
+  const cultureCards = [
+    {
+      img: '/outputs/img/yurt.webp',
+      cat: isKk ? 'Тұрмыс' : 'Быт',
+      title: isKk ? 'Киіз үй' : 'Юрта',
+      sub: isKk ? 'Шаңырақ, уық, кереге' : 'Шанырак, уык, кереге',
+      grad: 'from-[#0F4C81] to-[#0B1E3D]',
+    },
+    {
+      img: '/outputs/img/dombra.webp',
+      cat: isKk ? 'Өнер' : 'Искусство',
+      title: isKk ? 'Домбыра' : 'Домбра',
+      sub: isKk ? 'Күй, терме, жыр' : 'Кюй, терме, жыр',
+      grad: 'from-[#C2461A] to-[#E8A30C]',
+    },
+    {
+      img: '/outputs/img/tulips.webp',
+      cat: isKk ? 'Табиғат' : 'Природа',
+      title: isKk ? 'Қызғалдақ' : 'Тюльпан',
+      sub: isKk ? 'Дала гүлі · Тұран' : 'Степной цветок · Туран',
+      grad: 'from-[#F5C518] to-[#C2461A]',
+    },
+    {
+      img: '/outputs/img/astana.webp',
+      cat: isKk ? 'Қала' : 'Город',
+      title: isKk ? 'Астана' : 'Астана',
+      sub: isKk ? 'Мәңгілік ел · Бәйтерек' : 'Мәңгілік ел · Байтерек',
+      grad: 'from-[#1B6FB5] to-[#0F4C81]',
+    },
   ];
 
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 text-white kazakh-ornament">
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-              {m.hero.title}
+    <div className="bg-[#FAF6EC] text-[#2B2A26]">
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section className="hero-pattern relative overflow-hidden">
+        <Image
+          src="/outputs/img/hero-steppe.webp"
+          alt={isKk ? 'Қазақ даласы таң шапағында' : 'Казахская степь на рассвете'}
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover opacity-[0.22] pointer-events-none select-none"
+        />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#FAF6EC] via-[#FAF6EC]/60 to-transparent pointer-events-none" />
+
+        {/* SVG-steppe fallback */}
+        <svg className="absolute bottom-0 left-0 w-full h-[220px] opacity-[0.12] pointer-events-none" viewBox="0 0 1440 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sunGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#F5C518" />
+              <stop offset="100%" stopColor="#E8A30C" stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+          <circle cx="1180" cy="100" r="52" fill="url(#sunGradient)" />
+          <g stroke="#E8A30C" strokeWidth="1.2" opacity="0.6">
+            <line x1="1180" y1="30" x2="1180" y2="12" />
+            <line x1="1180" y1="188" x2="1180" y2="170" />
+            <line x1="1110" y1="100" x2="1092" y2="100" />
+            <line x1="1268" y1="100" x2="1250" y2="100" />
+            <line x1="1130" y1="50" x2="1118" y2="38" />
+            <line x1="1230" y1="150" x2="1242" y2="162" />
+            <line x1="1230" y1="50" x2="1242" y2="38" />
+            <line x1="1130" y1="150" x2="1118" y2="162" />
+          </g>
+          <path d="M0 170 Q 200 120 400 150 Q 600 180 800 130 Q 1000 95 1200 140 Q 1320 160 1440 135 L 1440 220 L 0 220 Z" fill="#1B6FB5" />
+          <path d="M0 190 Q 250 160 500 180 Q 750 200 1000 170 Q 1200 150 1440 185 L 1440 220 L 0 220 Z" fill="#0F4C81" />
+          <g transform="translate(180 155)" fill="#0B1E3D" stroke="#0B1E3D">
+            <path d="M0 40 L 8 8 L 48 8 L 56 40 Z" />
+            <path d="M8 8 L 28 0 L 48 8" fill="none" strokeWidth="2" />
+            <circle cx="28" cy="4" r="2" fill="#F5C518" />
+            <rect x="22" y="28" width="12" height="12" fill="#F5C518" opacity="0.8" />
+          </g>
+          <g transform="translate(900 168)" fill="#0B1E3D">
+            <ellipse cx="10" cy="14" rx="12" ry="4" />
+            <rect x="2" y="6" width="16" height="10" rx="1" />
+            <circle cx="10" cy="3" r="3" />
+            <path d="M0 8 L -4 14 M 20 8 L 24 14" stroke="#0B1E3D" strokeWidth="1.5" fill="none" />
+          </g>
+        </svg>
+
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 items-center relative">
+          {/* LEFT */}
+          <div className="fade-in">
+            <div className="inline-flex items-center gap-2 bg-[#F5C518]/20 text-[#0F4C81] px-3 py-1.5 rounded-full text-xs font-bold tracking-wide">
+              <span className="w-2 h-2 rounded-full bg-[#C2461A] animate-pulse" />
+              {t.heroBadge}
+            </div>
+            <h1 className="mt-6 text-[44px] sm:text-[56px] lg:text-[68px] font-extrabold leading-[1.02] text-[#0B1E3D] tracking-tight">
+              {isKk ? (
+                <>
+                  {t.heroTitle1}
+                  <br />
+                  <span className="relative inline-block">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1B6FB5] to-[#0F4C81]">
+                      {t.heroTitleAi}
+                    </span>
+                    <svg className="absolute -bottom-2 left-0 w-full" height="14" viewBox="0 0 280 14" fill="none">
+                      <path d="M4 10 Q 70 2 140 8 Q 210 14 276 6" stroke="#F5C518" strokeWidth="4" strokeLinecap="round" />
+                    </svg>
+                  </span>{' '}
+                  {t.heroTitle2}
+                </>
+              ) : (
+                <>
+                  {t.heroTitle1}
+                  <br />
+                  <span className="relative inline-block">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1B6FB5] to-[#0F4C81]">
+                      {t.heroTitleAi}
+                    </span>
+                    <svg className="absolute -bottom-2 left-0 w-full" height="14" viewBox="0 0 280 14" fill="none">
+                      <path d="M4 10 Q 70 2 140 8 Q 210 14 276 6" stroke="#F5C518" strokeWidth="4" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                </>
+              )}
             </h1>
-            <p className="text-lg md:text-xl text-teal-100 mb-8 leading-relaxed">
-              {m.hero.subtitle}
-            </p>
-            <div className="flex flex-wrap gap-4">
+            <p className="mt-6 text-lg text-[#6B6A63] max-w-xl leading-relaxed">{t.heroDesc}</p>
+
+            <div className="flex flex-wrap gap-3 mt-8">
               <Link
                 href={`/${locale}/learn`}
-                className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-xl font-medium text-lg transition-colors"
+                className="group px-7 py-4 rounded-2xl bg-[#C2461A] text-white font-bold shadow-lg hover:shadow-xl hover:brightness-110 transition flex items-center gap-2"
               >
-                {m.hero.cta}
+                {t.ctaStart}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="group-hover:translate-x-1 transition">
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
               </Link>
               <Link
                 href={`/${locale}/test/level`}
-                className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-xl font-medium text-lg border border-white/30 transition-colors"
+                className="px-7 py-4 rounded-2xl bg-white border-2 border-[#0F4C81] text-[#0F4C81] font-bold hover:bg-[#0F4C81] hover:text-white transition flex items-center gap-2"
               >
-                {m.hero.ctaTest}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+                {t.ctaTest}
               </Link>
+            </div>
+
+            <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-[#2B2A26]">
+              <span className="check-dot">{t.chkFree}</span>
+              <span className="check-dot">{t.chkRules}</span>
+              <span className="check-dot">{t.chkKaztest}</span>
+              <span className="check-dot">{t.chkPhoto}</span>
+            </div>
+
+            <div className="mt-10 grid grid-cols-3 gap-4 max-w-lg">
+              <div>
+                <div className="text-3xl font-extrabold text-[#0F4C81]">50K+</div>
+                <div className="text-xs text-[#6B6A63] mt-1">{t.statStudents}</div>
+              </div>
+              <div className="border-l border-[#F3ECD8] pl-4">
+                <div className="text-3xl font-extrabold text-[#0F4C81]">21</div>
+                <div className="text-xs text-[#6B6A63] mt-1">{t.statRules}</div>
+              </div>
+              <div className="border-l border-[#F3ECD8] pl-4">
+                <div className="text-3xl font-extrabold text-[#0F4C81]">A1→C2</div>
+                <div className="text-xs text-[#6B6A63] mt-1">{t.statLevels}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: AI-chat mock */}
+          <div className="relative fade-in delay-2">
+            <div className="absolute -top-8 -right-4 w-32 h-32 rounded-full sun-rays opacity-60 blur-sm" />
+            <div className="absolute -inset-6 rounded-[48px] bg-gradient-to-br from-[#0F4C81]/10 via-transparent to-[#F5C518]/15" />
+
+            <div className="relative bg-white rounded-[36px] shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] p-6 border border-[#F3ECD8]">
+              <div className="flex items-center gap-3 pb-4 border-b border-[#F3ECD8]">
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl gradient-blue flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                    {isKk ? 'АБ' : 'АБ'}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-white" />
+                </div>
+                <div>
+                  <div className="font-bold text-[#0B1E3D]">{isKk ? 'Ахмет Байтұрсынұлы' : 'Ахмет Байтурсынулы'}</div>
+                  <div className="text-xs text-[#6B6A63] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    {isKk ? 'AI Тәлімгер · Онлайн' : 'AI Наставник · Онлайн'}
+                  </div>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  <button className="w-9 h-9 rounded-xl bg-[#FAF6EC] hover:bg-[#F3ECD8] flex items-center justify-center" aria-label="Sound">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4C81" strokeWidth="2">
+                      <path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3 py-5">
+                <div className="flex gap-2">
+                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[80%]">
+                    {isKk ? 'Сәлеметсіз бе! Бүгін «Жұрнақтар» тақырыбын бастайық па?' : 'Здравствуйте! Начнём сегодня тему «Суффиксы»?'}
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <div className="gradient-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[80%]">
+                    {isKk ? 'Иә, бастайық. Мысал келтіріңізші.' : 'Да, начнём. Приведите пример.'}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[85%]">
+                    <div>
+                      {isKk ? 'Мынаны қараңыз: ' : 'Посмотрите: '}
+                      <b className="text-[#C2461A]">
+                        кітап<span className="text-[#E8A30C]">-хана</span>
+                      </b>
+                    </div>
+                    <div className="text-xs text-[#6B6A63] mt-1">{isKk ? '«-хана» — орын жұрнағы' : '«-хана» — суффикс места'}</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#6B6A63] animate-bounce" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#6B6A63] animate-bounce" style={{ animationDelay: '0.15s' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#6B6A63] animate-bounce" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t border-[#F3ECD8]">
+                <button className="w-10 h-10 rounded-xl bg-[#F5C518]/20 text-[#E8A30C] flex items-center justify-center" aria-label="Mic">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4" />
+                  </svg>
+                </button>
+                <div className="flex-1 bg-[#FAF6EC] rounded-xl px-4 flex items-center text-sm text-[#6B6A63]">
+                  {isKk ? 'Жауап жазыңыз…' : 'Напишите ответ…'}
+                </div>
+                <button className="w-10 h-10 rounded-xl gradient-blue text-white flex items-center justify-center shadow-md" aria-label="Send">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-thin pb-1">
+                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#1B6FB5]/10 text-[#0F4C81] text-xs font-semibold whitespace-nowrap">
+                  🔊 {isKk ? 'Тыңдау' : 'Слушать'}
+                </button>
+                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                  🎤 {isKk ? 'Айту' : 'Говорить'}
+                </button>
+                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                  💡 {isKk ? 'Түсіндіру' : 'Объяснить'}
+                </button>
+                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                  📝 {isKk ? 'Мысал' : 'Пример'}
+                </button>
+              </div>
+            </div>
+
+            <div className="absolute -left-8 top-12 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden md:flex">
+              <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center text-white font-extrabold">+25</div>
+              <div>
+                <div className="text-xs text-[#6B6A63]">{isKk ? 'Алдыңыз' : 'Получено'}</div>
+                <div className="text-sm font-bold text-[#0B1E3D]">{isKk ? '25 XP ұпай' : '25 XP очков'}</div>
+              </div>
+            </div>
+
+            <div className="absolute -right-4 bottom-16 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden md:flex">
+              <div className="text-2xl">🔥</div>
+              <div>
+                <div className="text-xs text-[#6B6A63]">Streak</div>
+                <div className="text-sm font-bold text-[#0B1E3D]">{isKk ? '7 күн қатарынан' : '7 дней подряд'}</div>
+              </div>
             </div>
           </div>
         </div>
-        {/* Decorative ornament line */}
-        <div className="h-2 bg-gradient-to-r from-amber-500 via-teal-400 to-amber-500" />
+
+        <div className="ornament-strip" />
       </section>
 
-      {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
-          {locale === 'kk' ? 'Платформа мүмкіндіктері' : 'Возможности платформы'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((f) => (
-            <Link key={f.href} href={f.href}>
-              <Card hover className="h-full">
-                <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500">{f.desc}</p>
-              </Card>
+      {/* ═══════════════ FEATURES ═══════════════ */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="text-[#C2461A] font-bold text-sm tracking-[0.2em] uppercase">{t.featSection}</div>
+            <h2 className="mt-3 text-4xl lg:text-5xl font-extrabold text-[#0B1E3D] text-balance">{t.featTitle}</h2>
+            <p className="mt-4 text-[#6B6A63] text-lg">{t.featSubtitle}</p>
+          </div>
+
+          <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* 1. AI Teacher */}
+            <Link
+              href={`/${locale}/learn`}
+              className="group card-hover bg-gradient-to-br from-[#0F4C81] to-[#1B6FB5] rounded-[28px] p-7 text-white relative overflow-hidden shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)]"
+            >
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
+              <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M12 2a3 3 0 013 3v2a3 3 0 01-3 3M12 10a4 4 0 014 4v6H8v-6a4 4 0 014-4zM9 7h6" />
+                  <circle cx="9" cy="15" r="1" fill="currentColor" />
+                  <circle cx="15" cy="15" r="1" fill="currentColor" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold">{t.feat1Title}</h3>
+              <p className="mt-2 text-white/80 text-sm leading-relaxed">{t.feat1Desc}</p>
+              <div className="mt-6 flex items-center gap-2 text-[#F5C518] font-semibold text-sm">
+                {t.feat1Cta}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:translate-x-1 transition">
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
+              </div>
             </Link>
-          ))}
+
+            {/* 2. Testing */}
+            <Link
+              href={`/${locale}/test`}
+              className="group card-hover bg-white border border-[#F3ECD8] rounded-[28px] p-7 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] relative overflow-hidden"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#F5C518]/15 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8A30C" strokeWidth="1.8">
+                  <path d="M9 11l3 3 5-5M3 12a9 9 0 1018 0 9 9 0 10-18 0z" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold text-[#0B1E3D]">{t.feat2Title}</h3>
+              <p className="mt-2 text-[#6B6A63] text-sm leading-relaxed">{t.feat2Desc}</p>
+              <div className="mt-5 flex gap-1.5">
+                {['A1', 'A2', 'B1', 'B2', 'C1'].map((l) => (
+                  <span key={l} className="px-2 py-0.5 rounded-md bg-[#FAF6EC] text-[10px] font-bold text-[#0F4C81]">
+                    {l}
+                  </span>
+                ))}
+                <span className="px-2 py-0.5 rounded-md bg-[#F5C518] text-[10px] font-bold text-[#0B1E3D]">C2</span>
+              </div>
+            </Link>
+
+            {/* 3. Photo-check */}
+            <Link
+              href={`/${locale}/photo-check`}
+              className="group card-hover bg-white border border-[#F3ECD8] rounded-[28px] p-7 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] relative overflow-hidden"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#C2461A]/15 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#C2461A" strokeWidth="1.8">
+                  <path d="M3 7h3l2-3h8l2 3h3v12H3z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold text-[#0B1E3D]">{t.feat3Title}</h3>
+              <p className="mt-2 text-[#6B6A63] text-sm leading-relaxed">{t.feat3Desc}</p>
+              <div className="mt-5 inline-flex items-center gap-2 text-[#C2461A] font-semibold text-sm">
+                <span className="w-2 h-2 rounded-full bg-[#C2461A] animate-pulse" />
+                {t.feat3New}
+              </div>
+            </Link>
+
+            {/* 4. Gamification */}
+            <Link
+              href={`/${locale}/game`}
+              className="group card-hover bg-gradient-to-br from-[#F5C518] to-[#E8A30C] rounded-[28px] p-7 text-white relative overflow-hidden shadow-[0_8px_32px_-4px_rgba(245,197,24,0.4)]"
+            >
+              <div className="absolute -bottom-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
+              <Image
+                src="/outputs/img/badge.webp"
+                alt=""
+                width={144}
+                height={144}
+                className="absolute -bottom-6 -right-6 w-36 h-36 object-contain opacity-90 group-hover:rotate-6 group-hover:scale-105 transition duration-500 drop-shadow-2xl pointer-events-none"
+              />
+              <div className="w-14 h-14 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center relative z-10">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M8 21h8M12 17v4M7 4h10l-1 8a4 4 0 01-8 0L7 4zM5 4h2v5a4 4 0 01-4-4V4zM19 4h-2v5a4 4 0 004-4V4z" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold relative z-10">{t.feat4Title}</h3>
+              <p className="mt-2 text-white/90 text-sm leading-relaxed relative z-10">{t.feat4Desc}</p>
+              <div className="mt-6 flex items-center gap-1 relative z-10">
+                <span className="text-xl">🏆</span>
+                <span className="text-xl">⭐</span>
+                <span className="text-xl">🔥</span>
+                <span className="text-xl">🎯</span>
+              </div>
+            </Link>
+
+            {/* 5. Dialog */}
+            <Link
+              href={`/${locale}/learn/dialog`}
+              className="group card-hover bg-white border border-[#F3ECD8] rounded-[28px] p-7 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] relative overflow-hidden"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#1B6FB5]/15 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1B6FB5" strokeWidth="1.8">
+                  <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold text-[#0B1E3D]">{t.feat5Title}</h3>
+              <p className="mt-2 text-[#6B6A63] text-sm leading-relaxed">{t.feat5Desc}</p>
+              <div className="mt-4 flex flex-wrap gap-1.5 text-[10px] font-semibold">
+                <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Shop}</span>
+                <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Cafe}</span>
+                <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Road}</span>
+              </div>
+            </Link>
+
+            {/* 6. Pronunciation */}
+            <Link
+              href={`/${locale}/learn/pronunciation`}
+              className="group card-hover bg-white border border-[#F3ECD8] rounded-[28px] p-7 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] relative overflow-hidden"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#0F4C81]/15 flex items-center justify-center">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F4C81" strokeWidth="1.8">
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4" />
+                </svg>
+              </div>
+              <h3 className="mt-5 text-2xl font-extrabold text-[#0B1E3D]">{t.feat6Title}</h3>
+              <p className="mt-2 text-[#6B6A63] text-sm leading-relaxed">{t.feat6Desc}</p>
+              <div className="mt-5 flex items-end gap-0.5 h-8">
+                {[30, 60, 90, 100, 75, 50, 40, 70, 55, 30].map((h, i) => (
+                  <div
+                    key={i}
+                    className={`w-1 rounded-full ${h >= 75 && h <= 100 && i < 5 ? 'bg-[#F5C518]' : 'bg-[#0F4C81]'}`}
+                    style={{ height: `${h}%` }}
+                  />
+                ))}
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Levels overview */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
-            {locale === 'kk' ? 'Тіл деңгейлері' : 'Уровни языка'}
-          </h2>
-          <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
-            {locale === 'kk'
-              ? 'A1-ден C2-ге дейін — жүйелі түрде деңгейіңізді арттырыңыз'
-              : 'От A1 до C2 — систематически повышайте свой уровень'}
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((level) => (
-              <Card key={level} hover className="text-center">
-                <div className="text-2xl font-bold text-teal-700 mb-1">{level}</div>
-                <p className="text-xs text-gray-500">
-                  {level === 'A1' && (locale === 'kk' ? 'Бастаушы' : 'Начальный')}
-                  {level === 'A2' && (locale === 'kk' ? 'Базалық' : 'Базовый')}
-                  {level === 'B1' && (locale === 'kk' ? 'Орта' : 'Средний')}
-                  {level === 'B2' && (locale === 'kk' ? 'Орта+' : 'Выше среднего')}
-                  {level === 'C1' && (locale === 'kk' ? 'Жоғары' : 'Продвинутый')}
-                  {level === 'C2' && (locale === 'kk' ? 'Шебер' : 'Мастер')}
-                </p>
-              </Card>
+      {/* ═══════════════ CULTURE ═══════════════ */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-10">
+            <div>
+              <div className="text-[#C2461A] font-bold text-sm tracking-[0.2em] uppercase">{t.cultSection}</div>
+              <h2 className="mt-3 text-4xl lg:text-5xl font-extrabold text-[#0B1E3D] text-balance">{t.cultTitle}</h2>
+            </div>
+            <p className="text-[#6B6A63] max-w-md text-base">{t.cultSubtitle}</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {cultureCards.map((c) => (
+              <Link
+                key={c.title}
+                href={`/${locale}/learn`}
+                className={`group card-hover relative aspect-square rounded-[24px] overflow-hidden bg-gradient-to-br ${c.grad} border border-white/10 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)]`}
+              >
+                <Image
+                  src={c.img}
+                  alt={c.title}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  className="object-cover group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0B1E3D] via-[#0B1E3D]/60 to-transparent">
+                  <div className="text-[#F5C518] text-[10px] font-extrabold tracking-widest uppercase">{c.cat}</div>
+                  <div className="text-white text-xl font-extrabold mt-1">{c.title}</div>
+                  <div className="text-white/70 text-xs mt-0.5">{c.sub}</div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Mentors */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
-          {locale === 'kk' ? 'AI тәлімгерлер' : 'AI наставники'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              name: locale === 'kk' ? 'Абай Құнанбайұлы' : 'Абай Кунанбайулы',
-              title: locale === 'kk' ? 'Ақын, ойшыл, ағартушы' : 'Поэт, мыслитель',
-              quote: '\"Адам бол!\"',
-              initials: 'АҚ',
-              color: 'bg-indigo-700',
-            },
-            {
-              name: locale === 'kk' ? 'Ахмет Байтұрсынұлы' : 'Ахмет Байтурсынулы',
-              title: locale === 'kk' ? 'Тілші, ғалым' : 'Лингвист, учёный',
-              quote: '\"Тіл — ұлттың жаны\"',
-              initials: 'АБ',
-              color: 'bg-emerald-700',
-            },
-            {
-              name: locale === 'kk' ? 'Мұхтар Әуезов' : 'Мухтар Ауэзов',
-              title: locale === 'kk' ? 'Жазушы, драматург' : 'Писатель, драматург',
-              quote: '\"Абай жолы\"',
-              initials: 'МӘ',
-              color: 'bg-amber-700',
-            },
-          ].map((mentor) => (
-            <Card key={mentor.name} hover className="text-center">
-              <div className={`w-20 h-20 ${mentor.color} rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4`}>
-                {mentor.initials}
+      {/* ═══════════════ LEVELS ═══════════════ */}
+      <section className="py-20 bg-[#FAF6EC] relative overflow-hidden">
+        <svg className="absolute bottom-0 left-0 w-full opacity-[0.06]" viewBox="0 0 1200 200" preserveAspectRatio="none">
+          <path d="M0 200 L0 160 Q 150 110 300 140 Q 500 180 700 120 Q 900 90 1200 150 L1200 200 Z" fill="#0F4C81" />
+          <path d="M0 200 L0 180 Q 200 150 400 170 Q 600 190 800 160 Q 1000 140 1200 180 L1200 200 Z" fill="#1B6FB5" />
+        </svg>
+
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 relative">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="text-[#C2461A] font-bold text-sm tracking-[0.2em] uppercase">{t.levelsSection}</div>
+            <h2 className="mt-3 text-4xl lg:text-5xl font-extrabold text-[#0B1E3D] text-balance">{t.levelsTitle}</h2>
+            <p className="mt-4 text-[#6B6A63] text-lg">{t.levelsSubtitle}</p>
+          </div>
+
+          <div className="mt-16 relative">
+            <div className="absolute left-0 right-0 top-[42px] h-1 bg-gradient-to-r from-[#1B6FB5] via-[#F5C518] to-[#C2461A] rounded-full hidden md:block" />
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+              {levels.map((lvl) => (
+                <div key={lvl.code} className="text-center">
+                  <div className={`w-[88px] h-[88px] mx-auto rounded-2xl bg-white shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] flex items-center justify-center relative border-2 ${lvl.border}`}>
+                    <svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke={lvl.stroke} strokeWidth="2">
+                      {lvl.icon}
+                    </svg>
+                    <div className={`absolute -top-2 -right-2 px-2 py-0.5 rounded-md ${lvl.badgeBg} ${lvl.badgeText} text-[10px] font-extrabold`}>
+                      {lvl.code}
+                    </div>
+                  </div>
+                  <div className="mt-3 font-bold text-[#0B1E3D]">{lvl.label}</div>
+                  <div className="text-xs text-[#6B6A63] mt-1">{lvl.sub}</div>
+                </div>
+              ))}
+              {/* C2 */}
+              <div className="text-center">
+                <div className="w-[88px] h-[88px] mx-auto rounded-2xl bg-gradient-to-br from-[#C2461A] to-[#E8A30C] shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] flex items-center justify-center relative">
+                  <svg width="44" height="44" viewBox="0 0 48 48" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M24 40 L 24 24 M 24 24 C 14 18 10 10 14 8 C 18 10 22 14 24 20 C 26 14 30 10 34 8 C 38 10 34 18 24 24 Z" />
+                  </svg>
+                  <div className="absolute -top-2 -right-2 px-2 py-0.5 rounded-md bg-[#0B1E3D] text-[#F5C518] text-[10px] font-extrabold">C2</div>
+                </div>
+                <div className="mt-3 font-bold text-[#0B1E3D]">{isKk ? 'Шебер' : 'Мастер'}</div>
+                <div className="text-xs text-[#6B6A63] mt-1">{isKk ? 'Ана тілі деңгейі' : 'Уровень носителя'}</div>
               </div>
-              <h3 className="font-semibold text-gray-900">{mentor.name}</h3>
-              <p className="text-sm text-gray-500 mb-2">{mentor.title}</p>
-              <p className="text-sm text-teal-700 italic">{mentor.quote}</p>
-            </Card>
-          ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-teal-800 text-white py-16 kazakh-ornament">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            {locale === 'kk' ? 'Бүгін бастаңыз!' : 'Начните сегодня!'}
+      {/* ═══════════════ MENTORS ═══════════════ */}
+      <section className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="text-[#C2461A] font-bold text-sm tracking-[0.2em] uppercase">{t.mentSection}</div>
+            <h2 className="mt-3 text-4xl lg:text-5xl font-extrabold text-[#0B1E3D] text-balance">{t.mentTitle}</h2>
+            <p className="mt-4 text-[#6B6A63] text-lg">{t.mentSubtitle}</p>
+          </div>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-8">
+            {/* Abai */}
+            <article className="group card-hover bg-gradient-to-b from-[#FAF6EC] to-white rounded-[32px] overflow-hidden shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] border border-[#F3ECD8]">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#0F4C81] to-[#0B1E3D]">
+                <Image
+                  src="/outputs/img/abai.webp"
+                  alt={isKk ? 'Абай Құнанбайұлы' : 'Абай Кунанбайулы'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover opacity-95 portrait-vintage"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3D] via-[#0B1E3D]/30 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F5C518]/90 text-[#0B1E3D] text-[10px] font-extrabold px-2 py-1 rounded tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-600" /> AI TUTOR
+                  </div>
+                </div>
+              </div>
+              <div className="p-7">
+                <h3 className="text-2xl font-extrabold text-[#0B1E3D]">{isKk ? 'Абай Құнанбайұлы' : 'Абай Кунанбайулы'}</h3>
+                <div className="text-sm text-[#6B6A63] mt-1">{isKk ? 'Ақын, ойшыл, ағартушы · 1845–1904' : 'Поэт, мыслитель, просветитель · 1845–1904'}</div>
+                <blockquote className="mt-5 font-serif italic text-lg text-[#0F4C81] leading-relaxed border-l-4 border-[#F5C518] pl-4">
+                  «{isKk ? 'Адам бол!' : 'Будь Человеком!'}»
+                </blockquote>
+                <p className="mt-4 text-sm text-[#6B6A63] leading-relaxed">
+                  {isKk
+                    ? '45 Қара сөздер негізінде моральдық-этикалық диалог жүргізеді. Поэзия, философия, өмірлік ақыл.'
+                    : 'Моральные и этические диалоги на основе 45 «Чёрных слов». Поэзия, философия, жизненная мудрость.'}
+                </p>
+                <Link href={`/${locale}/learn`} className="mt-5 w-full py-3 rounded-xl gradient-blue text-white font-bold text-sm hover:brightness-110 transition flex items-center justify-center gap-2">
+                  {t.mentTalk}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </article>
+
+            {/* Baitursynuly */}
+            <article className="group card-hover bg-gradient-to-b from-[#FAF6EC] to-white rounded-[32px] overflow-hidden shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] border border-[#F3ECD8] md:-mt-6">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#C2461A] to-[#0F4C81]">
+                <Image
+                  src="/outputs/img/baitursynov.webp"
+                  alt={isKk ? 'Ахмет Байтұрсынұлы' : 'Ахмет Байтурсынулы'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover opacity-95 portrait-vintage"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3D] via-[#0B1E3D]/30 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F5C518]/90 text-[#0B1E3D] text-[10px] font-extrabold px-2 py-1 rounded tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-600" /> {isKk ? 'БАСТЫ ТӘЛІМГЕР' : 'ГЛАВНЫЙ НАСТАВНИК'}
+                  </div>
+                </div>
+              </div>
+              <div className="p-7">
+                <h3 className="text-2xl font-extrabold text-[#0B1E3D]">{isKk ? 'Ахмет Байтұрсынұлы' : 'Ахмет Байтурсынулы'}</h3>
+                <div className="text-sm text-[#6B6A63] mt-1">{isKk ? 'Тілші, ғалым, ағартушы · 1872–1937' : 'Лингвист, учёный, просветитель · 1872–1937'}</div>
+                <blockquote className="mt-5 font-serif italic text-lg text-[#0F4C81] leading-relaxed border-l-4 border-[#F5C518] pl-4">
+                  «{isKk ? 'Тіл — ұлттың жаны' : 'Язык — это душа народа'}»
+                </blockquote>
+                <p className="mt-4 text-sm text-[#6B6A63] leading-relaxed">
+                  {isKk
+                    ? '«Тіл-құралы» оқулығының авторы. Грамматика, әліпби реформасы, орфография сабақтары.'
+                    : 'Автор учебника «Тіл-құралы». Грамматика, реформа алфавита, уроки орфографии.'}
+                </p>
+                <Link href={`/${locale}/learn`} className="mt-5 w-full py-3 rounded-xl bg-[#C2461A] text-white font-bold text-sm hover:brightness-110 transition flex items-center justify-center gap-2">
+                  {t.mentTalk}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </article>
+
+            {/* Auezov */}
+            <article className="group card-hover bg-gradient-to-b from-[#FAF6EC] to-white rounded-[32px] overflow-hidden shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] border border-[#F3ECD8]">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#E8A30C] to-[#0B1E3D]">
+                <Image
+                  src="/outputs/img/auezov.webp"
+                  alt={isKk ? 'Мұхтар Әуезов' : 'Мухтар Ауэзов'}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover opacity-95 portrait-vintage"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3D] via-[#0B1E3D]/30 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F5C518]/90 text-[#0B1E3D] text-[10px] font-extrabold px-2 py-1 rounded tracking-wide">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-600" /> AI TUTOR
+                  </div>
+                </div>
+              </div>
+              <div className="p-7">
+                <h3 className="text-2xl font-extrabold text-[#0B1E3D]">{isKk ? 'Мұхтар Әуезов' : 'Мухтар Ауэзов'}</h3>
+                <div className="text-sm text-[#6B6A63] mt-1">{isKk ? 'Жазушы, драматург · 1897–1961' : 'Писатель, драматург · 1897–1961'}</div>
+                <blockquote className="mt-5 font-serif italic text-lg text-[#0F4C81] leading-relaxed border-l-4 border-[#F5C518] pl-4">
+                  «{isKk ? 'Абай жолы' : 'Путь Абая'}»
+                </blockquote>
+                <p className="mt-4 text-sm text-[#6B6A63] leading-relaxed">
+                  {isKk
+                    ? 'Көркем әдебиет, романдар талдау, диалогтар құру. Лингвистикалық-әдеби практика.'
+                    : 'Художественная литература, анализ романов, построение диалогов. Лингво-литературная практика.'}
+                </p>
+                <Link href={`/${locale}/learn`} className="mt-5 w-full py-3 rounded-xl gradient-blue text-white font-bold text-sm hover:brightness-110 transition flex items-center justify-center gap-2">
+                  {t.mentTalk}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ MOBILE PREVIEW ═══════════════ */}
+      <section className="py-24 bg-gradient-to-br from-[#FAF6EC] to-[#F3ECD8] relative overflow-hidden">
+        <div className="ornament-strip absolute top-0 left-0 right-0" />
+
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <div className="text-[#C2461A] font-bold text-sm tracking-[0.2em] uppercase">{t.mobSection}</div>
+            <h2 className="mt-3 text-4xl lg:text-5xl font-extrabold text-[#0B1E3D] text-balance">{t.mobTitle}</h2>
+            <p className="mt-4 text-[#6B6A63] text-lg leading-relaxed">{t.mobDesc}</p>
+            <div className="mt-8 space-y-3">
+              {[
+                { bg: 'bg-[#1B6FB5]/10', stroke: '#1B6FB5', title: t.mobPush, desc: t.mobPushDesc },
+                { bg: 'bg-[#F5C518]/20', stroke: '#E8A30C', title: t.mobVoice, desc: t.mobVoiceDesc },
+                { bg: 'bg-[#C2461A]/15', stroke: '#C2461A', title: t.mobCam, desc: t.mobCamDesc },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-3">
+                  <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={item.stroke} strokeWidth="2.5">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="font-bold text-[#0B1E3D]">{item.title}</div>
+                    <div className="text-sm text-[#6B6A63]">{item.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="#" className="px-6 py-3.5 rounded-2xl bg-[#0B1E3D] text-white font-bold flex items-center gap-3 hover:brightness-125 transition">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                </svg>
+                <div className="text-left leading-tight">
+                  <div className="text-[10px] opacity-70">{t.mobDownload}</div>
+                  <div className="text-sm">App Store</div>
+                </div>
+              </a>
+              <a href="#" className="px-6 py-3.5 rounded-2xl bg-[#0B1E3D] text-white font-bold flex items-center gap-3 hover:brightness-125 transition">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3.609 1.814L13.792 12 3.61 22.186c-.272-.182-.452-.49-.452-.852V2.666c0-.362.18-.67.452-.852zm10.885 10.54l2.561 2.561-12.154 6.942 9.593-9.503zm3.658-3.658l2.475 1.415c.548.313.548 1.095 0 1.408l-2.475 1.415-2.82-2.62 2.82-2.62zM5.952 1.22l12.154 6.942-2.56 2.561L5.95 1.22z" />
+                </svg>
+                <div className="text-left leading-tight">
+                  <div className="text-[10px] opacity-70">{t.mobDownload}</div>
+                  <div className="text-sm">Google Play</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Phone mock */}
+          <div className="flex justify-center">
+            <div className="phone-frame">
+              <div className="phone-screen flex flex-col">
+                <div className="flex justify-between items-center px-6 pt-3 pb-1 text-[11px] font-bold text-[#0B1E3D]">
+                  <span>9:41</span>
+                  <div className="flex gap-1 items-center">
+                    <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor"><rect x="1" y="4" width="2" height="6" /><rect x="4" y="2" width="2" height="8" /><rect x="7" y="0" width="2" height="10" /></svg>
+                    <svg width="12" height="10" viewBox="0 0 12 10" fill="currentColor"><rect x="0" y="2" width="10" height="6" rx="1" /><rect x="11" y="4" width="1" height="2" /></svg>
+                  </div>
+                </div>
+                <div className="px-4 pt-2 pb-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center">
+                      <span className="text-white text-xs font-extrabold">Т</span>
+                    </div>
+                    <div className="font-extrabold text-sm text-[#0B1E3D]">Тіл-құрал</div>
+                  </div>
+                  <div className="w-8 h-8 rounded-lg bg-[#F3ECD8] flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4C81" strokeWidth="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" /></svg>
+                  </div>
+                </div>
+                <div className="mx-4 mb-3 rounded-2xl gradient-blue p-4 text-white relative overflow-hidden">
+                  <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10" />
+                  <div className="text-[10px] font-bold opacity-80 tracking-wider">{isKk ? 'КҮНДЕЛІКТІ МАҚСАТ' : 'ЦЕЛЬ ДНЯ'}</div>
+                  <div className="text-lg font-extrabold mt-1">25 / 50 XP</div>
+                  <div className="mt-2 h-2 rounded-full bg-white/20 overflow-hidden">
+                    <div className="h-full w-1/2 rounded-full bg-[#F5C518]" />
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-lg">🔥</span>
+                    <span className="text-xs font-bold">{isKk ? '7 күн қатарынан' : '7 дней подряд'}</span>
+                  </div>
+                </div>
+                <div className="flex-1 px-4 space-y-2 overflow-hidden">
+                  <div className="text-[10px] font-bold text-[#6B6A63] tracking-widest uppercase">{isKk ? 'Бүгінгі сабақ' : 'Урок дня'}</div>
+                  <div className="flex items-center gap-3 bg-white rounded-xl p-2.5 border border-[#F3ECD8]">
+                    <div className="w-10 h-10 rounded-lg bg-[#1B6FB5]/15 flex items-center justify-center text-lg">📖</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-[#0B1E3D] truncate">{isKk ? 'Жұрнақтар (-хана, -стан)' : 'Суффиксы (-хана, -стан)'}</div>
+                      <div className="text-[10px] text-[#6B6A63]">B1 · 15 {isKk ? 'мин' : 'мин'} · AI</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-[#C2461A]">{isKk ? 'БАСТАУ' : 'СТАРТ'}</div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white rounded-xl p-2.5 border border-[#F3ECD8]">
+                    <div className="w-10 h-10 rounded-lg bg-[#F5C518]/15 flex items-center justify-center text-lg">🎧</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-[#0B1E3D] truncate">{isKk ? 'Тыңдалым практикасы' : 'Практика аудирования'}</div>
+                      <div className="text-[10px] text-[#6B6A63]">B1 · 8 {isKk ? 'мин' : 'мин'}</div>
+                    </div>
+                    <div className="text-[10px] font-bold text-[#6B6A63]">{isKk ? 'СОҢЫН' : 'ПОТОМ'}</div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-white rounded-xl p-2.5 border border-[#F3ECD8]">
+                    <div className="w-10 h-10 rounded-lg bg-[#C2461A]/15 flex items-center justify-center text-lg">📸</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-[#0B1E3D] truncate">{isKk ? 'Фото тексеру' : 'Фото-проверка'}</div>
+                      <div className="text-[10px] text-[#6B6A63]">{isKk ? 'Қолжазбаны жүктеңіз' : 'Загрузите рукопись'}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-around items-center py-2 bg-white border-t border-[#F3ECD8]">
+                  <div className="flex flex-col items-center gap-0.5 text-[#0F4C81]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
+                    <span className="text-[9px] font-bold">{isKk ? 'Басты' : 'Дом'}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-[#6B6A63]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
+                    <span className="text-[9px] font-bold">{isKk ? 'Оқу' : 'Учить'}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-[#6B6A63]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3 5-5" /><circle cx="12" cy="12" r="10" /></svg>
+                    <span className="text-[9px] font-bold">{isKk ? 'Тест' : 'Тест'}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-[#6B6A63]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M9 10l6 4-6 4z" fill="currentColor" /></svg>
+                    <span className="text-[9px] font-bold">{isKk ? 'Ойын' : 'Игра'}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-[#6B6A63]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-7 8-7s8 3 8 7" /></svg>
+                    <span className="text-[9px] font-bold">{isKk ? 'Мен' : 'Я'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ ORNAMENT DIVIDER ═══════════════ */}
+      <div className="bg-[#FAF6EC] py-8 relative">
+        <div className="max-w-5xl mx-auto px-6 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#E8A30C]/40 to-[#E8A30C]/60" />
+          <Image
+            src="/outputs/img/ornament.webp"
+            alt={isKk ? 'Қошқар мүйіз орнаменті' : 'Орнамент «қошқар мүйіз»'}
+            width={200}
+            height={40}
+            className="h-10 w-auto object-contain opacity-80"
+          />
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[#E8A30C]/40 to-[#E8A30C]/60" />
+        </div>
+      </div>
+
+      {/* ═══════════════ CTA FINAL ═══════════════ */}
+      <section className="py-24 bg-[#0B1E3D] relative overflow-hidden">
+        <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="#F5C518" strokeWidth="1.5">
+            <circle cx="150" cy="100" r="60" />
+            <circle cx="150" cy="100" r="40" />
+            <circle cx="150" cy="100" r="20" />
+            <path d="M80 100 Q 150 20 220 100 Q 150 180 80 100 Z" />
+            <circle cx="1050" cy="500" r="80" />
+            <circle cx="1050" cy="500" r="50" />
+            <path d="M970 500 Q 1050 400 1130 500 Q 1050 600 970 500 Z" />
+            <path d="M600 50 Q 620 80 600 110 Q 580 80 600 50 Z M600 490 Q 620 520 600 550 Q 580 520 600 490 Z" />
+          </g>
+        </svg>
+
+        <div className="absolute top-12 right-24 w-40 h-40 rounded-full sun-rays opacity-20 blur-xl" />
+
+        <div className="max-w-4xl mx-auto px-6 text-center relative">
+          <div className="inline-flex items-center gap-2 bg-[#F5C518]/20 text-[#F5C518] px-3 py-1.5 rounded-full text-xs font-bold tracking-wide">
+            {t.ctaBadge}
+          </div>
+          <h2 className="mt-6 text-5xl lg:text-6xl font-extrabold text-white text-balance leading-[1.05]">
+            {t.ctaTitlePre}{' '}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#F5C518] to-[#C2461A]">{t.ctaTitleAccent}</span>
           </h2>
-          <p className="text-teal-200 mb-8 text-lg">
-            {locale === 'kk'
-              ? 'Тегін тіркеліп, AI мұғалімімен қазақ тілін үйреніңіз'
-              : 'Зарегистрируйтесь бесплатно и изучайте казахский с AI учителем'}
-          </p>
-          <Link
-            href={`/${locale}/learn`}
-            className="inline-block bg-amber-500 hover:bg-amber-600 text-white px-10 py-4 rounded-xl font-medium text-lg transition-colors"
-          >
-            {m.hero.cta}
-          </Link>
+          <p className="mt-6 text-xl text-white/80 max-w-2xl mx-auto">{t.ctaDesc}</p>
+          <div className="mt-10 flex flex-wrap gap-4 justify-center">
+            <Link href={`/${locale}/learn`} className="px-8 py-4 rounded-2xl bg-[#C2461A] text-white font-extrabold shadow-[0_8px_32px_-4px_rgba(245,197,24,0.4)] hover:brightness-110 transition flex items-center gap-2 text-lg">
+              {t.ctaStart}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <Link href={`/${locale}/test/level`} className="px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition text-lg">
+              {t.ctaTest}
+            </Link>
+          </div>
+          <div className="mt-8 text-sm text-white/50 flex justify-center gap-6 flex-wrap">
+            <span>{t.ctaChk1}</span>
+            <span>{t.ctaChk2}</span>
+            <span>{t.ctaChk3}</span>
+          </div>
         </div>
       </section>
     </div>

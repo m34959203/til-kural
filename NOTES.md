@@ -149,6 +149,10 @@ Sampling `buildQuestions()` берёт стратифицированно: 4L/4R
 
 `src/data/lessons-meta.ts` — каталог из 10 уроков с `rule_ids[]`, маппинг на `kazakh-grammar-rules.json` (21 правило). Страница `/learn/lessons/[id]` показывает связанные правила с deep-link `/learn/basics#rule_XX`.
 
+## Adaptive recommender
+
+Глобальный движок слабых тем: `src/lib/adaptive-recommender.ts` (weakness_score = 100 − avg% + decay 1.5/день, новая тема = 55). Таблица `user_topic_stats` (sql/003_topic_stats.sql, уникальность по user_id+topic_slug) апсертится из `POST /api/test/evaluate` после JWT-аутентификации. `GET /api/recommend/next` отдаёт топ-3 слабых тем + `nextAction` с маппингом на `/learn/lessons/:id`, `/test/topics/:slug` или `/learn/basics#rule_XX`. UI — блок «Сізге ұсынамыз / Рекомендуем вам» на `/learn` (`src/components/features/RecommendedTopics.tsx`) перед AITeacher; незалогиненным показывается приглашение на тест уровня.
+
 ## История существенных изменений
 
 - **2026-04-19 (вторая сессия)** — КАЗТЕСТ 100-балльная шкала с секциями и разбором ошибок, банк вопросов 5 → 40, раздел `/learn/basics` (21 правило грамматики), каталог уроков с привязкой к правилам.
