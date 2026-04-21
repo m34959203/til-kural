@@ -60,25 +60,26 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Auth работает и через cookie `tk-token` (основной путь), и через
+      // Authorization: Bearer из localStorage (fallback для старых клиентов).
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (!token) {
-        if (!cancelled) setStatus('unauth');
-        // Fallback: /login не реализован — уводим на главную локали
-        setTimeout(() => {
-          if (!cancelled) router.replace(`/${locale}`);
-        }, 1200);
-        return;
-      }
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       try {
         const r = await fetch('/api/profile/stats', {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
+          credentials: 'include',
           cache: 'no-store',
         });
         if (r.status === 401) {
           if (!cancelled) setStatus('unauth');
+          // Редирект на страницу логина с next-параметром, чтобы после входа вернуться
           setTimeout(() => {
-            if (!cancelled) router.replace(`/${locale}`);
-          }, 1200);
+            if (!cancelled) {
+              router.replace(`/${locale}/login?next=/${locale}/profile`);
+            }
+          }, 800);
           return;
         }
         const json = (await r.json()) as Stats;
@@ -90,7 +91,8 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
         // Грамотность по фото за 30 дней (best-effort, не ломает профиль)
         try {
           const hr = await fetch('/api/photo-check/history?days=30', {
-            headers: { Authorization: `Bearer ${token}` },
+            headers,
+            credentials: 'include',
             cache: 'no-store',
           });
           if (hr.ok) {
@@ -118,16 +120,23 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
   }
 
   if (status === 'unauth' || !stats) {
+    const loginHref = `/${locale}/login?next=/${locale}/profile`;
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-3">
           {locale === 'kk' ? 'Кіру қажет' : 'Требуется вход'}
         </h1>
-        <p className="text-gray-500">
+        <p className="text-gray-500 mb-6">
           {locale === 'kk'
-            ? 'Профильді көру үшін жүйеге кіріңіз. Бас бетке бағытталудасыз...'
-            : 'Войдите, чтобы увидеть профиль. Перенаправление на главную...'}
+            ? 'Профильді көру үшін жүйеге кіріңіз.'
+            : 'Войдите, чтобы увидеть профиль.'}
         </p>
+        <a
+          href={loginHref}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-700 text-white font-semibold text-sm hover:bg-teal-800 transition"
+        >
+          {locale === 'kk' ? 'Жүйеге кіру →' : 'Войти →'}
+        </a>
       </div>
     );
   }
