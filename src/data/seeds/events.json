@@ -1,0 +1,62 @@
+[
+  {
+    "id": "00000000-0000-4000-8000-000000000801",
+    "title_kk": "Қазақ тілі апталығы",
+    "title_ru": "Неделя казахского языка",
+    "description_kk": "Қазақ тіліне арналған ашық сабақтар, концерт, байқаулар мен кездесулер апталығы.",
+    "description_ru": "Неделя открытых уроков, концертов, конкурсов и встреч, посвящённая казахскому языку.",
+    "image_url": "https://images.unsplash.com/photo-1496449903678-68ddcb189a24?w=1200&q=80",
+    "event_type": "festival",
+    "start_date": "2026-05-05T09:00:00.000Z",
+    "end_date": "2026-05-11T18:00:00.000Z",
+    "location": "Сатпаев қ., «Тіл-құрал» орталығы",
+    "registration_url": null,
+    "status": "upcoming",
+    "created_at": "2026-04-10T00:00:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000802",
+    "title_kk": "KAZTEST семинары",
+    "title_ru": "Семинар по KAZTEST",
+    "description_kk": "KAZTEST емтиханына дайындық: 5 секция, 100 балл, AI-ассистенттің көмегі.",
+    "description_ru": "Подготовка к KAZTEST: 5 секций, 100 баллов, помощь AI-ассистента.",
+    "image_url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80",
+    "event_type": "seminar",
+    "start_date": "2026-04-25T10:00:00.000Z",
+    "end_date": "2026-04-25T17:00:00.000Z",
+    "location": "Сатпаев қ., «Тіл-құрал» орталығы",
+    "registration_url": "https://til-kural.kz/ru/contact",
+    "status": "upcoming",
+    "created_at": "2026-04-01T00:00:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000803",
+    "title_kk": "Республикалық диктант",
+    "title_ru": "Республиканский диктант",
+    "description_kk": "Қазақ тілі бойынша жыл сайынғы ашық диктант. Тегін қатысу, сертификат.",
+    "description_ru": "Ежегодный открытый диктант по казахскому языку. Бесплатное участие, сертификат.",
+    "image_url": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
+    "event_type": "contest",
+    "start_date": "2026-05-22T12:00:00.000Z",
+    "end_date": "2026-05-22T14:00:00.000Z",
+    "location": "Сатпаев қ., «Тіл-құрал» орталығы",
+    "registration_url": null,
+    "status": "upcoming",
+    "created_at": "2026-04-15T00:00:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000804",
+    "title_kk": "Жазғы тіл лагері",
+    "title_ru": "Летний языковой лагерь",
+    "description_kk": "Балаларға арналған қазақ тілі интенсиві: ойын, шығармашылық, экскурсия.",
+    "description_ru": "Интенсив казахского языка для детей: игры, творчество, экскурсии.",
+    "image_url": "https://images.unsplash.com/photo-1526495124232-a04e1849168c?w=1200&q=80",
+    "event_type": "camp",
+    "start_date": "2026-06-15T09:00:00.000Z",
+    "end_date": "2026-06-28T16:00:00.000Z",
+    "location": "Сатпаев қ., «Тіл-құрал» орталығы",
+    "registration_url": "https://til-kural.kz/ru/contact",
+    "status": "upcoming",
+    "created_at": "2026-04-15T00:00:00.000Z"
+  }
+]

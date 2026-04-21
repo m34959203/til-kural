@@ -4,7 +4,7 @@ export default async function AdminTestsPage({ params }: { params: Promise<{ loc
   const { locale } = await params;
 
   const config: EntityCrudConfig = {
-    apiPath: '/api/admin/test-questions',
+    apiPath: '/api/tests',
     listKey: 'questions',
     itemKey: 'question',
     titleKk: 'Тест сұрақтарын басқару',

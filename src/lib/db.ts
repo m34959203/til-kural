@@ -271,8 +271,142 @@ function createDB(): DB {
   }
 }
 
-const globalForDB = globalThis as unknown as { __tilkural_db?: DB };
+const globalForDB = globalThis as unknown as {
+  __tilkural_db?: DB;
+  __tilkural_seeded?: Promise<void>;
+};
 export const db: DB = globalForDB.__tilkural_db || (dbInstance = createDB());
 if (process.env.NODE_ENV !== 'production' && !globalForDB.__tilkural_db) {
   globalForDB.__tilkural_db = dbInstance!;
+}
+
+/**
+ * Заливает стартовый контент в пустую in-memory БД (lessons, test_questions, news,
+ * events, banners, grammar_rules). В Postgres сиды заливаются через sql/006_content_seeds.sql,
+ * поэтому в PG-режиме функция — no-op.
+ *
+ * Защищена идемпотентностью: повторный вызов ничего не делает.
+ */
+export async function ensureSeeded(): Promise<void> {
+  if (db.isPostgres) return;
+  if (globalForDB.__tilkural_seeded) return globalForDB.__tilkural_seeded;
+
+  const runSeed = async () => {
+    try {
+      const counts = {
+        lessons: 0,
+        test_questions: 0,
+        news: 0,
+        events: 0,
+        banners: 0,
+        grammar_rules: 0,
+      };
+
+      if ((await db.count('lessons')) === 0) {
+        const { LESSONS } = await import('@/data/lessons-meta');
+        for (const l of LESSONS) {
+          await db.insert('lessons', {
+            id: l.id,
+            title_kk: l.title_kk,
+            title_ru: l.title_ru,
+            description_kk: l.description_kk,
+            description_ru: l.description_ru,
+            topic: l.topic,
+            difficulty: l.difficulty,
+            content: { rule_ids: l.rule_ids || [] },
+            mentor_track: l.mentor_track || null,
+            required_level: l.required_level || null,
+            sort_order: Number(l.id) || 0,
+          });
+          counts.lessons++;
+        }
+      }
+
+      if ((await db.count('test_questions')) === 0) {
+        const bank = (await import('@/data/test-questions-bank.json')).default as Array<Record<string, unknown>>;
+        for (const q of bank) {
+          await db.insert('test_questions', {
+            id: q.id,
+            test_type: q.test_type,
+            topic: q.topic,
+            difficulty: q.difficulty,
+            question_kk: q.question_kk,
+            question_ru: q.question_ru || null,
+            options: q.options || [],
+            correct_answer: q.correct_answer,
+            explanation_kk: q.explanation_kk || null,
+            explanation_ru: q.explanation_ru || null,
+          });
+          counts.test_questions++;
+        }
+      }
+
+      if ((await db.count('news')) === 0) {
+        const newsSeed = (await import('@/data/seeds/news.json')).default as Array<Record<string, unknown>>;
+        for (const n of newsSeed) {
+          await db.insert('news', n);
+          counts.news++;
+        }
+      }
+
+      if ((await db.count('events')) === 0) {
+        const eventsSeed = (await import('@/data/seeds/events.json')).default as Array<Record<string, unknown>>;
+        for (const e of eventsSeed) {
+          await db.insert('events', e);
+          counts.events++;
+        }
+      }
+
+      if ((await db.count('banners')) === 0) {
+        const bannersSeed = (await import('@/data/seeds/banners.json')).default as Array<Record<string, unknown>>;
+        for (const b of bannersSeed) {
+          await db.insert('banners', b);
+          counts.banners++;
+        }
+      }
+
+      if ((await db.count('grammar_rules')) === 0) {
+        const rulesSeed = (await import('@/data/seeds/grammar-rules.json')).default as Array<Record<string, unknown>>;
+        let order = 0;
+        for (const r of rulesSeed) {
+          order += 10;
+          await db.insert('grammar_rules', {
+            id: r.id,
+            topic: r.topic,
+            title_kk: r.title_kk,
+            title_ru: r.title_ru,
+            level: r.level || 'A1',
+            description_kk: r.description_kk || null,
+            description_ru: r.description_ru || null,
+            examples: r.examples || [],
+            exceptions: r.exceptions || [],
+            rule_order: order,
+          });
+          counts.grammar_rules++;
+        }
+      }
+
+      const parts = Object.entries(counts)
+        .filter(([, n]) => n > 0)
+        .map(([k, n]) => `${k}=${n}`)
+        .join(' ');
+      if (parts) {
+        console.log(`[db] seeded ${parts}`);
+      } else {
+        console.log('[db] seeded (already populated)');
+      }
+    } catch (err) {
+      console.error('[db] ensureSeeded failed:', err);
+    }
+  };
+
+  globalForDB.__tilkural_seeded = runSeed();
+  return globalForDB.__tilkural_seeded;
+}
+
+// Для in-memory режима запускаем сиды сразу при первом импорте модуля,
+// чтобы публичные страницы и API видели контент без ручного «прогрева».
+if (!db.isPostgres) {
+  // Не блокируем экспорт — промис кэшируется в globalForDB.__tilkural_seeded.
+  void ensureSeeded();
 }
