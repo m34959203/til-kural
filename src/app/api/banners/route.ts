@@ -1,15 +1,42 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError } from '@/lib/api';
+import { requireAdminApi, apiError, parsePagination, paginationMeta } from '@/lib/api';
 import { BannersSchema, validateBody } from '@/lib/validators';
+
+const BANNERS_SEARCH_COLS = ['title', 'subtitle_kk', 'subtitle_ru'];
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const position = searchParams.get('position') || undefined;
+  const { page, limit, offset, search, paginated } = parsePagination(searchParams);
+
   const filter: Record<string, unknown> = {};
   if (position) filter.position = position;
-  if (searchParams.get('active')) filter.is_active = true;
-  const rows = await db.query('banners', filter, { orderBy: 'sort_order', order: 'asc' });
-  return Response.json({ banners: rows });
+  // `is_active`: префер явный параметр (?is_active=true|false). Старый `?active=1`
+  // оставляем для обратной совместимости — он выставляет is_active=true.
+  const isActiveParam = searchParams.get('is_active');
+  if (isActiveParam !== null) {
+    filter.is_active = isActiveParam === 'true' || isActiveParam === '1';
+  } else if (searchParams.get('active')) {
+    filter.is_active = true;
+  }
+  const filterOrUndef = Object.keys(filter).length ? filter : undefined;
+
+  const rows = await db.queryWithSearch(
+    'banners',
+    filterOrUndef,
+    BANNERS_SEARCH_COLS,
+    search,
+    paginated
+      ? { orderBy: 'sort_order', order: 'asc', limit, offset }
+      : { orderBy: 'sort_order', order: 'asc' },
+  );
+
+  if (!paginated) {
+    return Response.json({ banners: rows });
+  }
+
+  const total = await db.countWhere('banners', filterOrUndef, BANNERS_SEARCH_COLS, search);
+  return Response.json({ banners: rows, ...paginationMeta(total, page, limit) });
 }
 
 export async function POST(request: Request) {

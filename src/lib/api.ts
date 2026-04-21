@@ -32,3 +32,53 @@ export function slugify(input: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 80) || `item-${Date.now()}`;
 }
+
+/**
+ * Разбор серверной пагинации/поиска из URLSearchParams.
+ *
+ * Семантика (совпадает с паттерном smart-library-cbs):
+ *   - `page`  — 1-based. `page < 1` → 1.
+ *   - `limit` — 1..200 (если >200 — урезаем до 200). По умолчанию 50.
+ *   - `search` — строка, trim. Пустая/отсутствует → undefined.
+ *   - `paginated` — true, если в URL явно передан `page` или `limit` (тогда в ответ нужна pagination-meta).
+ */
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  offset: number;
+  search?: string;
+  paginated: boolean;
+}
+
+export function parsePagination(searchParams: URLSearchParams, defaultLimit = 50): PaginationParams {
+  const hasPage = searchParams.has('page');
+  const hasLimit = searchParams.has('limit');
+  const hasSearch = searchParams.has('search');
+
+  let page = Number(searchParams.get('page') || 1);
+  if (!Number.isFinite(page) || page < 1) page = 1;
+
+  let limit = Number(searchParams.get('limit') || defaultLimit);
+  if (!Number.isFinite(limit) || limit < 1) limit = defaultLimit;
+  if (limit > 200) limit = 200;
+
+  const searchRaw = searchParams.get('search');
+  const search = searchRaw && searchRaw.trim() ? searchRaw.trim() : undefined;
+
+  return {
+    page,
+    limit,
+    offset: (page - 1) * limit,
+    search,
+    paginated: hasPage || hasLimit || hasSearch,
+  };
+}
+
+export function paginationMeta(total: number, page: number, limit: number) {
+  return {
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
+}

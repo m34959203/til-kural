@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ZodType } from 'zod';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -69,34 +69,95 @@ export default function EntityCrudTable({ locale, config }: Props) {
   // Эффективная схема: автолукап по apiPath из общего SCHEMAS-мапа.
   const schema: ZodType | undefined = SCHEMAS[config.apiPath];
 
-  // UX: search / sort / paginate (client-side)
-  const [query, setQuery] = useState('');
+  // UX: search / sort / paginate.
+  // Режим server-mode включается автоматически: если первый ответ API вернул
+  // `total`/`totalPages` — мы переключаемся на серверный поиск/пагинацию и
+  // шлём page/limit/search как query-параметры. Иначе всё считается на клиенте.
+  const [query, setQuery] = useState('');           // то, что пользователь печатает (сразу)
+  const [debouncedQuery, setDebouncedQuery] = useState(''); // фактический поиск (300ms debounce)
   const [sort, setSort] = useState<SortState>(null);
   const [pageSize, setPageSize] = useState<number>(25);
   const [page, setPage] = useState(1); // 1-based
+  const [serverMode, setServerMode] = useState(false);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
 
-  const reload = async () => {
+  // Debounce поиска: 300мс. Пока пользователь печатает, сетевой запрос не уходит.
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(id);
+  }, [query]);
+
+  // Снимок page/pageSize/debouncedQuery для стабильной зависимости в reload().
+  const reqParams = useMemo(() => ({
+    page,
+    limit: pageSize,
+    search: debouncedQuery.trim(),
+  }), [page, pageSize, debouncedQuery]);
+
+  const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(config.apiPath);
+      // Строим URL: в server-режиме кладём page/limit/search в query-string.
+      // В первый заход server-режим ещё не известен — шлём параметры всегда,
+      // роуты бэкенда умеют их игнорировать (через `paginated` флаг).
+      const url = new URL(config.apiPath, typeof window === 'undefined' ? 'http://local' : window.location.origin);
+      url.searchParams.set('page', String(reqParams.page));
+      url.searchParams.set('limit', String(reqParams.limit));
+      if (reqParams.search) url.searchParams.set('search', reqParams.search);
+
+      const res = await fetch(url.pathname + url.search);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setRows((data[config.listKey] || []) as Row[]);
+
+      // Автоопределение server-mode по наличию total/totalPages в ответе.
+      if (typeof data.total === 'number' && typeof data.totalPages === 'number') {
+        setServerMode(true);
+        setServerTotal(data.total);
+        setServerTotalPages(Math.max(1, data.totalPages));
+      } else {
+        setServerMode(false);
+      }
     } catch (e) {
       console.error(e);
       setError(String(e));
     } finally {
       setLoading(false);
     }
-  };
+  }, [config.apiPath, config.listKey, reqParams]);
 
-  useEffect(() => { reload(); }, [config.apiPath]);
+  useEffect(() => { reload(); }, [reload]);
 
-  // Reset to first page whenever filter/sort/page-size changes
-  useEffect(() => { setPage(1); }, [query, sort, pageSize, rows.length]);
+  // Reset to first page whenever client-side filter/sort/page-size changes.
+  // В server-mode page-size тоже должен сбрасывать page (через reqParams пойдёт fetch).
+  const prevServerMode = useRef(serverMode);
+  useEffect(() => {
+    // В server-mode debouncedQuery/pageSize уже триггерят fetch через reqParams;
+    // нам нужно только сбросить page в 1 при смене фильтра.
+    if (serverMode) {
+      // page сбрасываем только когда изменился именно фильтр, не сам page.
+      // (если сам page меняется — оставляем).
+      setPage(1);
+      return;
+    }
+    // Клиентский режим: классический сброс.
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery, pageSize]);
 
+  // При переключении серверного режима (редкий кейс) — тоже сбрасываем страницу.
+  useEffect(() => {
+    if (prevServerMode.current !== serverMode) {
+      prevServerMode.current = serverMode;
+      setPage(1);
+    }
+  }, [serverMode]);
+
+  // --- Клиентский фильтр + сортировка + пагинация (только для !serverMode) ---
   const filteredRows = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    if (serverMode) return rows; // в серверном режиме search уже применён на бэке
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((row) => {
       for (const col of config.columns) {
@@ -105,9 +166,12 @@ export default function EntityCrudTable({ locale, config }: Props) {
       }
       return false;
     });
-  }, [rows, query, config.columns]);
+  }, [rows, debouncedQuery, config.columns, serverMode]);
 
   const sortedRows = useMemo(() => {
+    // В server-mode сортировку делаем тоже клиентскую, но только НАД загруженной
+    // страницей — это даёт быстрый визуальный отклик, хотя по-настоящему сортирует
+    // бэкенд (orderBy). TODO: вынести sort как query-param, если понадобится.
     if (!sort) return filteredRows;
     const { field, dir } = sort;
     const sign = dir === 'asc' ? 1 : -1;
@@ -128,12 +192,21 @@ export default function EntityCrudTable({ locale, config }: Props) {
     return copy;
   }, [filteredRows, sort]);
 
-  const total = sortedRows.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  // Итоговые числа для отображения и пагинации.
+  const total = serverMode ? serverTotal : sortedRows.length;
+  const totalPages = serverMode
+    ? serverTotalPages
+    : Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
-  const startIdx = (safePage - 1) * pageSize;
-  const endIdx = Math.min(startIdx + pageSize, total);
-  const pageRows = sortedRows.slice(startIdx, endIdx);
+  // В server-mode текущая страница — это вся полученная выборка (бэкенд уже
+  // порезал). В клиентском режиме — локальный slice.
+  const startIdx = serverMode
+    ? (total === 0 ? 0 : (safePage - 1) * pageSize)
+    : (safePage - 1) * pageSize;
+  const endIdx = serverMode
+    ? Math.min(startIdx + sortedRows.length, total)
+    : Math.min(startIdx + pageSize, total);
+  const pageRows = serverMode ? sortedRows : sortedRows.slice(startIdx, endIdx);
 
   const toggleSort = (field: string) => {
     setSort((prev) => {
@@ -272,12 +345,18 @@ export default function EntityCrudTable({ locale, config }: Props) {
 
         {loading ? (
           <div className="text-center py-8 text-gray-400">{isKk ? 'Жүктелуде…' : 'Загрузка…'}</div>
-        ) : rows.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">{isKk ? 'Жазбалар жоқ' : 'Записей нет'}</div>
         ) : total === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            {isKk ? 'Сәйкестік табылмады' : 'Ничего не найдено'}
-          </div>
+          // Пусто: в server-mode total=0 значит ровно "ничего нет/не найдено".
+          // В клиентском режиме различаем "совсем пусто" и "не найдено по поиску".
+          !serverMode && rows.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">{isKk ? 'Жазбалар жоқ' : 'Записей нет'}</div>
+          ) : !debouncedQuery.trim() ? (
+            <div className="text-center py-8 text-gray-400">{isKk ? 'Жазбалар жоқ' : 'Записей нет'}</div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              {isKk ? 'Сәйкестік табылмады' : 'Ничего не найдено'}
+            </div>
+          )
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

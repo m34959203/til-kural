@@ -1,17 +1,40 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError } from '@/lib/api';
+import {
+  requireAdminApi,
+  apiError,
+  parsePagination,
+  paginationMeta,
+} from '@/lib/api';
 import { StaffSchema, validateBody } from '@/lib/validators';
+
+const STAFF_SEARCH_COLS = ['name_kk', 'name_ru', 'position_kk', 'position_ru', 'email'];
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const departmentId = searchParams.get('department_id') || undefined;
+  const { page, limit, offset, search, paginated } = parsePagination(searchParams);
+
+  const filter: Record<string, unknown> = {};
+  if (departmentId) filter.department_id = departmentId;
+  const filterOrUndef = Object.keys(filter).length ? filter : undefined;
+
   try {
-    const rows = await db.query(
+    const rows = await db.queryWithSearch(
       'staff',
-      departmentId ? { department_id: departmentId } : undefined,
-      { orderBy: 'sort_order', order: 'asc' },
+      filterOrUndef,
+      STAFF_SEARCH_COLS,
+      search,
+      paginated
+        ? { orderBy: 'sort_order', order: 'asc', limit, offset }
+        : { orderBy: 'sort_order', order: 'asc' },
     );
-    return Response.json({ staff: rows });
+
+    if (!paginated) {
+      return Response.json({ staff: rows });
+    }
+
+    const total = await db.countWhere('staff', filterOrUndef, STAFF_SEARCH_COLS, search);
+    return Response.json({ staff: rows, ...paginationMeta(total, page, limit) });
   } catch (err) {
     return apiError(500, 'Failed to load staff', String(err));
   }

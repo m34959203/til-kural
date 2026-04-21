@@ -18,6 +18,27 @@ interface DB {
   update(table: string, id: string, data: Partial<DBRow>): Promise<DBRow | null>;
   delete(table: string, id: string): Promise<boolean>;
   count(table: string, filter?: Record<string, any>): Promise<number>;
+  /**
+   * Подсчёт строк с учётом equality-фильтра + ILIKE-поиска по нескольким колонкам.
+   * Используется вместе с `queryWithSearch` для серверной пагинации.
+   */
+  countWhere(
+    table: string,
+    filter?: Record<string, any>,
+    searchCols?: string[],
+    searchQuery?: string,
+  ): Promise<number>;
+  /**
+   * SELECT с equality-фильтром + ILIKE-поиском по нескольким колонкам (case-insensitive).
+   * Для in-memory режима: includes без учёта регистра.
+   */
+  queryWithSearch(
+    table: string,
+    filter: Record<string, any> | undefined,
+    searchCols: string[] | undefined,
+    searchQuery: string | undefined,
+    opts?: QueryOptions,
+  ): Promise<DBRow[]>;
   raw<T = any>(sql: string, params?: any[]): Promise<T[]>;
   isPostgres: boolean;
 }
@@ -171,6 +192,46 @@ class InMemoryDB implements DB {
     return (await this.query(table, filter)).length;
   }
 
+  private applySearch(rows: DBRow[], searchCols?: string[], searchQuery?: string): DBRow[] {
+    const q = searchQuery?.trim().toLowerCase();
+    if (!q || !searchCols || searchCols.length === 0) return rows;
+    return rows.filter((r) =>
+      searchCols.some((c) => {
+        const v = r[c];
+        return typeof v === 'string' && v.toLowerCase().includes(q);
+      }),
+    );
+  }
+
+  async countWhere(
+    table: string,
+    filter?: Record<string, any>,
+    searchCols?: string[],
+    searchQuery?: string,
+  ) {
+    const rows = await this.query(table, filter);
+    return this.applySearch(rows, searchCols, searchQuery).length;
+  }
+
+  async queryWithSearch(
+    table: string,
+    filter: Record<string, any> | undefined,
+    searchCols: string[] | undefined,
+    searchQuery: string | undefined,
+    opts?: QueryOptions,
+  ) {
+    // Сначала фильтр + сортировка (без limit/offset), потом search, потом пагинация —
+    // чтобы total/offset считались по отфильтрованному множеству.
+    let rows = await this.query(table, filter, {
+      orderBy: opts?.orderBy,
+      order: opts?.order,
+    });
+    rows = this.applySearch(rows, searchCols, searchQuery);
+    if (opts?.offset) rows = rows.slice(opts.offset);
+    if (opts?.limit) rows = rows.slice(0, opts.limit);
+    return rows;
+  }
+
   async raw<T = any>(): Promise<T[]> {
     return [];
   }
@@ -238,6 +299,58 @@ class PostgresDB implements DB {
     const { clause, values } = this.buildWhere(filter);
     const res = await this.pool.query(`SELECT COUNT(*)::int AS c FROM "${table}"${clause}`, values);
     return res.rows[0]?.c ?? 0;
+  }
+
+  /**
+   * Собирает WHERE с equality-фильтром и опциональным ILIKE по нескольким колонкам.
+   * ILIKE-часть оборачивается в скобки: `(col1 ILIKE $N OR col2 ILIKE $N ...)`.
+   * Один и тот же параметр `%search%` переиспользуется для всех колонок.
+   */
+  private buildWhereWithSearch(
+    filter?: Record<string, any>,
+    searchCols?: string[],
+    searchQuery?: string,
+  ) {
+    const base = this.buildWhere(filter);
+    const q = searchQuery?.trim();
+    if (!q || !searchCols || searchCols.length === 0) return base;
+    const nextIdx = base.values.length + 1;
+    const likeValue = `%${q}%`;
+    const likeClauses = searchCols.map((c) => `"${c}" ILIKE $${nextIdx}`).join(' OR ');
+    const clause = base.clause
+      ? `${base.clause} AND (${likeClauses})`
+      : ` WHERE (${likeClauses})`;
+    return { clause, values: [...base.values, likeValue] };
+  }
+
+  async countWhere(
+    table: string,
+    filter?: Record<string, any>,
+    searchCols?: string[],
+    searchQuery?: string,
+  ) {
+    const { clause, values } = this.buildWhereWithSearch(filter, searchCols, searchQuery);
+    const res = await this.pool.query(
+      `SELECT COUNT(*)::int AS c FROM "${table}"${clause}`,
+      values,
+    );
+    return res.rows[0]?.c ?? 0;
+  }
+
+  async queryWithSearch(
+    table: string,
+    filter: Record<string, any> | undefined,
+    searchCols: string[] | undefined,
+    searchQuery: string | undefined,
+    opts?: QueryOptions,
+  ) {
+    const { clause, values } = this.buildWhereWithSearch(filter, searchCols, searchQuery);
+    let sql = `SELECT * FROM "${table}"${clause}`;
+    if (opts?.orderBy) sql += ` ORDER BY "${opts.orderBy}" ${opts.order === 'desc' ? 'DESC' : 'ASC'}`;
+    if (opts?.limit) sql += ` LIMIT ${Number(opts.limit)}`;
+    if (opts?.offset) sql += ` OFFSET ${Number(opts.offset)}`;
+    const res: QueryResult = await this.pool.query(sql, values);
+    return res.rows;
   }
 
   async raw<T = any>(sql: string, params: any[] = []): Promise<T[]> {

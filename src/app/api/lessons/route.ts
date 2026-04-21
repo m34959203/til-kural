@@ -1,16 +1,36 @@
 import { db } from '@/lib/db';
-import { requireAdminApi } from '@/lib/api';
+import { requireAdminApi, parsePagination, paginationMeta } from '@/lib/api';
 import { LessonsSchema, validateBody } from '@/lib/validators';
+
+const LESSONS_SEARCH_COLS = ['title_kk', 'title_ru', 'topic'];
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const topic = searchParams.get('topic') || undefined;
   const difficulty = searchParams.get('difficulty') || undefined;
+  const { page, limit, offset, search, paginated } = parsePagination(searchParams);
+
   const filter: Record<string, unknown> = {};
   if (topic) filter.topic = topic;
   if (difficulty) filter.difficulty = difficulty;
-  const rows = await db.query('lessons', filter, { orderBy: 'sort_order', order: 'asc' });
-  return Response.json({ lessons: rows });
+  const filterOrUndef = Object.keys(filter).length ? filter : undefined;
+
+  const rows = await db.queryWithSearch(
+    'lessons',
+    filterOrUndef,
+    LESSONS_SEARCH_COLS,
+    search,
+    paginated
+      ? { orderBy: 'sort_order', order: 'asc', limit, offset }
+      : { orderBy: 'sort_order', order: 'asc' },
+  );
+
+  if (!paginated) {
+    return Response.json({ lessons: rows });
+  }
+
+  const total = await db.countWhere('lessons', filterOrUndef, LESSONS_SEARCH_COLS, search);
+  return Response.json({ lessons: rows, ...paginationMeta(total, page, limit) });
 }
 
 export async function POST(request: Request) {

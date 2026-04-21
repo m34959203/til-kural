@@ -1,14 +1,22 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError } from '@/lib/api';
+import {
+  requireAdminApi,
+  apiError,
+  parsePagination,
+  paginationMeta,
+} from '@/lib/api';
 import { TestQuestionsSchema, validateBody } from '@/lib/validators';
 
 /**
  * CRUD для банка тестовых вопросов (таблица test_questions).
  *
  * GET — публичный список (используется админ-CRUD и возможным read-only UI).
- *       Фильтры: ?test_type=level&difficulty=A1&topic=grammar&limit=500
+ *       Фильтры: ?test_type=level&difficulty=A1&topic=grammar
+ *       Пагинация: ?page=1&limit=25&search=...
  * POST — только admin/editor/moderator; создаёт вопрос.
  */
+
+const TESTS_SEARCH_COLS = ['question_kk', 'question_ru', 'topic'];
 
 function normalizeOptions(raw: unknown): unknown[] {
   if (Array.isArray(raw)) return raw;
@@ -31,20 +39,36 @@ export async function GET(request: Request) {
   const test_type = searchParams.get('test_type') || undefined;
   const topic = searchParams.get('topic') || undefined;
   const difficulty = searchParams.get('difficulty') || undefined;
-  const limit = Number(searchParams.get('limit') || 500);
+  // Дефолт-лимит для tests был исторически 500 (бэкенд KAZTEST/level-test
+  // ожидает большую пачку). Сохраняем поведение, когда клиент не передал page/limit.
+  const { page, limit, offset, search, paginated } = parsePagination(searchParams, 500);
 
   const filter: Record<string, unknown> = {};
   if (test_type) filter.test_type = test_type;
   if (topic) filter.topic = topic;
   if (difficulty) filter.difficulty = difficulty;
+  const filterOrUndef = Object.keys(filter).length ? filter : undefined;
 
   try {
-    const rows = await db.query('test_questions', filter, {
-      orderBy: 'topic',
-      order: 'asc',
-      limit,
-    });
-    return Response.json({ questions: rows });
+    const rows = await db.queryWithSearch(
+      'test_questions',
+      filterOrUndef,
+      TESTS_SEARCH_COLS,
+      search,
+      { orderBy: 'topic', order: 'asc', limit, offset },
+    );
+
+    if (!paginated) {
+      return Response.json({ questions: rows });
+    }
+
+    const total = await db.countWhere(
+      'test_questions',
+      filterOrUndef,
+      TESTS_SEARCH_COLS,
+      search,
+    );
+    return Response.json({ questions: rows, ...paginationMeta(total, page, limit) });
   } catch (err) {
     return apiError(500, 'Failed to load test questions', String(err));
   }
