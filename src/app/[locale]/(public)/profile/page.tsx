@@ -11,6 +11,7 @@ import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import LevelBadge from '@/components/ui/LevelBadge';
 import MentorAvatar from '@/components/features/MentorAvatar';
+import MentorTrack from '@/components/features/MentorTrack';
 
 interface Stats {
   user: {
@@ -234,6 +235,14 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
           </div>
         )}
       </Card>
+
+      {/* 🪶 Учебный путь от наставника */}
+      <MentorTrack
+        mentor={user.mentor_avatar}
+        currentLevel={totals.language_level}
+        completedLessonIds={[]}
+        locale={locale}
+      />
     </div>
   );
 }
