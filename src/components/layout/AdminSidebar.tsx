@@ -47,6 +47,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
         { href: `/${locale}/admin/departments`, label_kk: 'Бөлімдер', label_ru: 'Отделы', icon: '🏢' },
         { href: `/${locale}/admin/staff`, label_kk: 'Қызметкерлер', label_ru: 'Сотрудники', icon: '👔' },
         { href: `/${locale}/admin/rules`, label_kk: 'Ереже құжаттары', label_ru: 'Правила-документы', icon: '📜' },
+        { href: `/${locale}/admin/history`, label_kk: 'Орталық тарихы', label_ru: 'История центра', icon: '📖' },
       ],
     },
     {

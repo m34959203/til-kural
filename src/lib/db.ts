@@ -82,6 +82,41 @@ class InMemoryDB implements DB {
       },
     ],
     rules_documents: [],
+    history_blocks: [
+      {
+        id: '00000000-0000-4000-8000-000000000501',
+        year: '2024',
+        title_kk: 'Орталықтың негізі қаланды',
+        title_ru: 'Основание центра',
+        description_kk: 'КМҚК "Тіл-құрал" оқу-әдістемелік орталығы Сәтбаев қаласында ашылды.',
+        description_ru: 'В городе Сатпаев открыт КГУ «Учебно-методический центр „Тіл-құрал“».',
+        image_url: null,
+        sort_order: 10,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000502',
+        year: '2025',
+        title_kk: 'KAZTEST дайындық бағдарламасы',
+        title_ru: 'Запуск программы подготовки к KAZTEST',
+        description_kk: 'Қазақ тілі бойынша KAZTEST емтиханына толыққанды дайындық.',
+        description_ru: 'Полноценная подготовка к государственному экзамену KAZTEST.',
+        image_url: null,
+        sort_order: 20,
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000503',
+        year: '2026',
+        title_kk: 'AI-бағыты ашылды',
+        title_ru: 'Открытие AI-направления',
+        description_kk: 'Gemini негізіндегі AI-тәлімгер, фото-тексеру және диалог-жаттықтырушы іске қосылды.',
+        description_ru: 'Запущены AI-наставник, фото-проверка и диалог-тренажёр на базе Gemini.',
+        image_url: null,
+        sort_order: 30,
+        created_at: new Date().toISOString(),
+      },
+    ],
   };
 
   async query(table: string, filter?: Record<string, any>, opts?: QueryOptions) {

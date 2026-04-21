@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import LevelBadge from '@/components/ui/LevelBadge';
+import ShareButton from '@/components/features/ShareButton';
 
 interface CertificateViewProps {
   locale: string;
@@ -96,11 +97,30 @@ export default function CertificateView({ locale, certificateId }: CertificateVi
         </div>
       </div>
 
-      <Button size="lg" onClick={handleDownload} disabled={downloading}>
-        {downloading
-          ? locale === 'kk' ? 'Жүктелуде…' : 'Загрузка…'
-          : `📥 ${locale === 'kk' ? 'PDF жүктеу' : 'Скачать PDF'}`}
-      </Button>
+      <div className="flex flex-wrap gap-3 justify-center">
+        <Button size="lg" onClick={handleDownload} disabled={downloading}>
+          {downloading
+            ? locale === 'kk' ? 'Жүктелуде…' : 'Загрузка…'
+            : `📥 ${locale === 'kk' ? 'PDF жүктеу' : 'Скачать PDF'}`}
+        </Button>
+        <ShareButton
+          size="lg"
+          variant="outline"
+          locale={locale}
+          url={typeof window !== 'undefined' ? window.location.href : ''}
+          title={
+            locale === 'kk'
+              ? `Тіл-құрал сертификаты — ${level}`
+              : `Сертификат Тіл-құрал — ${level}`
+          }
+          text={
+            locale === 'kk'
+              ? `${userName || 'Student'} қазақ тілі бойынша ${level} деңгейіне жетті (${score}%).`
+              : `${userName || 'Student'} получил(а) сертификат казахского языка уровня ${level} (${score}%).`
+          }
+          image={`/api/og/certificate?name=${encodeURIComponent(userName || 'Student')}&level=${encodeURIComponent(level)}&score=${score}&locale=${locale}`}
+        />
+      </div>
     </Card>
   );
 }

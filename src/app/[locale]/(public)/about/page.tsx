@@ -1,6 +1,7 @@
 import Card from '@/components/ui/Card';
 import { db } from '@/lib/db';
 import { getSettings } from '@/lib/settings';
+import { HISTORY_TABLE, sortBlocks, HistoryBlock } from '@/lib/history-blocks';
 
 interface Department {
   id: string;
@@ -32,14 +33,16 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const { locale } = await params;
   const isKk = locale === 'kk';
 
-  const [departmentsRaw, staffRaw, settings] = await Promise.all([
+  const [departmentsRaw, staffRaw, historyRaw, settings] = await Promise.all([
     db.query('departments', undefined, { orderBy: 'sort_order', order: 'asc' }).catch(() => []),
     db.query('staff', undefined, { orderBy: 'sort_order', order: 'asc' }).catch(() => []),
+    db.query(HISTORY_TABLE, undefined, { orderBy: 'sort_order', order: 'asc' }).catch(() => []),
     getSettings(),
   ]);
 
   const departments = departmentsRaw as Department[];
   const staff = staffRaw as Staff[];
+  const history = sortBlocks(historyRaw as HistoryBlock[]);
 
   const orgJsonLd = {
     '@context': 'https://schema.org',
@@ -70,7 +73,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
       />
 
-      {/* Hero / История */}
+      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 via-teal-800 to-emerald-900 text-white mb-10">
         <div className="relative z-10 px-6 sm:px-10 py-12 sm:py-16">
           <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-teal-100/80 mb-4">
@@ -83,18 +86,71 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               : 'Центр развития языков города Сатпаев'}
           </h1>
           <p className="mt-5 text-teal-50/90 max-w-3xl text-base sm:text-lg leading-relaxed">
-            {isKk
-              ? settings.org_full_name_kk
-              : settings.org_full_name_ru}
+            {isKk ? settings.org_full_name_kk : settings.org_full_name_ru}
           </p>
-          <div className="mt-6 text-sm text-teal-100/70 italic max-w-3xl">
-            {isKk
-              ? 'Орталықтың тарихы толықтырылуда. Бұл блокты редакторлар CMS арқылы толтырады.'
-              : 'История центра наполняется. Этот блок редакторы смогут заполнить через CMS.'}
-          </div>
         </div>
         <div className="absolute -right-20 -bottom-20 h-72 w-72 rounded-full bg-teal-400/20 blur-3xl" />
         <div className="absolute -left-10 -top-10 h-52 w-52 rounded-full bg-emerald-400/10 blur-3xl" />
+      </section>
+
+      {/* История центра (CMS) */}
+      <section className="mb-12">
+        <div className="flex items-end justify-between mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {isKk ? 'Орталық тарихы' : 'История центра'}
+          </h2>
+          {history.length > 0 && (
+            <p className="text-sm text-gray-500">
+              {isKk ? `Кезеңдер: ${history.length}` : `Этапов: ${history.length}`}
+            </p>
+          )}
+        </div>
+        {history.length === 0 ? (
+          <Card>
+            <p className="text-gray-600 italic">
+              {isKk
+                ? 'Орталықтың тарихы толықтырылуда. Бұл блокты редакторлар CMS арқылы толтырады.'
+                : 'История центра наполняется. Этот блок редакторы смогут заполнить через CMS.'}
+            </p>
+          </Card>
+        ) : (
+          <ol className="relative border-l-2 border-teal-200 ml-3 space-y-6">
+            {history.map((h) => {
+              const title = isKk ? h.title_kk : h.title_ru;
+              const description = isKk ? h.description_kk : h.description_ru;
+              return (
+                <li key={h.id} className="pl-6 relative">
+                  <span className="absolute -left-[11px] top-1 h-5 w-5 rounded-full bg-teal-600 border-4 border-white shadow" />
+                  <Card hover className="flex flex-col sm:flex-row gap-4">
+                    {h.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={h.image_url}
+                        alt={title}
+                        className="w-full sm:w-40 h-40 sm:h-28 rounded-lg object-cover bg-gray-100 shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {h.year && (
+                        <div className="text-xs uppercase tracking-wider text-teal-700 font-semibold mb-1">
+                          {h.year}
+                        </div>
+                      )}
+                      <h3 className="text-lg font-semibold text-gray-900 leading-tight">
+                        {title}
+                      </h3>
+                      {description && (
+                        <p className="text-sm text-gray-600 mt-2 leading-relaxed whitespace-pre-line">
+                          {description}
+                        </p>
+                      )}
+                    </div>
+                  </Card>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
 
       {/* Миссия / возможности */}
