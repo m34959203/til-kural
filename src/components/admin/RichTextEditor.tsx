@@ -1,5 +1,25 @@
 'use client';
 
+/**
+ * RichTextEditor на TipTap с toolbar (B/I/U, headings, lists, link, image, align).
+ *
+ * Главный WYSIWYG-компонент админки til-kural. Перенесено и адаптировано из AIMAK
+ * (apps/web/src/components/rich-text-editor.tsx ~900 LOC) с упрощением:
+ *  - иконки заменены с react-icons на lucide-react (единый стиль с til-kural);
+ *  - убраны хуки upload-media — вставка картинки через prompt(URL);
+ *  - добавлен YouTube-embed (ResizableVideo) вместо полноценной video-загрузки;
+ *  - desktop-only toolbar (без mobile bottom-sheet) для упрощения.
+ *
+ * Public API:
+ *   <RichTextEditor
+ *     value={html}
+ *     onChange={setHtml}
+ *     placeholder="Начните писать..."
+ *     minHeight={200}
+ *     disabled={false}
+ *   />
+ */
+
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
