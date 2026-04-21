@@ -6,9 +6,11 @@ import { getSettings } from '@/lib/settings';
 export default async function ContactsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const s = await getSettings();
-  const address = locale === 'kk' ? s.contact_address_kk : s.contact_address_ru;
-  const lat = s.map_lat || '49.8047';
-  const lng = s.map_lng || '73.1094';
+  const isKk = locale === 'kk';
+  const address = isKk ? s.contact_address_kk : s.contact_address_ru;
+  const fullName = isKk ? s.org_full_name_kk : s.org_full_name_ru;
+  const lat = s.map_lat || '47.9014';
+  const lng = s.map_lng || '67.5314';
   const widgetId = s.map_2gis_id;
 
   const mapSrc = widgetId
@@ -27,11 +29,41 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
         {locale === 'kk' ? 'Байланыс' : 'Контакты'}
       </h1>
 
+      {fullName && (
+        <Card className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+            {isKk ? 'Заңды тұлға' : 'Юридическое лицо'}
+          </h2>
+          <div className="space-y-1 text-sm text-gray-700">
+            <p className="font-medium text-gray-900 leading-snug">{fullName}</p>
+            {s.org_bin && (
+              <p><span className="text-gray-500">{isKk ? 'БИН:' : 'БИН:'}</span> <span className="font-mono">{s.org_bin}</span></p>
+            )}
+            {s.org_director && (
+              <p><span className="text-gray-500">{isKk ? 'Директор:' : 'Директор:'}</span> {s.org_director}</p>
+            )}
+            {s.org_registered_at && (
+              <p><span className="text-gray-500">{isKk ? 'Тіркелген күні:' : 'Дата регистрации:'}</span> {s.org_registered_at}</p>
+            )}
+            <p className="pt-1">
+              <a
+                href="https://www.goszakup.gov.kz/ru/registry/show_supplier/745311"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-700 hover:underline text-xs"
+              >
+                {isKk ? 'Goszakup тізіліміндегі карточка →' : 'Карточка в реестре goszakup →'}
+              </a>
+            </p>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
           <Card>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {locale === 'kk' ? 'Байланыс ақпараты' : 'Контактная информация'}
+              {isKk ? 'Байланыс ақпараты' : 'Контактная информация'}
             </h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">

@@ -147,10 +147,10 @@ export default function Footer({ locale, messages }: FooterProps) {
                 <circle cx="12" cy="10" r="3" />
               </svg>
               <span>
-                {locale === 'kk' ? 'Астана қаласы' : 'г. Астана'}
+                {locale === 'kk' ? 'Ұлытау обл., Сәтбаев қ.' : 'Ұлытауская обл., г. Сатпаев'}
                 <br />
                 <span className="text-white/60 text-xs">
-                  {locale === 'kk' ? 'Мәңгілік ел даңғылы, 55' : 'пр. Мәңгілік ел, 55'}
+                  {locale === 'kk' ? 'Академик Қаныш Сәтбаев даңғ., 111' : 'пр. Академика Каныша Сатпаева, 111'}
                 </span>
               </span>
             </li>
@@ -158,7 +158,7 @@ export default function Footer({ locale, messages }: FooterProps) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5C518" strokeWidth="2" className="mt-0.5 shrink-0" aria-hidden="true">
                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.37 1.9.72 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0122 16.92z" />
               </svg>
-              <a href="tel:+77172000000" className="hover:text-tk-gold transition">+7 (7172) 00-00-00</a>
+              <a href="tel:+77053143391" className="hover:text-tk-gold transition">+7 705 314 3391</a>
             </li>
             <li className="flex items-start gap-3">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5C518" strokeWidth="2" className="mt-0.5 shrink-0" aria-hidden="true">
@@ -166,6 +166,11 @@ export default function Footer({ locale, messages }: FooterProps) {
                 <path d="M22 6l-10 7L2 6" />
               </svg>
               <a href="mailto:info@til-kural.kz" className="hover:text-tk-gold transition">info@til-kural.kz</a>
+            </li>
+            <li className="text-xs text-white/50 pl-7 pt-1 leading-relaxed">
+              {locale === 'kk'
+                ? 'МКҚК «Тіл-құрал» ОӘО · БСН 241240033540'
+                : 'КГУ УМЦ «Тіл-құрал» · БИН 241240033540'}
             </li>
           </ul>
         </div>

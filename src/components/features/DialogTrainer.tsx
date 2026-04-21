@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { MENTORS, type MentorKey, DEFAULT_MENTOR } from '@/lib/mentors';
+import LiveVoiceDialog from '@/components/features/LiveVoiceDialog';
+
+type DialogMode = 'text' | 'voice-loop' | 'live';
 
 interface DialogTrainerProps {
   locale: string;
@@ -47,18 +50,19 @@ type WindowWithSpeech = Window & {
 
 export default function DialogTrainer({ locale }: DialogTrainerProps) {
   const isKk = locale === 'kk';
+  const [mode, setMode] = useState<DialogMode>('text');
   const [mentor, setMentor] = useState<MentorKey>(DEFAULT_MENTOR);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(false);
   const [recording, setRecording] = useState(false);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const [speechSupported, setSpeechSupported] = useState(false);
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mentorProfile = MENTORS[mentor];
+  const voiceMode = mode === 'voice-loop';
 
   useEffect(() => {
     const w = window as WindowWithSpeech;
@@ -197,6 +201,27 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
 
   useEffect(() => () => { stopPlayback(); stopRecognition(); }, [stopPlayback]);
 
+  if (mode === 'live') {
+    return (
+      <div>
+        <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {isKk ? 'Live дауыстық диалог' : 'Live голосовой диалог'}
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              {isKk
+                ? 'AI-мен тірі дауыспен сөйлесіңіз — табиғи, жылдам, үзіле алады'
+                : 'Живой разговор с AI — естественно, быстро, с возможностью перебивать'}
+            </p>
+          </div>
+          <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
+        </div>
+        <LiveVoiceDialog locale={locale} topic={selectedTopic} />
+      </div>
+    );
+  }
+
   if (!selectedTopic) {
     return (
       <div>
@@ -211,7 +236,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
                 : 'Практикуйте разговор с AI в реальных ситуациях'}
             </p>
           </div>
-          <VoiceModeToggle locale={locale} enabled={voiceMode} onToggle={setVoiceMode} speechSupported={speechSupported} />
+          <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
         </div>
 
         <div className="mb-6">
@@ -281,7 +306,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <VoiceModeToggle locale={locale} enabled={voiceMode} onToggle={setVoiceMode} speechSupported={speechSupported} />
+          <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
           <Button variant="ghost" size="sm" onClick={() => { stopPlayback(); stopRecognition(); setSelectedTopic(null); setMessages([]); }}>
             {isKk ? 'Тақырып ауыстыру' : 'Сменить тему'}
           </Button>
@@ -374,33 +399,48 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
   );
 }
 
-function VoiceModeToggle({
+function ModeSwitch({
   locale,
-  enabled,
-  onToggle,
+  mode,
+  onChange,
   speechSupported,
 }: {
   locale: string;
-  enabled: boolean;
-  onToggle: (v: boolean) => void;
+  mode: DialogMode;
+  onChange: (m: DialogMode) => void;
   speechSupported: boolean;
 }) {
+  const isKk = locale === 'kk';
+  const modes: { id: DialogMode; label_kk: string; label_ru: string; hint_kk?: string; hint_ru?: string }[] = [
+    { id: 'text', label_kk: '📝 Мәтін', label_ru: '📝 Текст' },
+    { id: 'voice-loop', label_kk: '🎙️ Дауыс (цикл)', label_ru: '🎙️ Голос (цикл)' },
+    { id: 'live', label_kk: '📡 Live', label_ru: '📡 Live' },
+  ];
   return (
-    <label className="inline-flex items-center gap-2 text-sm cursor-pointer select-none">
-      <input
-        type="checkbox"
-        checked={enabled}
-        onChange={(e) => onToggle(e.target.checked)}
-        className="w-4 h-4 accent-teal-600"
-      />
-      <span className="text-gray-700 font-medium">
-        🎙️ {locale === 'kk' ? 'Дауыс режимі' : 'Голосовой режим'}
-      </span>
-      {!speechSupported && enabled && (
-        <span className="text-xs text-amber-600">
-          ({locale === 'kk' ? 'тек Chrome/Edge' : 'только Chrome/Edge'})
-        </span>
+    <div>
+      <div className="inline-flex rounded-xl border border-gray-200 bg-gray-50 p-0.5">
+        {modes.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => onChange(m.id)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              mode === m.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {isKk ? m.label_kk : m.label_ru}
+          </button>
+        ))}
+      </div>
+      {mode === 'voice-loop' && !speechSupported && (
+        <div className="text-[11px] text-amber-600 mt-1">
+          {isKk ? 'тек Chrome/Edge' : 'только Chrome/Edge'}
+        </div>
       )}
-    </label>
+      {mode === 'live' && (
+        <div className="text-[11px] text-gray-500 mt-1">
+          {isKk ? 'Gemini Live — нақты дауыстық диалог' : 'Gemini Live — живой голосовой диалог'}
+        </div>
+      )}
+    </div>
   );
 }

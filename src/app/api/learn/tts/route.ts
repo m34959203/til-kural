@@ -13,17 +13,23 @@ export async function POST(request: Request) {
   try {
     const { text, mode = 'audio', voice } = await request.json();
     if (!text || typeof text !== 'string') return apiError(400, 'Text is required');
-    if (text.length > 500) return apiError(400, 'Text too long (max 500 chars)');
+    // Dialog-ответы ИИ могут быть длинными. Режем до 2000 символов (последняя граница предложения).
+    let clean = text.trim();
+    if (clean.length > 2000) {
+      clean = clean.slice(0, 2000);
+      const lastDot = Math.max(clean.lastIndexOf('.'), clean.lastIndexOf('!'), clean.lastIndexOf('?'));
+      if (lastDot > 1200) clean = clean.slice(0, lastDot + 1);
+    }
 
     if (mode === 'guide') {
-      const guide = await getPronunciationGuide(text);
+      const guide = await getPronunciationGuide(clean);
       return Response.json({ guide });
     }
 
     const chosenVoice = typeof voice === 'string' && ALLOWED_VOICES.has(voice) ? voice : 'Aoede';
-    const audio = await generateSpeech(text, chosenVoice);
+    const audio = await generateSpeech(clean, chosenVoice);
     if (!audio) {
-      const guide = await getPronunciationGuide(text);
+      const guide = await getPronunciationGuide(clean);
       return Response.json({ audio: null, guide, fallback: 'browser-tts' });
     }
     return Response.json({ audio });

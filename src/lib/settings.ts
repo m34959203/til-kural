@@ -14,15 +14,29 @@ export interface SiteSettings {
   social_facebook?: string;
   social_telegram?: string;
   menu_json?: string;
+  // Реквизиты организации (goszakup.gov.kz/ru/registry/show_supplier/745311)
+  org_full_name_kk?: string;
+  org_full_name_ru?: string;
+  org_short_name?: string;
+  org_bin?: string;
+  org_director?: string;
+  org_registered_at?: string;
 }
 
 const DEFAULTS: SiteSettings = {
-  contact_phone: '+7 (7212) 00-00-00',
+  contact_phone: '+7 705 314 3391',
   contact_email: 'info@til-kural.kz',
-  contact_address_kk: 'Қарағанды қ., Тәуелсіздік д., 20',
-  contact_address_ru: 'г. Караганда, пр. Тәуелсіздік, 20',
-  map_lat: '49.8047',
-  map_lng: '73.1094',
+  contact_address_kk: 'Ұлытау обл., Сәтбаев қ., Академик Қаныш Сәтбаев даңғ., 111',
+  contact_address_ru: 'Ұлытауская обл., г. Сатпаев, пр. Академика Каныша Сатпаева, 111',
+  // Сатпаев, приблизительные координаты города
+  map_lat: '47.9014',
+  map_lng: '67.5314',
+  org_full_name_kk: '«Тіл-құрал» оқу-әдістемелік орталығы — Сәтбаев қаласының мәдениет және тілдерді дамыту бөлімінің МКҚК',
+  org_full_name_ru: 'КГУ «Учебно-методический центр «Тіл-құрал» ГУ «Отдел культуры и развития языков города Сатпаев» области Ұлытау',
+  org_short_name: 'УМЦ «Тіл-құрал»',
+  org_bin: '241240033540',
+  org_director: 'Игенберлина Мадинат Балтина',
+  org_registered_at: '2025-01-11',
 };
 
 let cache: { data: SiteSettings; at: number } | null = null;
