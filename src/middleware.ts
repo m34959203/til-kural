@@ -36,6 +36,8 @@ export function middleware(request: NextRequest) {
       rule = { limit: 20, windowMs: 60_000, scope: 'upload' };
     } else if (pathname.startsWith('/api/push')) {
       rule = { limit: 10, windowMs: 60_000, scope: 'push' };
+    } else if (pathname.startsWith('/api/contact')) {
+      rule = { limit: 5, windowMs: 60_000, scope: 'contact' };
     }
     if (rule) {
       const key = clientKey(request, rule.scope);
