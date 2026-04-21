@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { buildMetadata } from '@/lib/seo';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   return buildMetadata({
@@ -15,20 +17,32 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   });
 }
 
-const FALLBACK = [
-  { slug: 'kazakh-language-week-2026', title_kk: 'Қазақ тілі апталығы — 2026', title_ru: 'Неделя казахского языка — 2026', content_kk: 'Қазақ тілі апталығы аясында түрлі іс-шаралар өткізіледі.', content_ru: 'В рамках Недели казахского языка проводятся различные мероприятия.', published_at: '2026-04-01' },
-  { slug: 'new-ai-features', title_kk: 'Жаңа AI мүмкіндіктер қосылды', title_ru: 'Добавлены новые AI возможности', content_kk: 'Платформаға жаңа AI мүмкіндіктер қосылды.', content_ru: 'На платформу добавлены новые AI возможности.', published_at: '2026-03-25' },
-  { slug: 'kaztest-preparation', title_kk: 'ҚАЗТЕСТ дайындық бағдарламасы', title_ru: 'Программа подготовки к КАЗТЕСТ', content_kk: 'ҚАЗТЕСТ-ке дайындалу үшін жаңа бағдарлама.', content_ru: 'Запущена новая программа подготовки к КАЗТЕСТ.', published_at: '2026-03-20' },
-];
+interface NewsRow {
+  id?: string;
+  slug: string;
+  title_kk: string;
+  title_ru: string;
+  content_kk?: string;
+  content_ru?: string;
+  excerpt_kk?: string;
+  excerpt_ru?: string;
+  image_url?: string;
+  video_url?: string;
+  published_at?: string;
+}
 
 export default async function NewsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  let items: typeof FALLBACK = FALLBACK;
+  let items: NewsRow[] = [];
   try {
-    const rows = await db.query('news', { status: 'published' }, { orderBy: 'published_at', order: 'desc', limit: 24 });
-    if (rows.length) items = rows as unknown as typeof FALLBACK;
+    const rows = await db.query(
+      'news',
+      { status: 'published' },
+      { orderBy: 'published_at', order: 'desc', limit: 50 },
+    );
+    items = rows as NewsRow[];
   } catch {
-    /* use fallback */
+    /* empty list */
   }
 
   return (
@@ -36,11 +50,19 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
       <h1 className="text-3xl font-bold text-gray-900 mb-8">
         {locale === 'kk' ? 'Жаңалықтар' : 'Новости'}
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {items.map((news) => (
-          <NewsCard key={news.slug} locale={locale} news={news} />
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-200 p-10 text-center">
+          <p className="text-gray-500">
+            {locale === 'kk' ? 'Жаңалықтар жақында шығады.' : 'Скоро появятся новости.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {items.map((news) => (
+            <NewsCard key={news.slug || news.id} locale={locale} news={news} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
