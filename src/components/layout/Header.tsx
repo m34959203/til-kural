@@ -68,35 +68,86 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
   return (
     <>
       {/* ============================================= */}
-      {/* TOP BAR — state resources + language switcher   */}
+      {/* TOP BAR — государственные ресурсы + язык        */}
       {/* ============================================= */}
-      <div className="bg-tk-night text-white/70 text-[12px]">
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-9 flex items-center justify-between">
-          <div className="hidden md:flex gap-5">
-            {govLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-tk-gold transition whitespace-nowrap"
-              >
-                {link.label}
-              </a>
-            ))}
+      <div className="bg-tk-night text-white/75 text-[12px] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-9 flex items-center justify-between gap-4">
+          {/* Desktop: лейбл + ссылки с разделителями */}
+          <div className="hidden lg:flex items-center gap-3 min-w-0">
+            <span className="inline-flex items-center gap-1.5 text-tk-gold/80 font-medium uppercase tracking-wider text-[10px] whitespace-nowrap">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l-8 6v13h6v-7h4v7h6V8l-8-6z" />
+              </svg>
+              {locale === 'kk' ? 'Мемлекеттік ресурстар' : 'Госресурсы'}
+            </span>
+            <span className="text-white/20">·</span>
+            <nav className="flex items-center gap-0 min-w-0 overflow-x-auto scrollbar-thin">
+              {govLinks.map((link, i) => (
+                <span key={link.href} className="inline-flex items-center whitespace-nowrap">
+                  {i > 0 && <span className="text-white/15 mx-2.5 select-none">·</span>}
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-tk-gold transition"
+                  >
+                    {link.label}
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40" aria-hidden="true">
+                      <path d="M7 17L17 7M7 7h10v10" />
+                    </svg>
+                  </a>
+                </span>
+              ))}
+            </nav>
           </div>
-          <div className="flex gap-2 ml-auto items-center">
+
+          {/* Mobile/tablet: компактный дропдаун "Ресурстар" */}
+          <details className="lg:hidden relative group">
+            <summary className="list-none inline-flex items-center gap-1.5 cursor-pointer select-none text-tk-gold/90 hover:text-tk-gold transition">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l-8 6v13h6v-7h4v7h6V8l-8-6z" />
+              </svg>
+              <span className="font-medium text-[11px] uppercase tracking-wider">
+                {locale === 'kk' ? 'Ресурстар' : 'Ресурсы'}
+              </span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-open:rotate-180 transition-transform" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </summary>
+            <div className="absolute left-0 top-full mt-1 z-50 bg-tk-night border border-white/10 rounded-xl shadow-2xl py-1.5 min-w-[220px]">
+              {govLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 px-4 py-2 hover:bg-white/5 hover:text-tk-gold transition"
+                >
+                  <span>{link.label}</span>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40" aria-hidden="true">
+                    <path d="M7 17L17 7M7 7h10v10" />
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </details>
+
+          {/* Язык — pill-переключатель */}
+          <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-full p-0.5 shrink-0" role="group" aria-label={locale === 'kk' ? 'Тіл таңдау' : 'Выбор языка'}>
             <Link
               href={kkHref}
-              className={locale === 'kk' ? 'font-bold text-white' : 'hover:text-tk-gold transition'}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider transition ${
+                locale === 'kk' ? 'bg-tk-gold text-tk-night' : 'text-white/60 hover:text-white'
+              }`}
               aria-current={locale === 'kk' ? 'true' : undefined}
             >
               KK
             </Link>
-            <span className="opacity-30">|</span>
             <Link
               href={ruHref}
-              className={locale === 'ru' ? 'font-bold text-white' : 'hover:text-tk-gold transition'}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider transition ${
+                locale === 'ru' ? 'bg-tk-gold text-tk-night' : 'text-white/60 hover:text-white'
+              }`}
               aria-current={locale === 'ru' ? 'true' : undefined}
             >
               RU
