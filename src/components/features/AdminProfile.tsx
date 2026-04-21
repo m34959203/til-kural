@@ -3,6 +3,22 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Newspaper,
+  CalendarDays,
+  BookOpen,
+  CheckSquare,
+  Scale,
+  Briefcase,
+  Users as UsersIcon,
+  LineChart,
+  Settings,
+  Shield,
+  ArrowRight,
+  LogOut,
+  type LucideIcon,
+} from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
@@ -52,17 +68,17 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
     moderator: isKk ? 'Модератор' : 'Модератор',
   };
 
-  const quickLinks = [
-    { href: `/${locale}/admin`, icon: '📊', label: isKk ? 'Дашборд' : 'Дашборд', desc: isKk ? 'Шолу метрикалар' : 'Обзорные метрики' },
-    { href: `/${locale}/admin/news`, icon: '📰', label: isKk ? 'Жаңалықтар' : 'Новости', desc: isKk ? 'Жаңалықтарды қосу/өзгерту' : 'Добавить/редактировать' },
-    { href: `/${locale}/admin/events`, icon: '📅', label: isKk ? 'Іс-шаралар' : 'Мероприятия', desc: isKk ? 'Күнтізбе мен анонстар' : 'Календарь и анонсы' },
-    { href: `/${locale}/admin/lessons`, icon: '📚', label: isKk ? 'Сабақтар' : 'Уроки', desc: isKk ? 'Оқу контент' : 'Учебный контент' },
-    { href: `/${locale}/admin/tests`, icon: '✅', label: isKk ? 'Тест сұрақтары' : 'Тесты', desc: isKk ? 'Банк сұрақтар' : 'Банк вопросов' },
-    { href: `/${locale}/admin/grammar`, icon: '📐', label: isKk ? 'Грамматика' : 'Грамматика', desc: isKk ? '21 ереже' : '21 правило' },
-    { href: `/${locale}/admin/staff`, icon: '👔', label: isKk ? 'Қызметкерлер' : 'Сотрудники', desc: isKk ? 'Бөлімдер мен тізім' : 'Отделы и список' },
-    { href: `/${locale}/admin/users`, icon: '👥', label: isKk ? 'Пайдаланушылар' : 'Пользователи', desc: isKk ? 'Аккаунттар мен рөлдер' : 'Аккаунты и роли' },
-    { href: `/${locale}/admin/analytics`, icon: '📈', label: isKk ? 'Аналитика' : 'Аналитика', desc: isKk ? '30 күндегі динамика' : 'Динамика за 30 дней' },
-    { href: `/${locale}/admin/settings`, icon: '⚙️', label: isKk ? 'Баптаулар' : 'Настройки', desc: isKk ? 'CMS-конфиг' : 'CMS-конфиг' },
+  const quickLinks: { href: string; Icon: LucideIcon; label: string; desc: string; accent: string }[] = [
+    { href: `/${locale}/admin`, Icon: LayoutDashboard, label: isKk ? 'Дашборд' : 'Дашборд', desc: isKk ? 'Шолу метрикалар' : 'Обзорные метрики', accent: 'bg-slate-50 text-slate-700' },
+    { href: `/${locale}/admin/news`, Icon: Newspaper, label: isKk ? 'Жаңалықтар' : 'Новости', desc: isKk ? 'Жаңалықтарды қосу/өзгерту' : 'Добавить/редактировать', accent: 'bg-sky-50 text-sky-700' },
+    { href: `/${locale}/admin/events`, Icon: CalendarDays, label: isKk ? 'Іс-шаралар' : 'Мероприятия', desc: isKk ? 'Күнтізбе мен анонстар' : 'Календарь и анонсы', accent: 'bg-orange-50 text-orange-700' },
+    { href: `/${locale}/admin/lessons`, Icon: BookOpen, label: isKk ? 'Сабақтар' : 'Уроки', desc: isKk ? 'Оқу контент' : 'Учебный контент', accent: 'bg-teal-50 text-teal-700' },
+    { href: `/${locale}/admin/tests`, Icon: CheckSquare, label: isKk ? 'Тест сұрақтары' : 'Тесты', desc: isKk ? 'Банк сұрақтар' : 'Банк вопросов', accent: 'bg-amber-50 text-amber-700' },
+    { href: `/${locale}/admin/grammar`, Icon: Scale, label: isKk ? 'Грамматика' : 'Грамматика', desc: isKk ? '21 ереже' : '21 правило', accent: 'bg-violet-50 text-violet-700' },
+    { href: `/${locale}/admin/staff`, Icon: Briefcase, label: isKk ? 'Қызметкерлер' : 'Сотрудники', desc: isKk ? 'Бөлімдер мен тізім' : 'Отделы и список', accent: 'bg-indigo-50 text-indigo-700' },
+    { href: `/${locale}/admin/users`, Icon: UsersIcon, label: isKk ? 'Пайдаланушылар' : 'Пользователи', desc: isKk ? 'Аккаунттар мен рөлдер' : 'Аккаунты и роли', accent: 'bg-blue-50 text-blue-700' },
+    { href: `/${locale}/admin/analytics`, Icon: LineChart, label: isKk ? 'Аналитика' : 'Аналитика', desc: isKk ? '30 күндегі динамика' : 'Динамика за 30 дней', accent: 'bg-emerald-50 text-emerald-700' },
+    { href: `/${locale}/admin/settings`, Icon: Settings, label: isKk ? 'Баптаулар' : 'Настройки', desc: isKk ? 'CMS-конфиг' : 'CMS-конфиг', accent: 'bg-gray-50 text-gray-700' },
   ];
 
   const metricBadge = (value: number | undefined, label: string, accent: string) => (
@@ -78,7 +94,8 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
       <div className="rounded-3xl bg-gradient-to-br from-tk-night to-tk-blue-dark text-white p-8 mb-8 shadow-xl relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-tk-gold/10" />
         <div className="absolute right-6 top-6 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tk-gold text-tk-night font-bold text-xs uppercase tracking-wider">
-          🛡 {roleLabel[user.role] || user.role}
+          <Shield size={14} strokeWidth={2.25} />
+          <span>{roleLabel[user.role] || user.role}</span>
         </div>
         <h1 className="text-3xl font-extrabold mb-2">
           {isKk ? `Сәлеметсіз бе, ${user.name}!` : `Добро пожаловать, ${user.name}!`}
@@ -93,13 +110,13 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
             href={`/${locale}/admin`}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-tk-terra text-white font-bold text-sm shadow-lg hover:brightness-110 transition"
           >
-            🛠 {isKk ? 'Әкімші панеліне өту' : 'Открыть админ-панель'}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
+            <LayoutDashboard size={16} strokeWidth={2} />
+            <span>{isKk ? 'Әкімші панеліне өту' : 'Открыть админ-панель'}</span>
+            <ArrowRight size={16} strokeWidth={2.5} />
           </Link>
           <Button variant="ghost" onClick={logout} className="!text-white !border-white/30 !border hover:!bg-white/10">
-            ⎋ {isKk ? 'Шығу' : 'Выход'}
+            <LogOut size={16} strokeWidth={2} className="inline -mt-0.5 mr-1.5" />
+            {isKk ? 'Шығу' : 'Выход'}
           </Button>
         </div>
       </div>
@@ -124,17 +141,22 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
         {isKk ? 'Жылдам сілтемелер' : 'Быстрые ссылки'}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {quickLinks.map((l) => (
-          <Link key={l.href} href={l.href}>
-            <Card hover className="h-full flex items-start gap-3 p-4">
-              <span className="text-2xl shrink-0">{l.icon}</span>
-              <div className="min-w-0">
-                <div className="font-semibold text-gray-900">{l.label}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{l.desc}</div>
-              </div>
-            </Card>
-          </Link>
-        ))}
+        {quickLinks.map((l) => {
+          const { Icon } = l;
+          return (
+            <Link key={l.href} href={l.href}>
+              <Card hover className="h-full flex items-start gap-3 p-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${l.accent}`}>
+                  <Icon size={20} strokeWidth={1.75} />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-gray-900">{l.label}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{l.desc}</div>
+                </div>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

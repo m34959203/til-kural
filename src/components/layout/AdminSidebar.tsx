@@ -2,6 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  LineChart,
+  BookOpen,
+  CheckSquare,
+  Scale,
+  Newspaper,
+  CalendarDays,
+  Image as ImageIcon,
+  FileVideo,
+  Building2,
+  Briefcase,
+  ScrollText,
+  BookMarked,
+  Users,
+  Settings,
+  Home,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AdminSidebarProps {
@@ -12,7 +31,7 @@ interface NavItem {
   href: string;
   label_kk: string;
   label_ru: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 interface NavSection {
@@ -30,39 +49,39 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       title_kk: 'Шолу',
       title_ru: 'Обзор',
       items: [
-        { href: `/${locale}/admin`, label_kk: 'Басқару тақтасы', label_ru: 'Дашборд', icon: '📊' },
-        { href: `/${locale}/admin/analytics`, label_kk: 'Аналитика', label_ru: 'Аналитика', icon: '📈' },
+        { href: `/${locale}/admin`, label_kk: 'Басқару тақтасы', label_ru: 'Дашборд', Icon: LayoutDashboard },
+        { href: `/${locale}/admin/analytics`, label_kk: 'Аналитика', label_ru: 'Аналитика', Icon: LineChart },
       ],
     },
     {
       title_kk: 'Контент',
       title_ru: 'Контент',
       items: [
-        { href: `/${locale}/admin/lessons`, label_kk: 'Сабақтар', label_ru: 'Уроки', icon: '📚' },
-        { href: `/${locale}/admin/tests`, label_kk: 'Тест сұрақтары', label_ru: 'Тесты', icon: '✅' },
-        { href: `/${locale}/admin/grammar`, label_kk: 'Грамматика ережелері', label_ru: 'Правила грамматики', icon: '📐' },
-        { href: `/${locale}/admin/news`, label_kk: 'Жаңалықтар', label_ru: 'Новости', icon: '📰' },
-        { href: `/${locale}/admin/events`, label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', icon: '📅' },
-        { href: `/${locale}/admin/banners`, label_kk: 'Баннерлер', label_ru: 'Баннеры', icon: '🖼️' },
-        { href: `/${locale}/admin/media`, label_kk: 'Медиатека', label_ru: 'Медиатека', icon: '🎞️' },
-        { href: `/${locale}/admin/departments`, label_kk: 'Бөлімдер', label_ru: 'Отделы', icon: '🏢' },
-        { href: `/${locale}/admin/staff`, label_kk: 'Қызметкерлер', label_ru: 'Сотрудники', icon: '👔' },
-        { href: `/${locale}/admin/rules`, label_kk: 'Ереже құжаттары', label_ru: 'Правила-документы', icon: '📜' },
-        { href: `/${locale}/admin/history`, label_kk: 'Орталық тарихы', label_ru: 'История центра', icon: '📖' },
+        { href: `/${locale}/admin/lessons`, label_kk: 'Сабақтар', label_ru: 'Уроки', Icon: BookOpen },
+        { href: `/${locale}/admin/tests`, label_kk: 'Тест сұрақтары', label_ru: 'Тесты', Icon: CheckSquare },
+        { href: `/${locale}/admin/grammar`, label_kk: 'Грамматика ережелері', label_ru: 'Правила грамматики', Icon: Scale },
+        { href: `/${locale}/admin/news`, label_kk: 'Жаңалықтар', label_ru: 'Новости', Icon: Newspaper },
+        { href: `/${locale}/admin/events`, label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', Icon: CalendarDays },
+        { href: `/${locale}/admin/banners`, label_kk: 'Баннерлер', label_ru: 'Баннеры', Icon: ImageIcon },
+        { href: `/${locale}/admin/media`, label_kk: 'Медиатека', label_ru: 'Медиатека', Icon: FileVideo },
+        { href: `/${locale}/admin/departments`, label_kk: 'Бөлімдер', label_ru: 'Отделы', Icon: Building2 },
+        { href: `/${locale}/admin/staff`, label_kk: 'Қызметкерлер', label_ru: 'Сотрудники', Icon: Briefcase },
+        { href: `/${locale}/admin/rules`, label_kk: 'Ереже құжаттары', label_ru: 'Правила-документы', Icon: ScrollText },
+        { href: `/${locale}/admin/history`, label_kk: 'Орталық тарихы', label_ru: 'История центра', Icon: BookMarked },
       ],
     },
     {
       title_kk: 'Қауымдастық',
       title_ru: 'Сообщество',
       items: [
-        { href: `/${locale}/admin/users`, label_kk: 'Пайдаланушылар', label_ru: 'Пользователи', icon: '👥' },
+        { href: `/${locale}/admin/users`, label_kk: 'Пайдаланушылар', label_ru: 'Пользователи', Icon: Users },
       ],
     },
     {
       title_kk: 'Жүйе',
       title_ru: 'Система',
       items: [
-        { href: `/${locale}/admin/settings`, label_kk: 'Баптаулар', label_ru: 'Настройки сайта', icon: '⚙️' },
+        { href: `/${locale}/admin/settings`, label_kk: 'Баптаулар', label_ru: 'Настройки сайта', Icon: Settings },
       ],
     },
   ];
@@ -88,6 +107,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
             <div className="flex flex-col gap-0.5">
               {section.items.map((item) => {
                 const active = pathname === item.href;
+                const { Icon } = item;
                 return (
                   <Link
                     key={item.href}
@@ -99,7 +119,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
                     )}
                   >
-                    <span className="text-base leading-none">{item.icon}</span>
+                    <Icon size={18} strokeWidth={active ? 2.25 : 1.75} className={active ? 'text-teal-700' : 'text-gray-400'} />
                     <span>{isKk ? item.label_kk : item.label_ru}</span>
                   </Link>
                 );
@@ -114,7 +134,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
           href={`/${locale}`}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900"
         >
-          <span>🏠</span>
+          <Home size={18} strokeWidth={1.75} className="text-gray-400" />
           <span>{isKk ? 'Сайтқа оралу' : 'На сайт'}</span>
         </Link>
       </div>

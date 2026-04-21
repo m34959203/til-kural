@@ -1,6 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {
+  Users as UsersIcon,
+  BookOpen,
+  CheckSquare,
+  FlaskConical,
+  GraduationCap,
+  Camera,
+  Newspaper,
+  CalendarDays,
+  type LucideIcon,
+} from 'lucide-react';
 import Card from '@/components/ui/Card';
 
 interface Totals {
@@ -59,31 +70,36 @@ export default function AnalyticsDashboard({ locale, children }: Props) {
   if (error) return <div className="text-red-600">{error}</div>;
   if (!data) return null;
 
-  const stats: { label_kk: string; label_ru: string; value: number; icon: string; accent: string }[] = [
-    { label_kk: 'Пайдаланушылар', label_ru: 'Пользователи', value: data.totals.users, icon: '👥', accent: 'bg-blue-50 text-blue-700' },
-    { label_kk: 'Сабақтар', label_ru: 'Уроки', value: data.totals.lessons, icon: '📚', accent: 'bg-teal-50 text-teal-700' },
-    { label_kk: 'Тест сұрақтары', label_ru: 'Вопросы тестов', value: data.totals.test_questions, icon: '✅', accent: 'bg-amber-50 text-amber-700' },
-    { label_kk: 'Тест сессиялары', label_ru: 'Сессии тестов', value: data.totals.test_sessions, icon: '🧪', accent: 'bg-indigo-50 text-indigo-700' },
-    { label_kk: 'Сертификаттар', label_ru: 'Сертификаты', value: data.totals.certificates, icon: '🎓', accent: 'bg-emerald-50 text-emerald-700' },
-    { label_kk: 'Фото-тексерулер', label_ru: 'Фото-проверок', value: data.totals.photo_checks, icon: '📸', accent: 'bg-rose-50 text-rose-700' },
-    { label_kk: 'Жаңалықтар', label_ru: 'Новости', value: data.totals.news, icon: '📰', accent: 'bg-sky-50 text-sky-700' },
-    { label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', value: data.totals.events, icon: '📅', accent: 'bg-orange-50 text-orange-700' },
+  const stats: { label_kk: string; label_ru: string; value: number; Icon: LucideIcon; accent: string }[] = [
+    { label_kk: 'Пайдаланушылар', label_ru: 'Пользователи', value: data.totals.users, Icon: UsersIcon, accent: 'bg-blue-50 text-blue-700' },
+    { label_kk: 'Сабақтар', label_ru: 'Уроки', value: data.totals.lessons, Icon: BookOpen, accent: 'bg-teal-50 text-teal-700' },
+    { label_kk: 'Тест сұрақтары', label_ru: 'Вопросы тестов', value: data.totals.test_questions, Icon: CheckSquare, accent: 'bg-amber-50 text-amber-700' },
+    { label_kk: 'Тест сессиялары', label_ru: 'Сессии тестов', value: data.totals.test_sessions, Icon: FlaskConical, accent: 'bg-indigo-50 text-indigo-700' },
+    { label_kk: 'Сертификаттар', label_ru: 'Сертификаты', value: data.totals.certificates, Icon: GraduationCap, accent: 'bg-emerald-50 text-emerald-700' },
+    { label_kk: 'Фото-тексерулер', label_ru: 'Фото-проверок', value: data.totals.photo_checks, Icon: Camera, accent: 'bg-rose-50 text-rose-700' },
+    { label_kk: 'Жаңалықтар', label_ru: 'Новости', value: data.totals.news, Icon: Newspaper, accent: 'bg-sky-50 text-sky-700' },
+    { label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', value: data.totals.events, Icon: CalendarDays, accent: 'bg-orange-50 text-orange-700' },
   ];
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <Card key={s.label_ru}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500">{isKk ? s.label_kk : s.label_ru}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{s.value.toLocaleString()}</p>
+        {stats.map((s) => {
+          const { Icon } = s;
+          return (
+            <Card key={s.label_ru}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-gray-500">{isKk ? s.label_kk : s.label_ru}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{s.value.toLocaleString()}</p>
+                </div>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.accent}`}>
+                  <Icon size={20} strokeWidth={1.75} />
+                </div>
               </div>
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${s.accent}`}>{s.icon}</div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
