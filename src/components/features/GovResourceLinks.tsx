@@ -1,14 +1,14 @@
+import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
+
 interface GovResourceLinksProps {
   locale: string;
 }
 
 export default function GovResourceLinks({ locale }: GovResourceLinksProps) {
+  const isKk = locale === 'kk';
   const links = [
-    { href: 'https://www.akorda.kz', label: locale === 'kk' ? 'Ақорда' : 'Акорда' },
-    { href: 'https://baitursynuly.kz', label: locale === 'kk' ? 'Байтұрсынұлы' : 'Байтурсынулы' },
-    { href: 'https://tilalemi.kz', label: 'Тіл әлемі' },
-    { href: 'https://terminkom.kz', label: 'Терминком.кз' },
-    { href: 'https://emle.kz', label: 'Емле.кз' },
+    { href: 'https://www.akorda.kz', label: isKk ? 'Ақорда' : 'Акорда' },
+    ...GOV_LANGUAGE_LINKS.map((l) => ({ href: l.href, label: isKk ? l.label_kk : l.label_ru })),
   ];
 
   return (

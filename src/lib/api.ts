@@ -2,6 +2,11 @@
 import { getUserFromRequest, UserPayload } from './auth';
 
 export async function requireAdminApi(request: Request): Promise<UserPayload | Response> {
+  // DEV-режим: при DEV_ADMIN_BYPASS=1 пропускаем auth, отдаём синтетического admin.
+  // Используем ТОЛЬКО локально. В prod оставлять переменную не установленной.
+  if (process.env.DEV_ADMIN_BYPASS === '1') {
+    return { id: 'dev-admin', email: 'dev@til-kural.local', role: 'admin', name: 'Dev Admin' };
+  }
   const user = await getUserFromRequest(request);
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
   if (!['admin', 'editor', 'moderator'].includes(user.role)) {

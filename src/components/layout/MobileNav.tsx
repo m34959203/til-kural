@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
 
 interface MobileNavProps {
   locale: string;
@@ -61,10 +62,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
 
   const govLinks = [
     { href: 'https://www.akorda.kz', label: locale === 'kk' ? 'Ақорда' : 'Акорда' },
-    { href: 'https://til.gov.kz', label: locale === 'kk' ? 'Байтұрсынұлы' : 'Байтурсынулы' },
-    { href: 'https://tilalemi.kz/', label: 'Тіл әлемі' },
-    { href: 'https://termincom.kz', label: 'Терминком.кз' },
-    { href: 'https://emle.kz', label: 'Емле.кз' },
+    ...GOV_LANGUAGE_LINKS.map((l) => ({ href: l.href, label: locale === 'kk' ? l.label_kk : l.label_ru })),
   ];
 
   const isActive = (href: string) => {

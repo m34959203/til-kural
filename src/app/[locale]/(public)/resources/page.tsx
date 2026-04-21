@@ -1,15 +1,19 @@
 import Card from '@/components/ui/Card';
+import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
 
 export default async function ResourcesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
+  const isKk = locale === 'kk';
 
   const resources = [
-    { title: 'Байтұрсынұлы порталы', url: 'https://baitursynuly.kz', desc: locale === 'kk' ? 'Қазақ тілі туралы ресми портал' : 'Официальный портал о казахском языке' },
-    { title: 'Тіл әлемі', url: 'https://tilalemi.kz', desc: locale === 'kk' ? 'Тіл үйрену ресурсы' : 'Ресурс для изучения языка' },
-    { title: 'Терминком.кз', url: 'https://terminkom.kz', desc: locale === 'kk' ? 'Терминологиялық комиссия' : 'Терминологическая комиссия' },
-    { title: 'Емле.кз', url: 'https://emle.kz', desc: locale === 'kk' ? 'Орфографиялық сөздік' : 'Орфографический словарь' },
-    { title: 'Sozdik.kz', url: 'https://sozdik.kz', desc: locale === 'kk' ? 'Онлайн сөздік' : 'Онлайн словарь' },
-    { title: locale === 'kk' ? 'Ақорда' : 'Акорда', url: 'https://www.akorda.kz', desc: locale === 'kk' ? 'ҚР Президентінің ресми сайты' : 'Официальный сайт Президента РК' },
+    ...GOV_LANGUAGE_LINKS.map((l) => ({
+      title: isKk ? l.label_kk : l.label_ru,
+      url: l.href,
+      desc: (isKk ? l.description_kk : l.description_ru) || '',
+    })),
+    { title: 'Sozdik.kz', url: 'https://sozdik.kz', desc: isKk ? 'Онлайн сөздік' : 'Онлайн словарь' },
+    { title: 'Qazcorpus.kz', url: 'https://qazcorpus.kz', desc: isKk ? 'Қазақ тілінің ұлттық корпусы' : 'Национальный корпус казахского языка' },
+    { title: isKk ? 'Ақорда' : 'Акорда', url: 'https://www.akorda.kz', desc: isKk ? 'ҚР Президентінің ресми сайты' : 'Официальный сайт Президента РК' },
   ];
 
   return (

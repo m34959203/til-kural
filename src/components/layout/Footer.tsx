@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
 
 interface FooterProps {
   locale: string;
@@ -25,10 +26,10 @@ export default function Footer({ locale, messages }: FooterProps) {
 
   const govLinks = [
     { href: 'https://www.akorda.kz', label: f.aqorda || 'Ақорда' },
-    { href: 'https://til.gov.kz', label: f.baitursynuly || 'Байтұрсынұлы' },
-    { href: 'https://tilalemi.kz/', label: f.tilalemi || 'Тіл әлемі' },
-    { href: 'https://termincom.kz', label: f.terminkom || 'Терминком' },
-    { href: 'https://emle.kz', label: f.emle || 'Емле' },
+    ...GOV_LANGUAGE_LINKS.map((l) => ({
+      href: l.href,
+      label: (f[l.key] as string | undefined) || (locale === 'kk' ? l.label_kk : l.label_ru),
+    })),
   ];
 
   return (

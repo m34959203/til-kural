@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MOBILE_NAV_OPEN_EVENT } from '@/components/layout/MobileNav';
+import { GOV_LANGUAGE_LINKS } from '@/lib/external-links';
 
 interface HeaderProps {
   locale: string;
@@ -38,10 +39,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
 
   const govLinks = [
     { href: 'https://www.akorda.kz', label: locale === 'kk' ? 'Ақорда' : 'Акорда' },
-    { href: 'https://til.gov.kz', label: locale === 'kk' ? 'Байтұрсынұлы' : 'Байтурсынулы' },
-    { href: 'https://tilalemi.kz/', label: 'Тіл әлемі' },
-    { href: 'https://termincom.kz', label: 'Терминком.кз' },
-    { href: 'https://emle.kz', label: 'Емле.кз' },
+    ...GOV_LANGUAGE_LINKS.map((l) => ({ href: l.href, label: locale === 'kk' ? l.label_kk : l.label_ru })),
   ];
 
   const defaultNav = [
