@@ -263,6 +263,31 @@ export const TestQuestionsSchema = z.object({
 });
 export type TestQuestionsInput = z.infer<typeof TestQuestionsSchema>;
 
+/* ------------------------ AI analysis ------------------------ */
+/**
+ * Схема ответа Gemini для `/api/ai/analyze-content`.
+ * Используется для жёсткого парсинга JSON, который возвращает модель —
+ * если она «галлюционирует» лишние поля / меняет типы, мы падаем в 500,
+ * а не отдаём клиенту сырой мусор.
+ */
+export const AIAnalysisSuggestionSchema = z.object({
+  severity: z.enum(['low', 'medium', 'high']),
+  text: z.string().min(1),
+  field: z.enum(['title', 'excerpt', 'content']).optional(),
+});
+
+export const AIAnalysisSchema = z.object({
+  score: z.coerce.number().min(0).max(100),
+  suggestions: z.array(AIAnalysisSuggestionSchema).default([]),
+  strengths: z.array(z.string()).default([]),
+  improved_title_kk: z.string().optional(),
+  improved_title_ru: z.string().optional(),
+  improved_excerpt_kk: z.string().optional(),
+  improved_excerpt_ru: z.string().optional(),
+});
+export type AIAnalysis = z.infer<typeof AIAnalysisSchema>;
+export type AIAnalysisSuggestion = z.infer<typeof AIAnalysisSuggestionSchema>;
+
 /* --------------------------- History -------------------------- */
 export const HistorySchema = z.object({
   year: z.union([z.string().max(20), z.number(), z.null()]).optional(),
