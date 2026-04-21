@@ -41,7 +41,9 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
   const [draftUser, setDraftUser] = useState('');
   const [draftAi, setDraftAi] = useState('');
 
-  const sessionRef = useRef<Awaited<ReturnType<InstanceType<typeof GoogleGenAI>['live']['connect']>> | null>(null);
+  type LiveSession = Awaited<ReturnType<InstanceType<typeof GoogleGenAI>['live']['connect']>>;
+  const sessionRef = useRef<LiveSession | null>(null);
+  const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const inputCtxRef = useRef<AudioContext | null>(null);
   const outputCtxRef = useRef<AudioContext | null>(null);
@@ -78,6 +80,7 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
     closedRef.current = true;
     try { sessionRef.current?.close(); } catch {}
     sessionRef.current = null;
+    sessionPromiseRef.current = null;
     cleanupAudio();
     setConnected(false);
     setConnecting(false);
@@ -124,7 +127,7 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
       //    В @google/genai v1 токен передаётся как apiKey + apiVersion=v1alpha.
       const ai = new GoogleGenAI({ apiKey: token, apiVersion: 'v1alpha' } as { apiKey: string; apiVersion: string });
 
-      const session = await ai.live.connect({
+      const sessionPromise = ai.live.connect({
         model,
         callbacks: {
           onopen: () => {
@@ -151,12 +154,16 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
             source.connect(processor);
             processor.connect(inputCtxRef.current!.destination);
 
-            // 6. Пнём AI чтобы начал первым (иначе он ждёт голоса)
+            // 6. Пнём AI чтобы начал первым. В onopen сам `session` ещё не
+            //    разрешён (await ai.live.connect не вернулся), поэтому идём
+            //    через promise-ref — паттерн из LifeCompass.
             const topicLine = topic ? `Тақырыбы: ${topic}. ` : '';
             const greet = `Сәлеметсіз бе! Сіз — ${mentorProfile.name_kk}. ${topicLine}Қазақ тілінде қысқа амандасып, оқушыға бір сұрақ қойыңыз.`;
-            session.sendClientContent({
-              turns: [{ role: 'user', parts: [{ text: greet }] }],
-              turnComplete: true,
+            sessionPromiseRef.current?.then((s) => {
+              s.sendClientContent({
+                turns: [{ role: 'user', parts: [{ text: greet }] }],
+                turnComplete: true,
+              });
             });
           },
 
@@ -235,7 +242,8 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
         },
       });
 
-      sessionRef.current = session;
+      sessionPromiseRef.current = sessionPromise;
+      sessionRef.current = await sessionPromise;
     } catch (err) {
       console.error('[live] connect failed', err);
       setError(String(err instanceof Error ? err.message : err));
