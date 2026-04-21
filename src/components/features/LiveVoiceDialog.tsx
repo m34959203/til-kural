@@ -92,6 +92,14 @@ export default function LiveVoiceDialog({ locale, topic, level }: Props) {
     setMicOn(false);
     setSpeaking(false);
     isSpeakingRef.current = false;
+    // BUG-FIX: nextStartTimeRef накапливает AudioContext.currentTime первой сессии.
+    // При повторном connect создаётся НОВЫЙ outputCtx со своим currentTime=0,
+    // но Math.max(nextStartTime=stale, ctx.currentTime=0) планировал все буферы
+    // в будущее относительно нового контекста → AI не слышно. Сбрасываем.
+    nextStartTimeRef.current = 0;
+    isGreetedRef.current = false;
+    userTextRef.current = '';
+    aiTextRef.current = '';
   }, [cleanupAudio]);
 
   useEffect(() => () => disconnect(), [disconnect]);
@@ -102,8 +110,12 @@ export default function LiveVoiceDialog({ locale, topic, level }: Props) {
     setConnecting(true);
     closedRef.current = false;
     isGreetedRef.current = false;
+    isSpeakingRef.current = false;
     userTextRef.current = '';
     aiTextRef.current = '';
+    // Страховка на случай если disconnect не сбросил (например, падение connect до disconnect)
+    nextStartTimeRef.current = 0;
+    outSourcesRef.current.clear();
     setTranscript([]);
     setDraftUser('');
     setDraftAi('');
