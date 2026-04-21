@@ -4,7 +4,9 @@ import { db } from '@/lib/db';
 
 export async function POST(request: Request) {
   try {
-    const { image } = await request.json();
+    const body = (await request.json()) as { image?: string; locale?: string };
+    const { image } = body;
+    const locale: 'kk' | 'ru' = body.locale === 'ru' ? 'ru' : 'kk';
 
     if (!image) {
       return Response.json({ error: 'Image is required' }, { status: 400 });
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
     const mimeType = match[1];
     const base64Data = match[2];
 
-    const result = await checkPhotoText(base64Data, mimeType);
+    const result = await checkPhotoText(base64Data, mimeType, locale);
 
     // Persist record (если user_id не резолвится — пропускаем, не падаем)
     let checkId: string | null = null;
@@ -41,8 +43,43 @@ export async function POST(request: Request) {
       console.warn('[photo-check] db insert skipped:', dbErr);
     }
 
-    return Response.json({ result, id: checkId });
+    return Response.json({ result, id: checkId, locale });
   } catch (error) {
     return Response.json({ error: 'Photo check failed', details: String(error) }, { status: 500 });
+  }
+}
+
+/**
+ * GET /api/photo-check?limit=20
+ * Возвращает последние N фото-проверок залогиненного юзера.
+ * Анон — 401.
+ */
+export async function GET(request: Request) {
+  const user = await getUserFromRequest(request);
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const rawLimit = Number(url.searchParams.get('limit') ?? '20');
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 20;
+
+  try {
+    const rows = await db.query(
+      'photo_checks',
+      { user_id: user.id },
+      { orderBy: 'created_at', order: 'desc', limit }
+    );
+    return Response.json({
+      items: rows.map((r) => ({
+        id: r.id,
+        overall_score: r.overall_score ?? 0,
+        recognized_text: r.recognized_text ?? '',
+        errors_count: Array.isArray(r.errors) ? r.errors.length : 0,
+        created_at: r.created_at,
+      })),
+    });
+  } catch (err) {
+    return Response.json({ error: 'Fetch failed', details: String(err) }, { status: 500 });
   }
 }

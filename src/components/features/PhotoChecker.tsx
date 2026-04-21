@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
@@ -14,6 +15,9 @@ interface PhotoError {
   word: string;
   correction: string;
   rule: string;
+  rule_explanation?: string;
+  example_correct?: string[];
+  rule_slug?: string;
   position: number;
   type: string;
 }
@@ -51,7 +55,7 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
       const res = await fetch('/api/photo-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: preview }),
+        body: JSON.stringify({ image: preview, locale }),
       });
       const data = await res.json();
       setResult(data.result);
@@ -83,6 +87,10 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
     punctuation: { kk: 'Тыныс белгі', ru: 'Пунктуация' },
     style: { kk: 'Стиль', ru: 'Стиль' },
   };
+
+  const tRuleExplain = locale === 'kk' ? 'Ереже түсіндірмесі' : 'Объяснение правила';
+  const tExamples = locale === 'kk' ? 'Дұрыс мысалдар' : 'Правильные примеры';
+  const tLearnMore = locale === 'kk' ? 'Ережені ашу' : 'Открыть правило';
 
   return (
     <div className="space-y-6">
@@ -177,23 +185,63 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
               <h3 className="font-semibold text-gray-900 mb-3">
                 {locale === 'kk' ? 'Қателер' : 'Ошибки'} ({result.errors.length})
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {result.errors.map((err, idx) => (
                   <div
                     key={idx}
-                    className={cn('rounded-lg border p-3', errorTypeColors[err.type] || 'bg-gray-50 border-gray-200')}
+                    className={cn(
+                      'rounded-lg border p-3',
+                      errorTypeColors[err.type] || 'bg-gray-50 border-gray-200'
+                    )}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/50">
                         {errorTypeLabels[err.type]?.[locale] || err.type}
                       </span>
+                      {err.rule_slug && (
+                        <Link
+                          href={`/${locale}/learn/basics#${err.rule_slug}`}
+                          className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/70 hover:bg-white underline-offset-2 hover:underline"
+                        >
+                          {tLearnMore} →
+                        </Link>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="line-through">{err.word}</span>
                       <span>→</span>
                       <span className="font-medium">{err.correction}</span>
                     </div>
-                    <p className="text-xs mt-1 opacity-80">{err.rule}</p>
+                    <p className="text-xs mt-1 font-medium opacity-90">{err.rule}</p>
+
+                    {/* Пояснение правила */}
+                    {err.rule_explanation && (
+                      <div className="mt-2 rounded-md bg-white/60 p-2.5 text-xs leading-relaxed text-gray-800">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                          {tRuleExplain}
+                        </div>
+                        {err.rule_explanation}
+                      </div>
+                    )}
+
+                    {/* Примеры правильного употребления */}
+                    {err.example_correct && err.example_correct.length > 0 && (
+                      <div className="mt-2">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                          {tExamples}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {err.example_correct.map((ex, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700"
+                            >
+                              ✓ {ex}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
