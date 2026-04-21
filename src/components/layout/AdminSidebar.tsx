@@ -40,6 +40,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       items: [
         { href: `/${locale}/admin/lessons`, label_kk: 'Сабақтар', label_ru: 'Уроки', icon: '📚' },
         { href: `/${locale}/admin/tests`, label_kk: 'Тест сұрақтары', label_ru: 'Тесты', icon: '✅' },
+        { href: `/${locale}/admin/grammar`, label_kk: 'Грамматика ережелері', label_ru: 'Правила грамматики', icon: '📐' },
         { href: `/${locale}/admin/news`, label_kk: 'Жаңалықтар', label_ru: 'Новости', icon: '📰' },
         { href: `/${locale}/admin/events`, label_kk: 'Іс-шаралар', label_ru: 'Мероприятия', icon: '📅' },
         { href: `/${locale}/admin/banners`, label_kk: 'Баннерлер', label_ru: 'Баннеры', icon: '🖼️' },

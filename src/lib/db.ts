@@ -82,6 +82,7 @@ class InMemoryDB implements DB {
       },
     ],
     rules_documents: [],
+    grammar_rules: [],
     history_blocks: [
       {
         id: '00000000-0000-4000-8000-000000000501',
