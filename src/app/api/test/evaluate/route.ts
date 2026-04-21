@@ -1,10 +1,11 @@
 import questionsData from '@/data/test-questions-bank.json';
 import { getUserFromRequest } from '@/lib/auth';
 import { recordTestOutcomes, type QuestionOutcome } from '@/lib/adaptive-recommender';
+import { db } from '@/lib/db';
 
 export async function POST(request: Request) {
   try {
-    const { answers, questionIds } = await request.json();
+    const { answers, questionIds, testType = 'general', topic } = await request.json();
 
     if (!answers || !questionIds) {
       return Response.json({ error: 'Answers and questionIds are required' }, { status: 400 });
@@ -36,8 +37,25 @@ export async function POST(request: Request) {
     else if (score >= 45) level = 'A2';
 
     const user = await getUserFromRequest(request);
+    let sessionId: string | null = null;
     if (user) {
       await recordTestOutcomes(user.id, outcomes);
+      try {
+        const row = await db.insert('test_sessions', {
+          user_id: user.id,
+          test_type: testType,
+          topic: topic || outcomes[0]?.topic || null,
+          questions: questionIds,
+          answers,
+          score,
+          level_result: level,
+          started_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+        });
+        sessionId = row?.id ?? null;
+      } catch (dbErr) {
+        console.warn('[test/evaluate] db insert skipped:', dbErr);
+      }
     }
 
     return Response.json({
@@ -46,6 +64,7 @@ export async function POST(request: Request) {
       total: questionIds.length,
       level,
       details,
+      sessionId,
     });
   } catch (error) {
     return Response.json({ error: 'Evaluation failed', details: String(error) }, { status: 500 });
