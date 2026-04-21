@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { SiteSettings } from './settings';
 
 export const SITE = {
   name: 'Тіл-құрал',
@@ -6,16 +7,24 @@ export const SITE = {
   tagline_ru: 'Центр обучения казахскому языку',
   url: process.env.NEXT_PUBLIC_APP_URL || 'https://til-kural.kz',
   twitter: '@tilkural',
+  // Реальные реквизиты КГУ «УМЦ Тіл-құрал» (Сатпаев, область Ұлытау).
+  // Используются как fallback, если settings в БД отсутствуют.
   org: {
-    legalName_kk: 'Тіл-құрал оқу-әдістемелік орталығы',
-    legalName_ru: 'Учебно-методический центр «Тіл-құрал»',
-    telephone: '+7 (7212) 00-00-00',
+    legalName_kk: '«Тіл-құрал» оқу-әдістемелік орталығы — Сәтбаев қаласының мәдениет және тілдерді дамыту бөлімінің МКҚК',
+    legalName_ru: 'КГУ «Учебно-методический центр «Тіл-құрал» ГУ «Отдел культуры и развития языков города Сатпаев» области Ұлытау',
+    shortName: 'УМЦ «Тіл-құрал»',
+    telephone: '+7 705 314 3391',
     email: 'info@til-kural.kz',
-    streetAddress_kk: 'Қарағанды қ., Тәуелсіздік д., 20',
-    streetAddress_ru: 'г. Караганда, пр. Тәуелсіздік, 20',
-    city_kk: 'Қарағанды',
-    city_ru: 'Караганда',
+    streetAddress_kk: 'Ұлытау обл., Сәтбаев қ., Академик Қаныш Сәтбаев даңғ., 111',
+    streetAddress_ru: 'Ұлытауская обл., г. Сатпаев, пр. Академика Каныша Сатпаева, 111',
+    city_kk: 'Сәтбаев',
+    city_ru: 'Сатпаев',
+    region_kk: 'Ұлытау облысы',
+    region_ru: 'Ұлытауская область',
     country: 'KZ',
+    bin: '241240033540',
+    director: 'Игенберлина Мадинат Балтина',
+    goszakupUrl: 'https://www.goszakup.gov.kz/ru/registry/show_supplier/745311',
   },
 } as const;
 
@@ -36,7 +45,6 @@ export function buildMetadata(input: PageMetaInput): Metadata {
   const description = input.description || (input.locale === 'kk' ? SITE.tagline_kk : SITE.tagline_ru);
   const ogImage = input.image || `${SITE.url}/og-default.svg`;
   const otherLocale = input.locale === 'kk' ? 'ru' : 'kk';
-  const altPath = (input.path || '/').replace(/^\/(kk|ru)(\/|$)/, `/${otherLocale}$2`);
 
   return {
     title,
@@ -73,24 +81,69 @@ export function buildMetadata(input: PageMetaInput): Metadata {
   };
 }
 
-export function organizationJsonLd(locale: string) {
+/**
+ * Строит schema.org Organization JSON-LD.
+ * Принимает опциональные `settings` из БД — если переданы, используются актуальные
+ * реквизиты (имя, телефон, email, адрес, БИН, директор). Без `settings` — статический
+ * fallback из SITE.org (Сатпаев, Ұлытау).
+ */
+export function organizationJsonLd(locale: string, settings?: SiteSettings) {
   const isKk = locale === 'kk';
-  return {
+  const s = settings || {};
+
+  const legalName =
+    (isKk ? s.org_full_name_kk : s.org_full_name_ru) ||
+    (isKk ? SITE.org.legalName_kk : SITE.org.legalName_ru);
+  const telephone = s.contact_phone || SITE.org.telephone;
+  const email = s.contact_email || SITE.org.email;
+  const streetAddress =
+    (isKk ? s.contact_address_kk : s.contact_address_ru) ||
+    (isKk ? SITE.org.streetAddress_kk : SITE.org.streetAddress_ru);
+  const bin = s.org_bin || SITE.org.bin;
+  const director = s.org_director || SITE.org.director;
+
+  const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'EducationalOrganization',
-    name: isKk ? SITE.org.legalName_kk : SITE.org.legalName_ru,
+    name: legalName,
+    legalName,
+    alternateName: SITE.org.shortName,
     url: SITE.url,
     logo: `${SITE.url}/logo.svg`,
-    telephone: SITE.org.telephone,
-    email: SITE.org.email,
+    telephone,
+    email,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: isKk ? SITE.org.streetAddress_kk : SITE.org.streetAddress_ru,
+      streetAddress,
       addressLocality: isKk ? SITE.org.city_kk : SITE.org.city_ru,
+      addressRegion: isKk ? SITE.org.region_kk : SITE.org.region_ru,
       addressCountry: SITE.org.country,
     },
-    sameAs: [],
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        telephone,
+        email,
+        contactType: 'customer service',
+        availableLanguage: ['kk', 'ru'],
+      },
+    ],
+    sameAs: [SITE.org.goszakupUrl],
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'BIN',
+      value: bin,
+    },
   };
+
+  if (director) {
+    jsonLd.founder = { '@type': 'Person', name: director };
+    jsonLd.employee = [
+      { '@type': 'Person', name: director, jobTitle: isKk ? 'Директор' : 'Директор' },
+    ];
+  }
+
+  return jsonLd;
 }
 
 export function newsArticleJsonLd(params: {

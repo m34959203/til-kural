@@ -1,6 +1,7 @@
 import './globals.css';
 import { Manrope, Lora } from 'next/font/google';
 import { buildMetadata, organizationJsonLd, SITE } from '@/lib/seo';
+import { getSettings } from '@/lib/settings';
 import Analytics from '@/components/layout/Analytics';
 
 const manrope = Manrope({
@@ -25,14 +26,17 @@ export const metadata = buildMetadata({
   path: '/',
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Pull real organisation requisites from DB settings so Organization JSON-LD
+  // stays in sync with contacts page. Falls back to static defaults on failure.
+  const settings = await getSettings().catch(() => undefined);
   return (
     <html lang="kk" className={`h-full antialiased ${manrope.variable} ${lora.variable}`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-gray-50 font-sans">
         {children}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd('kk')) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd('kk', settings)) }}
         />
         <Analytics />
       </body>

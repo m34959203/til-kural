@@ -2,20 +2,34 @@ import { apiError } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
-    let name = '', email = '', subject = '', message = '';
+    let name = '', email = '', subject = '', message = '', website = '';
     const ct = request.headers.get('content-type') || '';
     if (ct.includes('application/json')) {
       const body = await request.json();
-      ({ name, email, subject, message } = body);
+      name = String(body.name || '');
+      email = String(body.email || '');
+      subject = String(body.subject || '');
+      message = String(body.message || '');
+      website = String(body.website || '');
     } else {
       const form = await request.formData();
       name = String(form.get('name') || '');
       email = String(form.get('email') || '');
       subject = String(form.get('subject') || '');
       message = String(form.get('message') || '');
+      website = String(form.get('website') || '');
+    }
+
+    // Honeypot: silent reject if bot filled the hidden field.
+    // Do not leak validation details — respond 204 as if accepted.
+    if (website.trim() !== '') {
+      return new Response(null, { status: 204 });
     }
 
     if (!name || !email || !message) return apiError(400, 'Missing fields');
+    if (name.length > 100) return apiError(400, 'Name too long');
+    if (email.length > 200) return apiError(400, 'Email too long');
+    if (subject.length > 200) return apiError(400, 'Subject too long');
     if (message.length > 5000) return apiError(400, 'Message too long');
 
     // Forward via email if SMTP configured, otherwise just log

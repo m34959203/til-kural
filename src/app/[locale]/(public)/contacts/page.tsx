@@ -120,6 +120,16 @@ export default async function ContactsPage({ params }: { params: Promise<{ local
             {locale === 'kk' ? 'Хабарлама жіберу' : 'Отправить сообщение'}
           </h2>
           <form className="space-y-4" method="POST" action="/api/contact">
+            {/* Honeypot field — should stay empty; bots usually fill all inputs. */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="sr-only"
+              defaultValue=""
+            />
             <Input name="name" required label={locale === 'kk' ? 'Аты-жөні' : 'ФИО'} placeholder={locale === 'kk' ? 'Аты-жөніңізді жазыңыз' : 'Введите ФИО'} />
             <Input name="email" required label="Email" type="email" placeholder="email@example.com" />
             <Input name="subject" label={locale === 'kk' ? 'Тақырып' : 'Тема'} placeholder={locale === 'kk' ? 'Хабарлама тақырыбы' : 'Тема сообщения'} />
