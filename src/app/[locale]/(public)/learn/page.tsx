@@ -31,6 +31,7 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
     { href: `/${locale}/learn/dialog`, icon: '💬', title: m.learn.dialog, desc: locale === 'kk' ? 'AI-мен сөйлесу практикасы' : 'Практика разговора с AI' },
     { href: `/${locale}/learn/writing`, icon: '✍️', title: m.learn.writing, desc: locale === 'kk' ? 'Жазба жұмысты тексеру' : 'Проверка письменных работ' },
     { href: `/${locale}/learn/pronunciation`, icon: '🔊', title: m.learn.pronunciation, desc: locale === 'kk' ? 'Дұрыс айтылуды үйрену' : 'Изучение произношения' },
+    { href: `/${locale}/learn/exercises`, icon: '💪', title: locale === 'kk' ? 'Жаттығулар' : 'Упражнения', desc: locale === 'kk' ? 'Әлсіз жерлеріңіз бойынша жаттығулар' : 'Адаптивные упражнения по слабым местам' },
   ];
 
   return (
