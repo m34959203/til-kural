@@ -154,16 +154,23 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
             source.connect(processor);
             processor.connect(inputCtxRef.current!.destination);
 
-            // 6. Пнём AI чтобы начал первым. В onopen сам `session` ещё не
-            //    разрешён (await ai.live.connect не вернулся), поэтому идём
-            //    через promise-ref — паттерн из LifeCompass.
+            // 6. Пнём AI чтобы начал первым. `ai.live.connect` может
+            //    запустить WebSocket + вызвать onopen СИНХРОННО внутри
+            //    вызова — `const sessionPromise = ai.live.connect(...)` ещё
+            //    в TDZ, а `sessionPromiseRef.current` ещё null. Отложим на
+            //    микротаск, чтобы внешний const успел инициализироваться.
             const topicLine = topic ? `Тақырыбы: ${topic}. ` : '';
             const greet = `Сәлеметсіз бе! Сіз — ${mentorProfile.name_kk}. ${topicLine}Қазақ тілінде қысқа амандасып, оқушыға бір сұрақ қойыңыз.`;
-            sessionPromiseRef.current?.then((s) => {
-              s.sendClientContent({
-                turns: [{ role: 'user', parts: [{ text: greet }] }],
-                turnComplete: true,
-              });
+            queueMicrotask(() => {
+              const p = sessionPromiseRef.current;
+              if (!p) return;
+              p.then((s) => {
+                if (closedRef.current) return;
+                s.sendClientContent({
+                  turns: [{ role: 'user', parts: [{ text: greet }] }],
+                  turnComplete: true,
+                });
+              }).catch(() => {});
             });
           },
 
