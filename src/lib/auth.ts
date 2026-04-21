@@ -53,10 +53,36 @@ export function verifyToken(token: string): JWTClaims | null {
   }
 }
 
+/**
+ * Достаём значение cookie по имени из raw-заголовка Cookie.
+ * Парсер осознанно примитивный — без зависимостей, чтобы работало и в Node, и (при необходимости)
+ * без next/headers. Для middleware используется собственный парсер в `src/middleware.ts`.
+ */
+function readCookie(request: Request, name: string): string | null {
+  const header = request.headers.get('cookie');
+  if (!header) return null;
+  const needle = `${name}=`;
+  // Разбиваем по ';' и обрезаем пробелы — стандартный формат Cookie header.
+  for (const part of header.split(';')) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(needle)) {
+      return decodeURIComponent(trimmed.slice(needle.length));
+    }
+  }
+  return null;
+}
+
 export async function getUserFromRequest(request: Request): Promise<UserPayload | null> {
+  // Принимаем токен из Authorization: Bearer ИЛИ из httpOnly cookie tk-token.
+  // Bearer приоритетнее (совместимость с существующими клиентами, использующими localStorage).
+  let token: string | null = null;
   const authHeader = request.headers.get('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-  const token = authHeader.slice(7);
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else {
+    token = readCookie(request, 'tk-token');
+  }
+  if (!token) return null;
   const claims = verifyToken(token);
   if (!claims) return null;
   const user = await db.findOne('users', { id: claims.id });

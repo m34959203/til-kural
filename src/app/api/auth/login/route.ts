@@ -2,6 +2,16 @@ import { db } from '@/lib/db';
 import { verifyPassword, signToken } from '@/lib/auth';
 import { validateLogin } from '@/lib/validators';
 
+// Срок жизни cookie совпадает с exp JWT (7 дней). Значение в секундах для Max-Age.
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
+function buildAuthCookie(token: string): string {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  // SameSite=Lax: защита от CSRF при сохранении top-level navigation.
+  // HttpOnly: недоступен JS (middleware читает на сервере, клиент использует localStorage-копию).
+  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}${secure}`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -22,7 +32,10 @@ export async function POST(request: Request) {
 
     const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
-    return Response.json({
+    // JSON-ответ сохраняем 1:1 с токеном + user — существующие клиенты не ломаем.
+    // Дополнительно ставим httpOnly cookie tk-token, чтобы middleware мог гейтить /admin
+    // без участия JS.
+    const res = Response.json({
       token,
       user: {
         id: user.id,
@@ -37,6 +50,8 @@ export async function POST(request: Request) {
         longest_streak: user.longest_streak ?? 0,
       },
     });
+    res.headers.append('Set-Cookie', buildAuthCookie(token));
+    return res;
   } catch (error) {
     return Response.json({ error: 'Login failed', details: String(error) }, { status: 500 });
   }

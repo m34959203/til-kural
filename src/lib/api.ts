@@ -3,8 +3,10 @@ import { getUserFromRequest, UserPayload } from './auth';
 
 export async function requireAdminApi(request: Request): Promise<UserPayload | Response> {
   // DEV-режим: при DEV_ADMIN_BYPASS=1 пропускаем auth, отдаём синтетического admin.
-  // Используем ТОЛЬКО локально. В prod оставлять переменную не установленной.
-  if (process.env.DEV_ADMIN_BYPASS === '1') {
+  // SECURITY: работает ТОЛЬКО когда NODE_ENV !== 'production'. На проде (даже если
+  // переменная случайно попала в окружение) bypass игнорируется — иначе CF-tunnel
+  // открыл бы всю админку любому в интернете.
+  if (process.env.NODE_ENV !== 'production' && process.env.DEV_ADMIN_BYPASS === '1') {
     return { id: 'dev-admin', email: 'dev@til-kural.local', role: 'admin', name: 'Dev Admin' };
   }
   const user = await getUserFromRequest(request);
