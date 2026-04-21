@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { MENTORS, type MentorKey, DEFAULT_MENTOR } from '@/lib/mentors';
 import LiveVoiceDialog from '@/components/features/LiveVoiceDialog';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 type DialogMode = 'text' | 'voice-loop' | 'live';
 
@@ -50,6 +51,8 @@ type WindowWithSpeech = Window & {
 
 export default function DialogTrainer({ locale }: DialogTrainerProps) {
   const isKk = locale === 'kk';
+  const { user } = useCurrentUser();
+  const currentLevel = user?.language_level || 'B1';
   const [mode, setMode] = useState<DialogMode>('text');
   const [mentor, setMentor] = useState<MentorKey>(DEFAULT_MENTOR);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -125,7 +128,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           message: `Диалог бастаңыз. Тақырып: ${topicId}. Сіз жағдайды сипаттап, бірінші сұрақты қойыңыз.`,
           history: [],
           mentor,
-          level: 'B1',
+          level: currentLevel,
           mode: 'dialog',
           topic: topicId,
         }),
@@ -157,7 +160,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           message: text,
           history: messages,
           mentor,
-          level: 'B1',
+          level: currentLevel,
           mode: 'dialog',
           topic: selectedTopic,
         }),
@@ -215,9 +218,12 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
                 : 'Живой разговор с AI — естественно, быстро, с возможностью перебивать'}
             </p>
           </div>
-          <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
+          <div className="flex items-center gap-2">
+            <LevelBadge locale={locale} level={currentLevel} />
+            <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
+          </div>
         </div>
-        <LiveVoiceDialog locale={locale} topic={selectedTopic} />
+        <LiveVoiceDialog locale={locale} topic={selectedTopic} level={currentLevel} />
       </div>
     );
   }
@@ -236,7 +242,10 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
                 : 'Практикуйте разговор с AI в реальных ситуациях'}
             </p>
           </div>
-          <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
+          <div className="flex items-center gap-2">
+            <LevelBadge locale={locale} level={currentLevel} />
+            <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
+          </div>
         </div>
 
         <div className="mb-6">
@@ -306,6 +315,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <LevelBadge locale={locale} level={currentLevel} />
           <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
           <Button variant="ghost" size="sm" onClick={() => { stopPlayback(); stopRecognition(); setSelectedTopic(null); setMessages([]); }}>
             {isKk ? 'Тақырып ауыстыру' : 'Сменить тему'}
@@ -396,6 +406,18 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
         </div>
       )}
     </div>
+  );
+}
+
+function LevelBadge({ locale, level }: { locale: string; level: string }) {
+  const isKk = locale === 'kk';
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 text-xs font-medium"
+      title={isKk ? 'Сіздің деңгейіңіз' : 'Ваш уровень'}
+    >
+      {isKk ? 'Деңгей:' : 'Ваш уровень:'} {level}
+    </span>
   );
 }
 

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import MentorAvatar from './MentorAvatar';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,11 +16,23 @@ interface AITeacherProps {
 }
 
 export default function AITeacher({ locale }: AITeacherProps) {
+  const { user } = useCurrentUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mentor, setMentor] = useState('abai');
+  // Local mentor selector takes priority; seed from user profile if present.
+  const [mentor, setMentor] = useState<string>('abai');
+  const [mentorTouched, setMentorTouched] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Seed mentor from user profile once (until the user changes it manually).
+  useEffect(() => {
+    if (!mentorTouched && user?.mentor_avatar) {
+      setMentor(user.mentor_avatar);
+    }
+  }, [user?.mentor_avatar, mentorTouched]);
+
+  const currentLevel = user?.language_level || 'B1';
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +64,7 @@ export default function AITeacher({ locale }: AITeacherProps) {
           message: userMessage,
           history: messages,
           mentor,
-          level: 'B1',
+          level: currentLevel,
         }),
       });
       const data = await res.json();
@@ -65,15 +78,15 @@ export default function AITeacher({ locale }: AITeacherProps) {
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] max-h-[700px]">
-      {/* Mentor selector */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Mentor selector + level badge */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         <span className="text-sm font-medium text-gray-700">
           {locale === 'kk' ? 'Тәлімгер:' : 'Наставник:'}
         </span>
         {['abai', 'baitursynuly', 'auezov'].map((m) => (
           <button
             key={m}
-            onClick={() => setMentor(m)}
+            onClick={() => { setMentor(m); setMentorTouched(true); }}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
               mentor === m ? 'bg-teal-100 text-teal-800 font-medium' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
@@ -84,6 +97,12 @@ export default function AITeacher({ locale }: AITeacherProps) {
             </span>
           </button>
         ))}
+        <span
+          className="ml-auto inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 text-xs font-medium"
+          title={locale === 'kk' ? 'Сіздің деңгейіңіз' : 'Ваш уровень'}
+        >
+          {locale === 'kk' ? 'Деңгей:' : 'Ваш уровень:'} {currentLevel}
+        </span>
       </div>
 
       {/* Chat messages */}

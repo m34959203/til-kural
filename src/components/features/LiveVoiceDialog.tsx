@@ -7,10 +7,13 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { createPcmBlob, decodeAudioData, decodeBase64 } from '@/lib/audio/pcm';
 import { MENTORS, type MentorKey, DEFAULT_MENTOR } from '@/lib/mentors';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface Props {
   locale: string;
   topic?: string | null;
+  /** Optional CEFR level override. Falls back to the current user's language_level, then 'B1'. */
+  level?: string;
 }
 
 interface TranscriptLine {
@@ -29,8 +32,10 @@ function getAudioCtxCtor(): AudioCtxCtor {
   return window.AudioContext || w.webkitAudioContext!;
 }
 
-export default function LiveVoiceDialog({ locale, topic }: Props) {
+export default function LiveVoiceDialog({ locale, topic, level }: Props) {
   const isKk = locale === 'kk';
+  const { user } = useCurrentUser();
+  const effectiveLevel = level || user?.language_level || 'B1';
   const [mentor, setMentor] = useState<MentorKey>(DEFAULT_MENTOR);
   const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -108,7 +113,7 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
       const tokenRes = await fetch('/api/ai/live-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mentor, level: 'B1', topic }),
+        body: JSON.stringify({ mentor, level: effectiveLevel, topic }),
       });
       if (!tokenRes.ok) throw new Error(`token HTTP ${tokenRes.status}`);
       const { token, model } = await tokenRes.json();
@@ -256,7 +261,7 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
       setError(String(err instanceof Error ? err.message : err));
       disconnect();
     }
-  }, [connecting, connected, mentor, mentorProfile, topic, isKk, disconnect]);
+  }, [connecting, connected, mentor, mentorProfile, topic, effectiveLevel, isKk, disconnect]);
 
   const stopAiSpeaking = () => {
     outSourcesRef.current.forEach((s) => { try { s.stop(); } catch {} });
@@ -311,7 +316,15 @@ export default function LiveVoiceDialog({ locale, topic }: Props) {
               <Image src={mentorProfile.image} alt={isKk ? mentorProfile.name_kk : mentorProfile.name_ru} fill className="object-cover" sizes="48px" />
             </div>
             <div className="min-w-0">
-              <div className="font-semibold text-gray-900 truncate">{isKk ? mentorProfile.name_kk : mentorProfile.name_ru}</div>
+              <div className="font-semibold text-gray-900 truncate flex items-center gap-2">
+                <span className="truncate">{isKk ? mentorProfile.name_kk : mentorProfile.name_ru}</span>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 text-[11px] font-medium shrink-0"
+                  title={isKk ? 'Сіздің деңгейіңіз' : 'Ваш уровень'}
+                >
+                  {isKk ? 'Деңгей:' : 'Ваш уровень:'} {effectiveLevel}
+                </span>
+              </div>
               <div className="text-xs text-gray-500 truncate">
                 {isKk ? mentorProfile.role_kk : mentorProfile.role_ru} · 🎙 {mentorProfile.ttsVoice}
               </div>
