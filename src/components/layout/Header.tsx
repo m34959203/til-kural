@@ -172,21 +172,51 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
             </div>
           </Link>
 
-          {/* Nav (desktop) */}
-          <nav className="hidden xl:flex items-center gap-1 text-[14px] font-semibold">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={
-                  isActive(item.href)
-                    ? 'px-3 py-2 rounded-lg text-tk-blue-dark bg-tk-blue/10'
-                    : 'px-3 py-2 rounded-lg text-tk-ink hover:bg-tk-beige-2 transition'
-                }
-              >
-                {item.label}
-              </Link>
-            ))}
+          {/* Nav (desktop) — 6 top-level групп, тематические дропдауны */}
+          <nav className="hidden lg:flex items-center gap-1 text-[14px] font-semibold">
+            <NavLink href={`/${locale}`} active={pathname === `/${locale}` || pathname === `/${locale}/`}>
+              {locale === 'kk' ? 'Басты' : 'Главная'}
+            </NavLink>
+            <NavDropdown
+              label={locale === 'kk' ? 'Оқу' : 'Обучение'}
+              active={pathname.startsWith(`/${locale}/learn`) || pathname.startsWith(`/${locale}/photo-check`) || pathname.startsWith(`/${locale}/game`)}
+              items={[
+                { href: `/${locale}/learn`, label_kk: 'Сабақтар', label_ru: 'Уроки', desc_kk: '21 сабақ A1–B2', desc_ru: '21 урок A1–B2', icon: '📚' },
+                { href: `/${locale}/learn/basics`, label_kk: 'Тіл негіздері', label_ru: 'Основы языка', desc_kk: '21 грамматика ережесі', desc_ru: '21 правило грамматики', icon: '📖' },
+                { href: `/${locale}/learn/dialog`, label_kk: 'AI-диалог', label_ru: 'AI-диалог', desc_kk: 'Live дауыстық сөйлесу', desc_ru: 'Живой голос с AI', icon: '🎙️' },
+                { href: `/${locale}/photo-check`, label_kk: 'Фото-тексеру', label_ru: 'Фото-проверка', desc_kk: 'Қолжазбаны сканерлеу', desc_ru: 'Распознавание рукописи', icon: '📸' },
+                { href: `/${locale}/game`, label_kk: 'Ойын', label_ru: 'Игра', desc_kk: 'Квесттер мен XP', desc_ru: 'Квесты и XP', icon: '🎮' },
+              ]}
+              locale={locale}
+            />
+            <NavDropdown
+              label={locale === 'kk' ? 'Тестілеу' : 'Тесты'}
+              active={pathname.startsWith(`/${locale}/test`) || pathname.startsWith(`/${locale}/kaztest-info`)}
+              items={[
+                { href: `/${locale}/test/level`, label_kk: 'Деңгей', label_ru: 'Уровень', desc_kk: 'A1–C2 адаптивті тест', desc_ru: 'Адаптивный тест A1–C2', icon: '🎯' },
+                { href: `/${locale}/test/topics`, label_kk: 'Тақырыптық', label_ru: 'Тематические', desc_kk: 'Грамматика, лексика…', desc_ru: 'Грамматика, лексика…', icon: '📝' },
+                { href: `/${locale}/test/kaztest`, label_kk: 'ҚАЗТЕСТ', label_ru: 'КАЗТЕСТ', desc_kk: '5 секция, 100 балл', desc_ru: '5 секций, 100 баллов', icon: '🏅' },
+                { href: `/${locale}/kaztest-info`, label_kk: 'ҚАЗТЕСТ жөнінде', label_ru: 'О КАЗТЕСТ', desc_kk: 'Форматы мен ережелері', desc_ru: 'Формат и правила', icon: 'ℹ️' },
+              ]}
+              locale={locale}
+            />
+            <NavDropdown
+              label={locale === 'kk' ? 'Орталық' : 'О центре'}
+              active={pathname.startsWith(`/${locale}/about`) || pathname.startsWith(`/${locale}/events`) || pathname.startsWith(`/${locale}/rules`) || pathname.startsWith(`/${locale}/resources`)}
+              items={[
+                { href: `/${locale}/about`, label_kk: 'Біз туралы', label_ru: 'О нас', desc_kk: 'Тарих, бөлімдер, қызметкерлер', desc_ru: 'История, отделы, сотрудники', icon: '🏛' },
+                { href: `/${locale}/events`, label_kk: 'Іс-шаралар', label_ru: 'События', desc_kk: 'Күнтізбе және жаңалықтар', desc_ru: 'Календарь и анонсы', icon: '📅' },
+                { href: `/${locale}/rules`, label_kk: 'Ережелер', label_ru: 'Правила', desc_kk: 'Нормативтік құжаттар', desc_ru: 'Нормативные документы', icon: '📜' },
+                { href: `/${locale}/resources`, label_kk: 'Ресурстар', label_ru: 'Ресурсы', desc_kk: 'Пайдалы сілтемелер', desc_ru: 'Полезные ссылки', icon: '🔗' },
+              ]}
+              locale={locale}
+            />
+            <NavLink href={`/${locale}/news`} active={pathname.startsWith(`/${locale}/news`)}>
+              {locale === 'kk' ? 'Жаңалықтар' : 'Новости'}
+            </NavLink>
+            <NavLink href={`/${locale}/contacts`} active={pathname.startsWith(`/${locale}/contacts`)}>
+              {locale === 'kk' ? 'Байланыс' : 'Контакты'}
+            </NavLink>
           </nav>
 
           {/* Actions */}
@@ -211,11 +241,11 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
               </svg>
             </Link>
 
-            {/* Hamburger — visible below xl (where desktop nav hides) */}
+            {/* Hamburger — visible below lg (где nav скрывается) */}
             <button
               type="button"
               onClick={() => window.dispatchEvent(new Event(MOBILE_NAV_OPEN_EVENT))}
-              className="xl:hidden w-11 h-11 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark flex items-center justify-center hover:bg-tk-blue-dark hover:text-white transition"
+              className="lg:hidden w-11 h-11 rounded-xl border-2 border-tk-blue-dark text-tk-blue-dark flex items-center justify-center hover:bg-tk-blue-dark hover:text-white transition"
               aria-label={locale === 'kk' ? 'Мәзірді ашу' : 'Открыть меню'}
               aria-controls="tk-mobile-drawer"
             >
@@ -227,5 +257,79 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
         </div>
       </header>
     </>
+  );
+}
+
+function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={
+        active
+          ? 'px-3 py-2 rounded-lg text-tk-blue-dark bg-tk-blue/10'
+          : 'px-3 py-2 rounded-lg text-tk-ink hover:bg-tk-beige-2 transition'
+      }
+    >
+      {children}
+    </Link>
+  );
+}
+
+interface DropdownItem {
+  href: string;
+  label_kk: string;
+  label_ru: string;
+  desc_kk?: string;
+  desc_ru?: string;
+  icon?: string;
+}
+
+function NavDropdown({
+  label,
+  items,
+  locale,
+  active,
+}: {
+  label: string;
+  items: DropdownItem[];
+  locale: string;
+  active: boolean;
+}) {
+  const isKk = locale === 'kk';
+  return (
+    <div className="relative group">
+      <button
+        type="button"
+        className={
+          active
+            ? 'flex items-center gap-1 px-3 py-2 rounded-lg text-tk-blue-dark bg-tk-blue/10'
+            : 'flex items-center gap-1 px-3 py-2 rounded-lg text-tk-ink hover:bg-tk-beige-2 transition'
+        }
+        aria-haspopup="menu"
+      >
+        {label}
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60 group-hover:opacity-100 group-focus-within:rotate-180 transition" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {/* Панель. Появляется по :hover на группе и :focus-within. Невидима по умолчанию. */}
+      <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition-all absolute left-0 top-full mt-1 z-50 min-w-[340px] bg-white rounded-2xl shadow-2xl border border-tk-beige-2 p-2">
+        {items.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-tk-beige-2 transition"
+          >
+            {item.icon && <span className="text-xl leading-none mt-0.5">{item.icon}</span>}
+            <div className="min-w-0">
+              <div className="font-semibold text-tk-ink text-sm">{isKk ? item.label_kk : item.label_ru}</div>
+              {(item.desc_kk || item.desc_ru) && (
+                <div className="text-xs text-tk-muted leading-snug mt-0.5">{isKk ? item.desc_kk : item.desc_ru}</div>
+              )}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
