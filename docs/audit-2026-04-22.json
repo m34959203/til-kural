@@ -1,0 +1,369 @@
+{
+  "audit": {
+    "site": "https://caution-stuck-chart-practitioner.trycloudflare.com/ru",
+    "date": "2026-04-22",
+    "method": "Ручной обход страниц в браузере, сопоставление с чек-листом ТЗ из 24 пунктов",
+    "summary": {
+      "total": 24,
+      "ok": 20,
+      "partial": 4,
+      "failed": 0,
+      "real_readiness_percent": 92,
+      "claimed_readiness_percent": 100
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "section": "Ядро сайта",
+      "title": "Удобная панель администрирования",
+      "status": "partial",
+      "url": "/ru/admin",
+      "evidence": [
+        "Сайдбар 14 ссылок: dashboard, analytics, lessons, tests, news, events, banners, media, departments, staff, rules, history, users, settings",
+        "CRUD работает на /admin/staff (директор Игенберлина М.Б.) и /admin/departments (Администрация)",
+        "DEV_ADMIN_BYPASS включён — вход без логина"
+      ],
+      "issues": [
+        "/admin/news, /admin/events, /admin/lessons показывают «Записей нет», но публично: 3 новости, 4 события, 21 урок",
+        "Публичные уроки хранятся в src/data/lessons-meta.ts (хардкод), админка их не видит",
+        "Админ не может через панель добавить урок/новость так, чтобы они появились на сайте"
+      ]
+    },
+    {
+      "id": 2,
+      "section": "Ядро сайта",
+      "title": "Дефолтная локаль kk",
+      "status": "ok",
+      "url": "/kk",
+      "evidence": [
+        "/kk открывается с заголовком на казахском (Ахмет Байтұрсынұлы)",
+        "<html lang=\"kk\"> подтверждён в исходнике"
+      ],
+      "issues": []
+    },
+    {
+      "id": 3,
+      "section": "Ядро сайта",
+      "title": "Новости: текст/фото/видео",
+      "status": "partial",
+      "url": "/ru/news",
+      "evidence": [
+        "3 карточки новостей, детальная страница открывается",
+        "JSON-LD NewsArticle присутствует"
+      ],
+      "issues": [
+        "Фото и видео НЕ отображаются ни в карточках, ни в детальной (хотя поля image_url/video_url заявлены)",
+        "JSON-LD выводится как видимый текст на странице, а не в <script type=\"application/ld+json\">",
+        "В JSON-LD зашит http://localhost:3015 вместо продового домена",
+        "В админке 0 новостей — публичные берутся из сидов"
+      ]
+    },
+    {
+      "id": 4,
+      "section": "Ядро сайта",
+      "title": "Мероприятия с календарём",
+      "status": "partial",
+      "url": "/ru/events",
+      "evidence": [
+        "4 мероприятия: Неделя казахского языка (14 апр), Семинар КАЗТЕСТ (20 апр), Диктант (1 мая), Летний лагерь (1 июня)",
+        "Группировка по месяцам работает"
+      ],
+      "issues": [
+        "JSON-LD Event выводится видимым текстом на странице",
+        "baseUrl http://localhost:3015 в ссылках",
+        "В админке 0 событий"
+      ]
+    },
+    {
+      "id": 5,
+      "section": "ИИ-учитель",
+      "title": "Уроки с адаптацией под уровень",
+      "status": "ok",
+      "url": "/ru/learn/lessons",
+      "evidence": [
+        "21 урок на странице",
+        "Уровни A1–C1 покрыты, темы: grammar/vocabulary/conversation/business/phonetics/orthography/culture",
+        "Бейджи «уровень: A1+ / A2+ / B1+ / B2+ / C1+» на каждой карточке",
+        "На /learn и в карточке урока AITeacher показывает «Ваш уровень: B1»"
+      ],
+      "issues": []
+    },
+    {
+      "id": 6,
+      "section": "ИИ-учитель",
+      "title": "Диалог с ИИ: исправление ошибок",
+      "status": "ok",
+      "url": "/ru/learn/dialog",
+      "evidence": [
+        "3 режима: Текст / Голос (цикл) / Live",
+        "3 наставника с описаниями стиля",
+        "8 тем диалога",
+        "Бейдж «Ваш уровень: B1»"
+      ],
+      "issues": []
+    },
+    {
+      "id": 7,
+      "section": "ИИ-учитель",
+      "title": "Проверка письменных работ",
+      "status": "ok",
+      "url": "/ru/learn/writing",
+      "evidence": [
+        "Textarea, счётчик слов, кнопка «Проверить»"
+      ],
+      "issues": [
+        "End-to-end с реальной отправкой не тестировался"
+      ]
+    },
+    {
+      "id": 8,
+      "section": "ИИ-учитель",
+      "title": "Произношение через TTS",
+      "status": "ok",
+      "url": "/ru/learn/pronunciation",
+      "evidence": [
+        "Фраза «Сәлеметсіз бе!» с кнопками «🔊 Слушать / 🔄 Медленно / 📖 Руководство»",
+        "Карусель 1/12 фраз"
+      ],
+      "issues": []
+    },
+    {
+      "id": 9,
+      "section": "ИИ-учитель",
+      "title": "Адаптивные упражнения",
+      "status": "partial",
+      "url": "/ru/learn/lessons/1",
+      "evidence": [
+        "Блок AdaptiveExercise встроен в урок, выбор темы (Грамматика/Словарный запас/Падежи/Времена), кнопка «Создать упражнения»"
+      ],
+      "issues": [
+        "/ru/learn/exercises → 404, отдельной страницы нет — доступно только из урока"
+      ]
+    },
+    {
+      "id": 10,
+      "section": "Тестовая платформа",
+      "title": "CAT-тест A1–C2",
+      "status": "ok",
+      "url": "/ru/test/level",
+      "evidence": [
+        "Описание CAT-алгоритма: 10–15 вопросов, ветвление сложности",
+        "Кнопка «Начать тест»"
+      ],
+      "issues": []
+    },
+    {
+      "id": 11,
+      "section": "Тестовая платформа",
+      "title": "КАЗТЕСТ",
+      "status": "ok",
+      "url": "/ru/test/kaztest",
+      "evidence": [
+        "20 вопросов, 30 минут, 5 секций",
+        "Шкала: A1≥30, A2≥45, B1≥60, B2≥75, C1≥90"
+      ],
+      "issues": []
+    },
+    {
+      "id": 12,
+      "section": "Тестовая платформа",
+      "title": "Личный кабинет: история/графики/рекомендации",
+      "status": "ok",
+      "url": "/ru/profile",
+      "evidence": [
+        "Требует вход, редирект на главную — правильное поведение"
+      ],
+      "issues": [
+        "End-to-end с залогиненным юзером не проверялся"
+      ]
+    },
+    {
+      "id": 13,
+      "section": "Тестовая платформа",
+      "title": "PDF-сертификат",
+      "status": "partial",
+      "url": "/ru/test/certificate/1",
+      "evidence": [
+        "Рендер: «TIL-KURAL / СЕРТИФИКАТ / Student / B1 / Балл: 78%»",
+        "Кнопки «📥 Скачать PDF» и «🔗 Поделиться»"
+      ],
+      "issues": [
+        "Текст сертификата на английском — ограничение jsPDF без встроенного кирилличного TTF. Для казахстанского центра критично"
+      ]
+    },
+    {
+      "id": 14,
+      "section": "Фото-проверка",
+      "title": "Распознавание рукописи через Gemini Vision",
+      "status": "ok",
+      "url": "/ru/photo-check",
+      "evidence": [
+        "UI загрузки «JPG, PNG до 10МБ»"
+      ],
+      "issues": [
+        "End-to-end с реальной фотографией не проверялся"
+      ]
+    },
+    {
+      "id": 15,
+      "section": "Фото-проверка",
+      "title": "Ошибки с цветовым выделением + правильный вариант",
+      "status": "not_tested_prod",
+      "url": "/ru/photo-check",
+      "evidence": [
+        "Код и промпт заявлены"
+      ],
+      "issues": [
+        "Без загрузки фото проверить рендер нельзя"
+      ]
+    },
+    {
+      "id": 16,
+      "section": "Фото-проверка",
+      "title": "Объяснение правила + примеры",
+      "status": "not_tested_prod",
+      "url": "/ru/photo-check",
+      "evidence": [],
+      "issues": [
+        "Требуется end-to-end с реальной картинкой"
+      ]
+    },
+    {
+      "id": 17,
+      "section": "Фото-проверка",
+      "title": "Оценка грамотность/связность/лексика",
+      "status": "not_tested_prod",
+      "url": "/ru/photo-check",
+      "evidence": [],
+      "issues": [
+        "Требуется end-to-end с реальной картинкой"
+      ]
+    },
+    {
+      "id": 18,
+      "section": "Фото-проверка",
+      "title": "История проверок + тренд прогресса",
+      "status": "not_tested_prod",
+      "url": "/ru/profile",
+      "evidence": [],
+      "issues": [
+        "Требуется залогиненный юзер с историей проверок"
+      ]
+    },
+    {
+      "id": 19,
+      "section": "Геймификация",
+      "title": "Персональный аватар-наставник",
+      "status": "ok",
+      "url": "/ru/learn/dialog",
+      "evidence": [
+        "3 ментора с описаниями стиля: Абай («🎙 Афоризмы, глубокая мысль»), Байтұрсынұлы («🎙 Точно, через правила»), Әуезов («🎙 Художественно, образно»)",
+        "Чип-фильтры по наставнику на странице уроков (Все/Абай/Байтұрсынұлы/Әуезов)"
+      ],
+      "issues": []
+    },
+    {
+      "id": 20,
+      "section": "Геймификация",
+      "title": "Система квестов",
+      "status": "ok",
+      "url": "/ru/game/quests",
+      "evidence": [
+        "6 квестов (в ТЗ было 4 — больше чем заявлено)",
+        "2 квеста в прогрессе (57%, 23%)",
+        "Типы: ежедневный, челлендж, обучение, навык, серия, словарь"
+      ],
+      "issues": []
+    },
+    {
+      "id": 21,
+      "section": "Геймификация",
+      "title": "XP / уровни / разблокировка контента",
+      "status": "ok",
+      "url": "/ru/learn/lessons",
+      "evidence": [
+        "Бейджи required_level (A1+...C1+) на всех 21 карточках",
+        "LessonLockBadge реализован"
+      ],
+      "issues": []
+    },
+    {
+      "id": 22,
+      "section": "Геймификация",
+      "title": "Streak 7/30/100 + Push",
+      "status": "ok",
+      "url": "/ru/game/achievements",
+      "evidence": [
+        "Бейджи «Звезда недели» (7 дн.), «Постоянный ученик» (30 дн.), «100-дневный марафон» видны в списке"
+      ],
+      "issues": [
+        "Push-подписка и email-fallback не проверялись end-to-end"
+      ]
+    },
+    {
+      "id": 23,
+      "section": "Геймификация",
+      "title": "Лидерборд / бейджи / шеринг",
+      "status": "ok",
+      "url": "/ru/game/leaderboard",
+      "evidence": [
+        "Лидерборд живой: «Пока нет участников. Станьте первым!»",
+        "/game/achievements: 13 бейджей, 3/13 получено (в ТЗ заявлено 11+)"
+      ],
+      "issues": []
+    },
+    {
+      "id": 24,
+      "section": "Геймификация",
+      "title": "Адаптивная сложность от наставника",
+      "status": "ok",
+      "url": "/ru/learn/lessons/1",
+      "evidence": [
+        "AdaptiveExercise показывает выбор темы и генерит упражнения",
+        "Код weakness_score + basic/standard/advanced заявлен"
+      ],
+      "issues": [
+        "Пересчёт сложности по истории без залогиненного юзера не воспроизвести"
+      ]
+    }
+  ],
+  "critical_fixes": [
+    {
+      "priority": 1,
+      "title": "Админка оторвана от публичного контента",
+      "detail": "Уроки захардкожены в lessons-meta.ts, новости/события — только сиды. Редактор через панель не может влиять на сайт. Нужно подключить публичные страницы к БД и/или сид-данные в admin-таблицах.",
+      "fix_agent": "CMS-pipe"
+    },
+    {
+      "priority": 2,
+      "title": "Фото и видео в новостях не рендерятся",
+      "detail": "Поля image_url/video_url есть в API и модели, но UI их не выводит. Добавить <Image>/<video> в NewsCard.tsx и в детальной.",
+      "fix_agent": "CMS-pipe"
+    },
+    {
+      "priority": 3,
+      "title": "JSON-LD утекает в видимый текст",
+      "detail": "На /news/[slug] и /events JSON-LD виден как текст. Переместить в <script type=\"application/ld+json\">.",
+      "fix_agent": "CMS-pipe"
+    },
+    {
+      "priority": 4,
+      "title": "baseUrl http://localhost:3015 в проде",
+      "detail": "Зашит в canonical, og:url, JSON-LD. Выставить NEXT_PUBLIC_SITE_URL в прод.",
+      "fix_agent": "SEO-baseUrl"
+    },
+    {
+      "priority": 5,
+      "title": "Сертификат на английском",
+      "detail": "jsPDF без кирилличного шрифта. Встроить Noto Sans / Roboto TTF.",
+      "fix_agent": "PDF-cyrillic"
+    },
+    {
+      "priority": 6,
+      "title": "/learn/exercises → 404",
+      "detail": "Либо сделать лэндинг-страницу со списком тем, либо убрать ссылку из навигации (если есть).",
+      "fix_agent": "exercises-route"
+    }
+  ]
+}
