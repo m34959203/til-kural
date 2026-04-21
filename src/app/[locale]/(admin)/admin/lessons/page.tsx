@@ -1,71 +1,54 @@
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
+import EntityCrudTable, { EntityCrudConfig } from '@/components/admin/EntityCrudTable';
 
-const PAGE_NAME = 'lessons';
-
-const titles: Record<string, Record<string, string>> = {
-  lessons: { kk: 'Сабақтарды басқару', ru: 'Управление уроками' },
-  tests: { kk: 'Тест сұрақтарын басқару', ru: 'Управление тестами' },
-  news: { kk: 'Жаңалықтарды басқару', ru: 'Управление новостями' },
-  events: { kk: 'Іс-шараларды басқару', ru: 'Управление мероприятиями' },
-  users: { kk: 'Пайдаланушыларды басқару', ru: 'Управление пользователями' },
-  analytics: { kk: 'Аналитика', ru: 'Аналитика' },
-  banners: { kk: 'Баннерлерді басқару', ru: 'Управление баннерами' },
-};
-
-export default async function AdminSubPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function AdminLessonsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const title = titles[PAGE_NAME]?.[locale] || PAGE_NAME;
 
-  const items = Array.from({ length: 5 }, (_, i) => ({
-    id: String(i + 1),
-    name: `${title} #${i + 1}`,
-    status: i < 3 ? 'active' : 'draft',
-    date: `2026-0${4 - i > 0 ? 4 - i : 1}-01`,
-  }));
+  const config: EntityCrudConfig = {
+    apiPath: '/api/lessons',
+    listKey: 'lessons',
+    itemKey: 'lesson',
+    titleKk: 'Сабақтарды басқару',
+    titleRu: 'Управление уроками',
+    fields: [
+      { name: 'title_kk', label_kk: 'Тақырыбы (KK)', label_ru: 'Название (KK)', type: 'text', required: true },
+      { name: 'title_ru', label_kk: 'Тақырыбы (RU)', label_ru: 'Название (RU)', type: 'text', required: true },
+      { name: 'description_kk', label_kk: 'Сипаттамасы (KK)', label_ru: 'Описание (KK)', type: 'textarea' },
+      { name: 'description_ru', label_kk: 'Сипаттамасы (RU)', label_ru: 'Описание (RU)', type: 'textarea' },
+      {
+        name: 'topic',
+        label_kk: 'Тақырып',
+        label_ru: 'Тема',
+        type: 'select',
+        required: true,
+        defaultValue: 'grammar',
+        options: [
+          { value: 'grammar', label_kk: 'Грамматика', label_ru: 'Грамматика' },
+          { value: 'vocabulary', label_kk: 'Сөздік', label_ru: 'Лексика' },
+          { value: 'listening', label_kk: 'Тыңдалым', label_ru: 'Аудирование' },
+          { value: 'reading', label_kk: 'Оқылым', label_ru: 'Чтение' },
+          { value: 'writing', label_kk: 'Жазылым', label_ru: 'Письмо' },
+          { value: 'speaking', label_kk: 'Айтылым', label_ru: 'Говорение' },
+          { value: 'culture', label_kk: 'Мәдениет', label_ru: 'Культура' },
+        ],
+      },
+      {
+        name: 'difficulty',
+        label_kk: 'Деңгейі',
+        label_ru: 'Уровень',
+        type: 'select',
+        required: true,
+        defaultValue: 'A1',
+        options: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((l) => ({ value: l, label_kk: l, label_ru: l })),
+      },
+      { name: 'sort_order', label_kk: 'Реті', label_ru: 'Порядок', type: 'number', defaultValue: 0 },
+    ],
+    columns: [
+      { field: 'title_ru', label_kk: 'Тақырыбы', label_ru: 'Название' },
+      { field: 'topic', label_kk: 'Тақырып', label_ru: 'Тема' },
+      { field: 'difficulty', label_kk: 'Деңгей', label_ru: 'Уровень' },
+      { field: 'sort_order', label_kk: 'Реті', label_ru: 'Порядок' },
+    ],
+  };
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        <Button>{locale === 'kk' ? 'Жаңа қосу' : 'Добавить'}</Button>
-      </div>
-
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th className="pb-3 font-medium text-gray-500">ID</th>
-                <th className="pb-3 font-medium text-gray-500">{locale === 'kk' ? 'Атауы' : 'Название'}</th>
-                <th className="pb-3 font-medium text-gray-500">{locale === 'kk' ? 'Күйі' : 'Статус'}</th>
-                <th className="pb-3 font-medium text-gray-500">{locale === 'kk' ? 'Күні' : 'Дата'}</th>
-                <th className="pb-3 font-medium text-gray-500">{locale === 'kk' ? 'Әрекеттер' : 'Действия'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="py-3 text-gray-500">{item.id}</td>
-                  <td className="py-3 font-medium text-gray-900">{item.name}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-3 text-gray-500">{item.date}</td>
-                  <td className="py-3">
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="ghost">{locale === 'kk' ? 'Өңдеу' : 'Редактировать'}</Button>
-                      <Button size="sm" variant="ghost">{locale === 'kk' ? 'Жою' : 'Удалить'}</Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </div>
-  );
+  return <EntityCrudTable locale={locale} config={config} />;
 }
