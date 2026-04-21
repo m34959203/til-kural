@@ -20,7 +20,44 @@ export default function LevelTest({ locale }: LevelTestProps) {
   const [score, setScore] = useState(0);
   const [level, setLevel] = useState('');
 
+  const [downloading, setDownloading] = useState(false);
+
   const questions = questionsData.filter((q) => q.test_type === 'level').slice(0, 15);
+
+  const handleDownloadCertificate = async () => {
+    setDownloading(true);
+    try {
+      let userName = 'Student';
+      try {
+        const meRes = await fetch('/api/auth/me');
+        if (meRes.ok) {
+          const me = await meRes.json();
+          userName = me?.user?.name || me?.user?.email?.split('@')[0] || 'Student';
+        }
+      } catch {}
+
+      const res = await fetch('/api/test/certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userName, level, score }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `til-kural-certificate-${level}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(locale === 'kk' ? 'Сертификатты жүктеу сәтсіз аяқталды' : 'Не удалось скачать сертификат');
+      console.error(e);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     if (finished) {
@@ -73,7 +110,11 @@ export default function LevelTest({ locale }: LevelTestProps) {
           <Button variant="outline" onClick={() => { setStarted(false); setFinished(false); setAnswers({}); setCurrentIdx(0); }}>
             {locale === 'kk' ? 'Қайта тапсыру' : 'Пересдать'}
           </Button>
-          <Button>{locale === 'kk' ? 'Сертификат алу' : 'Получить сертификат'}</Button>
+          <Button onClick={handleDownloadCertificate} disabled={downloading}>
+            {downloading
+              ? locale === 'kk' ? 'Жүктелуде…' : 'Загрузка…'
+              : locale === 'kk' ? 'Сертификат алу' : 'Получить сертификат'}
+          </Button>
         </div>
       </Card>
     );

@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Progress from '@/components/ui/Progress';
@@ -21,8 +24,28 @@ interface QuestCardProps {
 }
 
 export default function QuestCard({ locale, quest, progress = 0, started = false }: QuestCardProps) {
+  const [isStarted, setIsStarted] = useState(started);
+  const [starting, setStarting] = useState(false);
   const title = locale === 'kk' ? quest.title_kk : quest.title_ru;
   const description = locale === 'kk' ? quest.description_kk : quest.description_ru;
+
+  const handleStart = async () => {
+    setStarting(true);
+    try {
+      const res = await fetch('/api/game/quests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questId: quest.id, action: 'start' }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setIsStarted(true);
+    } catch (e) {
+      console.error(e);
+      alert(locale === 'kk' ? 'Квестті бастау сәтсіз аяқталды' : 'Не удалось начать квест');
+    } finally {
+      setStarting(false);
+    }
+  };
 
   const typeLabels: Record<string, Record<string, string>> = {
     daily: { kk: 'Күнделікті', ru: 'Ежедневный' },
@@ -49,7 +72,7 @@ export default function QuestCard({ locale, quest, progress = 0, started = false
         <span>{quest.tasks.length} {locale === 'kk' ? 'тапсырма' : 'заданий'}</span>
       </div>
 
-      {started ? (
+      {isStarted ? (
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
             <span className="text-gray-500">{locale === 'kk' ? 'Прогресс' : 'Прогресс'}</span>
@@ -58,7 +81,7 @@ export default function QuestCard({ locale, quest, progress = 0, started = false
           <Progress value={progress} size="sm" color="amber" />
         </div>
       ) : (
-        <Button size="sm" variant="outline" className="w-full">
+        <Button size="sm" variant="outline" className="w-full" onClick={handleStart} loading={starting}>
           {locale === 'kk' ? 'Квестті бастау' : 'Начать квест'}
         </Button>
       )}
