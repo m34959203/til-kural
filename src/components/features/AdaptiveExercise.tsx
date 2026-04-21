@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface Exercise {
   question: string;
@@ -12,11 +13,40 @@ interface Exercise {
   explanation: string;
 }
 
+interface WeakTopic {
+  topic: string;
+  avg_score: number;
+  attempts: number;
+  weakness_score: number;
+  is_new: boolean;
+  target_label_kk?: string;
+  target_label_ru?: string;
+}
+
 interface AdaptiveExerciseProps {
   locale: string;
 }
 
+const TOPIC_LABELS: Record<string, { kk: string; ru: string }> = {
+  grammar: { kk: 'Грамматика', ru: 'Грамматика' },
+  vocabulary: { kk: 'Сөздік қор', ru: 'Словарный запас' },
+  cases: { kk: 'Септіктер', ru: 'Падежи' },
+  tenses: { kk: 'Етістік шақтары', ru: 'Времена глагола' },
+  reading: { kk: 'Оқылым', ru: 'Чтение' },
+  listening: { kk: 'Тыңдалым', ru: 'Аудирование' },
+  writing: { kk: 'Жазылым', ru: 'Письмо' },
+};
+
+function labelForTopic(slug: string, locale: string, fallbackKk?: string, fallbackRu?: string): string {
+  const base = TOPIC_LABELS[slug];
+  if (base) return locale === 'kk' ? base.kk : base.ru;
+  if (locale === 'kk' && fallbackKk) return fallbackKk;
+  if (locale !== 'kk' && fallbackRu) return fallbackRu;
+  return slug;
+}
+
 export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
+  const { user } = useCurrentUser();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -24,13 +54,50 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
   const [score, setScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [topic, setTopic] = useState('grammar');
+  const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([]);
+  const [recommendedTopic, setRecommendedTopic] = useState<WeakTopic | null>(null);
+  const [difficultyMode, setDifficultyMode] = useState<'basic' | 'standard' | 'advanced' | null>(null);
 
-  const topics = [
+  const fallbackTopics = [
     { id: 'grammar', label: locale === 'kk' ? 'Грамматика' : 'Грамматика' },
     { id: 'vocabulary', label: locale === 'kk' ? 'Сөздік қор' : 'Словарный запас' },
     { id: 'cases', label: locale === 'kk' ? 'Септіктер' : 'Падежи' },
     { id: 'tenses', label: locale === 'kk' ? 'Етістік шақтары' : 'Времена глагола' },
   ];
+
+  const loadRecommendations = useCallback(async () => {
+    if (!user) {
+      setWeakTopics([]);
+      setRecommendedTopic(null);
+      return;
+    }
+    try {
+      const res = await fetch('/api/recommend/next', { credentials: 'include' });
+      if (!res.ok) {
+        setWeakTopics([]);
+        setRecommendedTopic(null);
+        return;
+      }
+      const data = await res.json();
+      const weak: WeakTopic[] = Array.isArray(data?.weakTopics) ? data.weakTopics : [];
+      setWeakTopics(weak);
+      if (weak.length > 0) {
+        // max weakness_score
+        const top = [...weak].sort((a, b) => (b.weakness_score ?? 0) - (a.weakness_score ?? 0))[0];
+        setRecommendedTopic(top);
+        setTopic(top.topic);
+      } else {
+        setRecommendedTopic(null);
+      }
+    } catch {
+      setWeakTopics([]);
+      setRecommendedTopic(null);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadRecommendations();
+  }, [loadRecommendations]);
 
   const generateExercises = async () => {
     setLoading(true);
@@ -40,13 +107,25 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
     setSelected(null);
     setShowResult(false);
 
+    const level = user?.language_level || 'B1';
+    const weakPoints = weakTopics.map((w) => w.topic).filter((t) => t !== topic);
+    const stat = weakTopics.find((w) => w.topic === topic);
+    const avgScore = stat && stat.attempts > 0 ? stat.avg_score : undefined;
+
     try {
       const res = await fetch('/api/learn/exercises', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, level: 'B1', weakPoints: [] }),
+        credentials: 'include',
+        body: JSON.stringify({
+          topic,
+          level,
+          weakPoints,
+          ...(typeof avgScore === 'number' ? { avg_score: avgScore } : {}),
+        }),
       });
       const data = await res.json();
+      if (data?.difficulty) setDifficultyMode(data.difficulty);
       if (data.exercises && data.exercises.length > 0) {
         setExercises(data.exercises);
       } else {
@@ -77,8 +156,23 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
   const nextExercise = () => {
     setSelected(null);
     setShowResult(false);
-    setCurrentIdx((prev) => prev + 1);
+    const newIdx = currentIdx + 1;
+    setCurrentIdx(newIdx);
+    // Если только что закончили раунд — обновим рекомендации,
+    // чтобы следующая тема подтянулась по актуальным данным.
+    if (newIdx >= exercises.length) {
+      loadRecommendations();
+    }
   };
+
+  const recommendedLabel = recommendedTopic
+    ? labelForTopic(
+        recommendedTopic.topic,
+        locale,
+        recommendedTopic.target_label_kk,
+        recommendedTopic.target_label_ru,
+      )
+    : '';
 
   if (exercises.length === 0) {
     return (
@@ -87,19 +181,69 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
           {locale === 'kk' ? 'Бейімделгіш жаттығулар' : 'Адаптивные упражнения'}
         </h2>
         <p className="text-gray-500 text-sm">
-          {locale === 'kk' ? 'Тақырыпты таңдап, AI жаттығулар жасасын' : 'Выберите тему и AI создаст упражнения'}
+          {locale === 'kk'
+            ? 'Тақырыпты таңдап, AI жаттығулар жасасын'
+            : 'Выберите тему и AI создаст упражнения'}
         </p>
-        <div className="flex flex-wrap gap-2">
-          {topics.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTopic(t.id)}
-              className={cn('px-4 py-2 rounded-lg text-sm transition-colors', topic === t.id ? 'bg-teal-100 text-teal-800 font-medium' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+
+        {user && recommendedTopic && (
+          <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-900">
+            <div className="font-medium">
+              {locale === 'kk' ? 'Ұсынылады' : 'Рекомендовано'}:
+              {' '}
+              <span className="font-semibold">{recommendedLabel}</span>
+            </div>
+            <div className="text-teal-800/80 mt-1">
+              {locale === 'kk'
+                ? `Бұл тақырыпта әлсіздеу, орташа балл ${Math.round(recommendedTopic.avg_score)}%`
+                : `У вас слабо в теме «${recommendedLabel}», средний балл ${Math.round(recommendedTopic.avg_score)}%`}
+            </div>
+          </div>
+        )}
+
+        {user && weakTopics.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {weakTopics.map((w) => {
+              const lbl = labelForTopic(w.topic, locale, w.target_label_kk, w.target_label_ru);
+              const active = topic === w.topic;
+              return (
+                <button
+                  key={w.topic}
+                  onClick={() => setTopic(w.topic)}
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-sm transition-colors',
+                    active
+                      ? 'bg-teal-100 text-teal-800 font-medium'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                  )}
+                >
+                  {lbl}
+                  <span className="ml-2 text-xs opacity-70">
+                    {Math.round(w.avg_score)}%
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {fallbackTopics.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTopic(t.id)}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-sm transition-colors',
+                  topic === t.id
+                    ? 'bg-teal-100 text-teal-800 font-medium'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <Button onClick={generateExercises} loading={loading}>
           {locale === 'kk' ? 'Жаттығулар жасау' : 'Создать упражнения'}
         </Button>
@@ -124,6 +268,12 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
   }
 
   const exercise = exercises[currentIdx];
+  const difficultyBadgeText =
+    difficultyMode === 'basic'
+      ? locale === 'kk' ? 'Базалық' : 'Базовые'
+      : difficultyMode === 'advanced'
+        ? locale === 'kk' ? 'Озық' : 'Продвинутые'
+        : null;
 
   return (
     <div className="space-y-4">
@@ -131,9 +281,23 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
         <span className="text-sm text-gray-500">
           {currentIdx + 1} / {exercises.length}
         </span>
-        <span className="text-sm font-medium text-teal-700">
-          {locale === 'kk' ? 'Дұрыс' : 'Правильно'}: {score}
-        </span>
+        <div className="flex items-center gap-2">
+          {difficultyBadgeText && (
+            <span
+              className={cn(
+                'text-xs px-2 py-0.5 rounded-full',
+                difficultyMode === 'basic'
+                  ? 'bg-amber-100 text-amber-800'
+                  : 'bg-indigo-100 text-indigo-800',
+              )}
+            >
+              {difficultyBadgeText}
+            </span>
+          )}
+          <span className="text-sm font-medium text-teal-700">
+            {locale === 'kk' ? 'Дұрыс' : 'Правильно'}: {score}
+          </span>
+        </div>
       </div>
 
       <Card>

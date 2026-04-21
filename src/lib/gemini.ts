@@ -67,17 +67,45 @@ export async function analyzeImage(
 export async function generateExercises(
   topic: string,
   level: string,
-  weakPoints: string[] = []
+  weakPoints: string[] = [],
+  avgScore?: number
 ): Promise<string> {
+  const hasScore = typeof avgScore === 'number' && !Number.isNaN(avgScore);
+  const scorePct = hasScore ? Math.round(avgScore as number) : null;
+
+  let difficultyBlock = '';
+  let difficultyTag = 'standard';
+  if (hasScore && scorePct !== null) {
+    if (scorePct < 50) {
+      difficultyTag = 'basic';
+      difficultyBlock = `Студент часто ошибается в этой теме (средний балл ${scorePct}%). Дай базовые (basic) упражнения с подробными подсказками, простыми примерами и пошаговыми объяснениями. В поле "explanation" обязательно укажи правило и разбери ошибку. Отметь упражнения как "базовые" и используй простой уровень лексики.`;
+    } else if (scorePct > 85) {
+      difficultyTag = 'advanced';
+      difficultyBlock = `Студент силён в этой теме (средний балл ${scorePct}%). Дай продвинутые (advanced) упражнения с нюансами: редкие исключения, стилистические оттенки, сложные конструкции. Отметь упражнения как "продвинутые".`;
+    } else {
+      difficultyBlock = `Средний балл студента по теме: ${scorePct}%. Дай сбалансированные упражнения стандартного уровня.`;
+    }
+  }
+
+  const weakBlock = weakPoints.length > 0
+    ? `Уделить особое внимание этим подтемам: ${weakPoints.join(', ')}.`
+    : '';
+
   const systemPrompt = `Сен қазақ тілі мұғалімісің. Берілген тақырып пен деңгейге сай жаттығулар жаса.
-Деңгей: ${level}
+Деңгей (CEFR): ${level}
 Тақырып: ${topic}
-${weakPoints.length > 0 ? `Әлсіз тұстар: ${weakPoints.join(', ')}` : ''}
+Режим сложности: ${difficultyTag}
+${difficultyBlock}
+${weakBlock}
 
-JSON форматында 5 жаттығу бер:
-[{"question": "...", "options": ["..."], "correct": "...", "explanation": "..."}]`;
+JSON форматында тек 5 жаттығу бер (массив), ешқандай түсіндірмесіз:
+[{"question": "...", "options": ["..."], "correct": "...", "explanation": "..."}]
 
-  return chatWithAI(systemPrompt, `${topic} тақырыбынан ${level} деңгейіне сай 5 жаттығу жаса`);
+В поле "explanation" обязательно отмечай сложность словом "базовые" (basic), "стандартные" или "продвинутые" (advanced) согласно режиму сложности "${difficultyTag}".`;
+
+  const userMessage = `${topic} тақырыбынан ${level} деңгейіне сай 5 жаттығу жаса (режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`;
+
+  return chatWithAI(systemPrompt, userMessage);
 }
 
 export async function checkWriting(text: string, level: string): Promise<string> {
