@@ -15,8 +15,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json();
     const allowed: Record<string, unknown> = {};
-    for (const k of ['title_kk','title_ru','description_kk','description_ru','image_url','event_type','start_date','end_date','location','registration_url','status']) {
+    for (const k of ['title_kk','title_ru','description_kk','description_ru','image_url','event_type','start_date','end_date','location','registration_url','status','scheduled_at']) {
       if (k in body) allowed[k] = body[k];
+    }
+    if ('scheduled_at' in allowed) {
+      const v = allowed.scheduled_at;
+      allowed.scheduled_at = v ? new Date(String(v)).toISOString() : null;
     }
     const row = await db.update('events', id, allowed);
     if (!row) return apiError(404, 'Not found');

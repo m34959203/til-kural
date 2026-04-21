@@ -34,6 +34,13 @@ export default async function AdminNewsPage({ params }: { params: Promise<{ loca
           { value: 'published', label_kk: 'Жарияланды', label_ru: 'Опубликовано' },
         ],
       },
+      {
+        name: 'scheduled_at',
+        label_kk: 'Жоспарлы жариялау (автоматты)',
+        label_ru: 'Запланированная публикация (автоматически)',
+        type: 'datetime',
+        placeholder: 'Қолмен жариялау үшін бос қалдырыңыз / Оставьте пустым для ручной публикации',
+      },
     ],
     columns: [
       { field: 'title_ru', label_kk: 'Тақырыбы', label_ru: 'Заголовок' },

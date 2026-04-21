@@ -16,8 +16,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json();
     const allowed: Record<string, unknown> = {};
-    for (const k of ['title_kk','title_ru','content_kk','content_ru','excerpt_kk','excerpt_ru','image_url','video_url','status','slug','published_at']) {
+    for (const k of ['title_kk','title_ru','content_kk','content_ru','excerpt_kk','excerpt_ru','image_url','video_url','status','slug','published_at','scheduled_at']) {
       if (k in body) allowed[k] = body[k];
+    }
+    // Нормализуем scheduled_at: пустая строка → null.
+    if ('scheduled_at' in allowed) {
+      const v = allowed.scheduled_at;
+      allowed.scheduled_at = v ? new Date(String(v)).toISOString() : null;
     }
     allowed.updated_at = new Date().toISOString();
     if (body.status === 'published' && !body.published_at) allowed.published_at = new Date().toISOString();

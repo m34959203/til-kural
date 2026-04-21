@@ -41,11 +41,19 @@ export default async function AdminEventsPage({ params }: { params: Promise<{ lo
         type: 'select',
         defaultValue: 'upcoming',
         options: [
+          { value: 'draft', label_kk: 'Жоба', label_ru: 'Черновик' },
           { value: 'upcoming', label_kk: 'Келе жатыр', label_ru: 'Предстоящее' },
           { value: 'ongoing', label_kk: 'Жүріп жатыр', label_ru: 'Идёт' },
           { value: 'past', label_kk: 'Өтті', label_ru: 'Прошло' },
           { value: 'cancelled', label_kk: 'Болдырылмады', label_ru: 'Отменено' },
         ],
+      },
+      {
+        name: 'scheduled_at',
+        label_kk: 'Жоспарлы жариялау (автоматты)',
+        label_ru: 'Запланированная публикация (автоматически)',
+        type: 'datetime',
+        placeholder: 'Қолмен жариялау үшін бос қалдырыңыз / Оставьте пустым для ручной публикации',
       },
     ],
     columns: [

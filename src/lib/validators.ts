@@ -129,6 +129,10 @@ export const NewsSchema = z.object({
   video_url: optionalUrl(),
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
   published_at: z.union([z.string(), z.null()]).optional(),
+  // Запланированная публикация: cron /api/cron/publish-scheduled переведёт
+  // draft→published, когда scheduled_at <= NOW().  Допускаем пустую строку
+  // (datetime-local input так отдаёт «нет значения»).
+  scheduled_at: z.union([z.string(), z.literal(''), z.null()]).optional(),
 });
 export type NewsInput = z.infer<typeof NewsSchema>;
 
@@ -145,8 +149,11 @@ export const EventsSchema = z.object({
   location: optionalText(500),
   registration_url: optionalUrl(),
   status: z
-    .enum(['upcoming', 'ongoing', 'past', 'cancelled'])
+    .enum(['draft', 'upcoming', 'ongoing', 'past', 'cancelled'])
     .default('upcoming'),
+  // Запланированная публикация: cron /api/cron/publish-scheduled переведёт
+  // draft→upcoming, когда scheduled_at <= NOW().
+  scheduled_at: z.union([z.string(), z.literal(''), z.null()]).optional(),
 });
 export type EventsInput = z.infer<typeof EventsSchema>;
 
