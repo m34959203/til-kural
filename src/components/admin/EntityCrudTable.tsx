@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { ZodType } from 'zod';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import MarkdownPreview from '@/components/admin/MarkdownPreview';
+import { SCHEMAS, validateBody } from '@/lib/validators';
 
 export type FieldType = 'text' | 'textarea' | 'number' | 'date' | 'datetime' | 'select' | 'checkbox';
 
@@ -36,6 +38,12 @@ export interface EntityCrudConfig {
   titleRu: string;
   fields: CrudField[];
   columns: CrudColumn[];
+  /**
+   * Optional Zod schema for per-field client-side validation. If omitted,
+   * the component автоматически tries SCHEMAS[apiPath] — so новые страницы
+   * подхватывают схему без изменений в EntityCrudConfig.
+   */
+  schema?: ZodType;
 }
 
 type Row = Record<string, unknown> & { id: string };
@@ -58,6 +66,10 @@ export default function EntityCrudTable({ locale, config }: Props) {
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Эффективная схема: явно заданная в config имеет приоритет, иначе — по apiPath.
+  const schema: ZodType | undefined = config.schema ?? SCHEMAS[config.apiPath];
 
   // UX: search / sort / paginate (client-side)
   const [query, setQuery] = useState('');
@@ -158,12 +170,28 @@ export default function EntityCrudTable({ locale, config }: Props) {
     setCreating(false);
     setFormData({});
     setError(null);
+    setFieldErrors({});
   };
 
   const submit = async () => {
     setSaving(true);
     setError(null);
+    setFieldErrors({});
     try {
+      // 1) Client-side Zod validation (если схема доступна).
+      if (schema) {
+        const clientResult = validateBody(schema, formData);
+        if (!clientResult.ok) {
+          const map: Record<string, string> = {};
+          for (const e of clientResult.errors) {
+            if (!map[e.field]) map[e.field] = e.message;
+          }
+          setFieldErrors(map);
+          setError(isKk ? 'Өрістерді тексеріңіз' : 'Проверьте поля');
+          return;
+        }
+      }
+
       const url = editing ? `${config.apiPath}/${editing.id}` : config.apiPath;
       const method = editing ? 'PUT' : 'POST';
       const res = await fetch(url, {
@@ -173,6 +201,16 @@ export default function EntityCrudTable({ locale, config }: Props) {
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
+        // 2) Server-side errors in {errors: [{field, message}]} shape?
+        if (Array.isArray(j.errors) && j.errors.length) {
+          const map: Record<string, string> = {};
+          for (const e of j.errors as Array<{ field?: string; message?: string }>) {
+            if (e?.field && e?.message && !map[e.field]) map[e.field] = e.message;
+          }
+          setFieldErrors(map);
+          setError(j.error || (isKk ? 'Өрістерді тексеріңіз' : 'Проверьте поля'));
+          return;
+        }
         throw new Error(j.error || `HTTP ${res.status}`);
       }
       closeForm();
@@ -335,7 +373,18 @@ export default function EntityCrudTable({ locale, config }: Props) {
                   field={f}
                   locale={locale}
                   value={formData[f.name]}
-                  onChange={(v) => setFormData((prev) => ({ ...prev, [f.name]: v }))}
+                  error={fieldErrors[f.name]}
+                  onChange={(v) => {
+                    setFormData((prev) => ({ ...prev, [f.name]: v }));
+                    // Сразу убираем ошибку этого поля, чтобы пользователь видел реакцию на правку.
+                    if (fieldErrors[f.name]) {
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next[f.name];
+                        return next;
+                      });
+                    }
+                  }}
                 />
               ))}
               {error && <div className="text-red-600 text-sm">{error}</div>}
@@ -395,29 +444,37 @@ function FormField({
   field,
   locale,
   value,
+  error,
   onChange,
 }: {
   field: CrudField;
   locale: string;
   value: unknown;
+  error?: string;
   onChange: (v: unknown) => void;
 }) {
   const isKk = locale === 'kk';
   const label = isKk ? field.label_kk : field.label_ru;
-  const commonInput = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500';
+  const borderCls = error
+    ? 'border-red-500 focus:ring-red-500'
+    : 'border-gray-300 focus:ring-teal-500';
+  const commonInput = `w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${borderCls}`;
   const [mdMode, setMdMode] = useState<'edit' | 'preview'>('edit');
 
   if (field.type === 'checkbox') {
     return (
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={!!value}
-          onChange={(e) => onChange(e.target.checked)}
-          className="w-4 h-4 accent-teal-600"
-        />
-        <span className="text-sm text-gray-700">{label}</span>
-      </label>
+      <div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!value}
+            onChange={(e) => onChange(e.target.checked)}
+            className="w-4 h-4 accent-teal-600"
+          />
+          <span className="text-sm text-gray-700">{label}</span>
+        </label>
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      </div>
     );
   }
 
@@ -453,6 +510,7 @@ function FormField({
             value={String(value ?? '')}
             onChange={(e) => onChange(e.target.value)}
             placeholder={field.placeholder}
+            aria-invalid={!!error}
           />
         ) : (
           <MarkdownPreview value={String(value ?? '')} />
@@ -462,6 +520,7 @@ function FormField({
           className={commonInput}
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
+          aria-invalid={!!error}
         >
           <option value="">—</option>
           {field.options?.map((o) => (
@@ -474,6 +533,7 @@ function FormField({
           className={commonInput}
           value={Number(value ?? 0)}
           onChange={(e) => onChange(Number(e.target.value))}
+          aria-invalid={!!error}
         />
       ) : field.type === 'date' ? (
         <input
@@ -481,6 +541,7 @@ function FormField({
           className={commonInput}
           value={String(value ?? '').slice(0, 10)}
           onChange={(e) => onChange(e.target.value)}
+          aria-invalid={!!error}
         />
       ) : field.type === 'datetime' ? (
         <input
@@ -488,6 +549,7 @@ function FormField({
           className={commonInput}
           value={String(value ?? '').slice(0, 16)}
           onChange={(e) => onChange(e.target.value)}
+          aria-invalid={!!error}
         />
       ) : (
         <input
@@ -496,8 +558,10 @@ function FormField({
           value={String(value ?? '')}
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder}
+          aria-invalid={!!error}
         />
       )}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

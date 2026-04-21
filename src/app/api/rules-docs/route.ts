@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { RulesDocsSchema, validateBody } from '@/lib/validators';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,18 +23,21 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['title_kk', 'title_ru']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(RulesDocsSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
 
     const row = await db.insert('rules_documents', {
-      title_kk: body.title_kk,
-      title_ru: body.title_ru,
-      description_kk: body.description_kk || null,
-      description_ru: body.description_ru || null,
-      year: body.year || null,
-      pdf_url: body.pdf_url || null,
-      category: body.category || 'other',
-      sort_order: Number(body.sort_order || 0),
+      title_kk: data.title_kk,
+      title_ru: data.title_ru,
+      description_kk: data.description_kk || null,
+      description_ru: data.description_ru || null,
+      year: data.year || null,
+      pdf_url: data.pdf_url || null,
+      category: data.category || 'other',
+      sort_order: Number(data.sort_order || 0),
     });
     return Response.json({ doc: row }, { status: 201 });
   } catch (err) {

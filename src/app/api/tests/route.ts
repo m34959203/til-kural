@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { TestQuestionsSchema, validateBody } from '@/lib/validators';
 
 /**
  * CRUD для банка тестовых вопросов (таблица test_questions).
@@ -55,25 +56,22 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, [
-      'test_type',
-      'topic',
-      'difficulty',
-      'question_kk',
-      'correct_answer',
-    ]);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(TestQuestionsSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
 
     const row = await db.insert('test_questions', {
-      test_type: body.test_type,
-      topic: body.topic,
-      difficulty: body.difficulty,
-      question_kk: body.question_kk,
-      question_ru: body.question_ru || null,
-      options: normalizeOptions(body.options),
-      correct_answer: body.correct_answer,
-      explanation_kk: body.explanation_kk || null,
-      explanation_ru: body.explanation_ru || null,
+      test_type: data.test_type,
+      topic: data.topic,
+      difficulty: data.difficulty,
+      question_kk: data.question_kk,
+      question_ru: data.question_ru || null,
+      options: normalizeOptions(data.options),
+      correct_answer: data.correct_answer,
+      explanation_kk: data.explanation_kk || null,
+      explanation_ru: data.explanation_ru || null,
     });
     return Response.json({ question: row }, { status: 201 });
   } catch (err) {

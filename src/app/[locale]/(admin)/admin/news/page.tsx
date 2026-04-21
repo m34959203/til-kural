@@ -1,4 +1,5 @@
 import EntityCrudTable, { EntityCrudConfig } from '@/components/admin/EntityCrudTable';
+import { NewsSchema } from '@/lib/validators';
 
 export default async function AdminNewsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -7,6 +8,7 @@ export default async function AdminNewsPage({ params }: { params: Promise<{ loca
     apiPath: '/api/news',
     listKey: 'news',
     itemKey: 'news',
+    schema: NewsSchema,
     titleKk: 'Жаңалықтарды басқару',
     titleRu: 'Управление новостями',
     fields: [

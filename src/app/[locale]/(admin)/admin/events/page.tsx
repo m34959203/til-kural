@@ -1,4 +1,5 @@
 import EntityCrudTable, { EntityCrudConfig } from '@/components/admin/EntityCrudTable';
+import { EventsSchema } from '@/lib/validators';
 
 export default async function AdminEventsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -7,6 +8,7 @@ export default async function AdminEventsPage({ params }: { params: Promise<{ lo
     apiPath: '/api/events',
     listKey: 'events',
     itemKey: 'event',
+    schema: EventsSchema,
     titleKk: 'Іс-шараларды басқару',
     titleRu: 'Управление мероприятиями',
     fields: [

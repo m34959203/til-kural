@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { GrammarRulesSchema, validateBody } from '@/lib/validators';
 
 function parseJsonField(value: unknown, fallback: unknown = []) {
   if (value === undefined || value === null || value === '') return fallback;
@@ -26,19 +27,22 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['topic', 'title_kk', 'title_ru']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(GrammarRulesSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
 
     const row = await db.insert('grammar_rules', {
-      topic: body.topic,
-      title_kk: body.title_kk,
-      title_ru: body.title_ru,
-      level: body.level || 'A1',
-      description_kk: body.description_kk || null,
-      description_ru: body.description_ru || null,
-      examples: parseJsonField(body.examples, []),
-      exceptions: parseJsonField(body.exceptions, []),
-      rule_order: Number(body.rule_order || 0),
+      topic: data.topic,
+      title_kk: data.title_kk,
+      title_ru: data.title_ru,
+      level: data.level || 'A1',
+      description_kk: data.description_kk || null,
+      description_ru: data.description_ru || null,
+      examples: parseJsonField(data.examples, []),
+      exceptions: parseJsonField(data.exceptions, []),
+      rule_order: Number(data.rule_order || 0),
     });
     return Response.json({ rule: row }, { status: 201 });
   } catch (err) {

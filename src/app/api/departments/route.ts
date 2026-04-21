@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { DepartmentsSchema, validateBody } from '@/lib/validators';
 
 export async function GET() {
   try {
@@ -20,16 +21,19 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['name_kk', 'name_ru']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(DepartmentsSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
 
     const row = await db.insert('departments', {
-      name_kk: body.name_kk,
-      name_ru: body.name_ru,
-      description_kk: body.description_kk || null,
-      description_ru: body.description_ru || null,
-      head_user_id: body.head_user_id || null,
-      sort_order: Number(body.sort_order || 0),
+      name_kk: data.name_kk,
+      name_ru: data.name_ru,
+      description_kk: data.description_kk || null,
+      description_ru: data.description_ru || null,
+      head_user_id: data.head_user_id || null,
+      sort_order: Number(data.sort_order || 0),
     });
     return Response.json({ department: row }, { status: 201 });
   } catch (err) {

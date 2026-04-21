@@ -1,4 +1,5 @@
 import EntityCrudTable, { EntityCrudConfig } from '@/components/admin/EntityCrudTable';
+import { StaffSchema } from '@/lib/validators';
 
 export default async function AdminStaffPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -7,6 +8,7 @@ export default async function AdminStaffPage({ params }: { params: Promise<{ loc
     apiPath: '/api/staff',
     listKey: 'staff',
     itemKey: 'staff',
+    schema: StaffSchema,
     titleKk: 'Қызметкерлерді басқару',
     titleRu: 'Управление сотрудниками',
     fields: [

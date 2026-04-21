@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
 import { HISTORY_TABLE, pickAllowed, sortBlocks, HistoryBlock } from '@/lib/history-blocks';
+import { HistorySchema, validateBody } from '@/lib/validators';
 
 export async function GET() {
   try {
@@ -20,14 +21,16 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['title_kk', 'title_ru']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
-
-    const data = pickAllowed(body);
+    const result = validateBody(HistorySchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    // pickAllowed нормализует поля (включая '' → null и sort_order → number).
+    const data = pickAllowed(result.data as Record<string, unknown>);
     const row = await db.insert(HISTORY_TABLE, {
       year: data.year ?? null,
-      title_kk: body.title_kk,
-      title_ru: body.title_ru,
+      title_kk: result.data.title_kk,
+      title_ru: result.data.title_ru,
       description_kk: data.description_kk ?? null,
       description_ru: data.description_ru ?? null,
       image_url: data.image_url ?? null,

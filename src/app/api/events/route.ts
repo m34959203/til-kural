@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { EventsSchema, validateBody } from '@/lib/validators';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -21,20 +22,23 @@ export async function POST(request: Request) {
   if (auth instanceof Response) return auth;
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['title_kk', 'title_ru', 'start_date']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(EventsSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
     const row = await db.insert('events', {
-      title_kk: body.title_kk,
-      title_ru: body.title_ru,
-      description_kk: body.description_kk || null,
-      description_ru: body.description_ru || null,
-      image_url: body.image_url || null,
-      event_type: body.event_type || 'event',
-      start_date: body.start_date,
-      end_date: body.end_date || null,
-      location: body.location || null,
-      registration_url: body.registration_url || null,
-      status: body.status || 'upcoming',
+      title_kk: data.title_kk,
+      title_ru: data.title_ru,
+      description_kk: data.description_kk || null,
+      description_ru: data.description_ru || null,
+      image_url: data.image_url || null,
+      event_type: data.event_type || 'event',
+      start_date: data.start_date,
+      end_date: data.end_date || null,
+      location: data.location || null,
+      registration_url: data.registration_url || null,
+      status: data.status || 'upcoming',
     });
     return Response.json({ event: row }, { status: 201 });
   } catch (err) {

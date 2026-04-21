@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { StaffSchema, validateBody } from '@/lib/validators';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,21 +23,24 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['name_kk', 'name_ru']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(StaffSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
 
     const row = await db.insert('staff', {
-      name_kk: body.name_kk,
-      name_ru: body.name_ru,
-      position_kk: body.position_kk || null,
-      position_ru: body.position_ru || null,
-      department_id: body.department_id || null,
-      photo_url: body.photo_url || null,
-      email: body.email || null,
-      phone: body.phone || null,
-      bio_kk: body.bio_kk || null,
-      bio_ru: body.bio_ru || null,
-      sort_order: Number(body.sort_order || 0),
+      name_kk: data.name_kk,
+      name_ru: data.name_ru,
+      position_kk: data.position_kk || null,
+      position_ru: data.position_ru || null,
+      department_id: data.department_id || null,
+      photo_url: data.photo_url || null,
+      email: data.email || null,
+      phone: data.phone || null,
+      bio_kk: data.bio_kk || null,
+      bio_ru: data.bio_ru || null,
+      sort_order: Number(data.sort_order || 0),
     });
     return Response.json({ staff: row }, { status: 201 });
   } catch (err) {

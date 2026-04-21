@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError, requireFields } from '@/lib/api';
+import { requireAdminApi, apiError } from '@/lib/api';
+import { BannersSchema, validateBody } from '@/lib/validators';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,17 +17,20 @@ export async function POST(request: Request) {
   if (auth instanceof Response) return auth;
   try {
     const body = await request.json();
-    const missing = requireFields(body, ['image_url']);
-    if (missing.length) return apiError(400, 'Missing fields', missing);
+    const result = validateBody(BannersSchema, body);
+    if (!result.ok) {
+      return Response.json({ error: 'Validation failed', errors: result.errors }, { status: 400 });
+    }
+    const data = result.data;
     const row = await db.insert('banners', {
-      title: body.title || null,
-      subtitle_kk: body.subtitle_kk || null,
-      subtitle_ru: body.subtitle_ru || null,
-      image_url: body.image_url,
-      link_url: body.link_url || null,
-      position: body.position || 'hero',
-      is_active: body.is_active !== false,
-      sort_order: Number(body.sort_order ?? 0),
+      title: data.title || null,
+      subtitle_kk: data.subtitle_kk || null,
+      subtitle_ru: data.subtitle_ru || null,
+      image_url: data.image_url,
+      link_url: data.link_url || null,
+      position: data.position || 'hero',
+      is_active: data.is_active !== false,
+      sort_order: Number(data.sort_order ?? 0),
     });
     return Response.json({ banner: row }, { status: 201 });
   } catch (err) {
