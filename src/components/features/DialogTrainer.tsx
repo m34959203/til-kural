@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { MENTORS, type MentorKey, DEFAULT_MENTOR } from '@/lib/mentors';
 
 interface DialogTrainerProps {
   locale: string;
@@ -25,16 +27,92 @@ interface Message {
   correction?: string;
 }
 
+// Минимальный тип под Web Speech API (в Next 16 globals нет)
+interface SpeechRecognitionLike extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((e: unknown) => void) | null;
+  onend: (() => void) | null;
+}
+
+type WindowWithSpeech = Window & {
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+};
+
 export default function DialogTrainer({ locale }: DialogTrainerProps) {
+  const isKk = locale === 'kk';
+  const [mentor, setMentor] = useState<MentorKey>(DEFAULT_MENTOR);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recogRef = useRef<SpeechRecognitionLike | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mentorProfile = MENTORS[mentor];
+
+  useEffect(() => {
+    const w = window as WindowWithSpeech;
+    setSpeechSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+  }, []);
+
+  const stopPlayback = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+    setPlayingIdx(null);
+  }, []);
+
+  const playMessage = useCallback(async (text: string, idx: number) => {
+    if (!text?.trim()) return;
+    stopPlayback();
+    setPlayingIdx(idx);
+    try {
+      const res = await fetch('/api/learn/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: mentorProfile.ttsVoice }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data?.audio?.audioBase64) {
+        // Fallback: browser TTS на kk-KZ (работает так себе, но хоть что-то)
+        if ('speechSynthesis' in window) {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = 'kk-KZ';
+          u.onend = () => setPlayingIdx(null);
+          window.speechSynthesis.speak(u);
+          return;
+        }
+        setPlayingIdx(null);
+        return;
+      }
+      const src = `data:${data.audio.mimeType};base64,${data.audio.audioBase64}`;
+      const audio = new Audio(src);
+      audio.onended = () => setPlayingIdx(null);
+      audio.onerror = () => setPlayingIdx(null);
+      audioRef.current = audio;
+      await audio.play();
+    } catch (e) {
+      console.error(e);
+      setPlayingIdx(null);
+    }
+  }, [stopPlayback, mentorProfile.ttsVoice]);
 
   const startDialog = async (topicId: string) => {
     setSelectedTopic(topicId);
     setLoading(true);
-
     try {
       const res = await fetch('/api/learn/chat', {
         method: 'POST',
@@ -42,14 +120,16 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
         body: JSON.stringify({
           message: `Диалог бастаңыз. Тақырып: ${topicId}. Сіз жағдайды сипаттап, бірінші сұрақты қойыңыз.`,
           history: [],
-          mentor: 'baitursynuly',
+          mentor,
           level: 'B1',
           mode: 'dialog',
           topic: topicId,
         }),
       });
       const data = await res.json();
-      setMessages([{ role: 'assistant', content: data.reply || 'Диалогты бастайық!' }]);
+      const reply = data.reply || 'Диалогты бастайық!';
+      setMessages([{ role: 'assistant', content: reply }]);
+      if (voiceMode) setTimeout(() => playMessage(reply, 0), 200);
     } catch {
       setMessages([{ role: 'assistant', content: 'Диалогты бастайық! Сәлеметсіз бе!' }]);
     } finally {
@@ -57,11 +137,12 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = input.trim();
+  const sendMessage = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
+    if (!text || loading) return;
     setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: userMsg }]);
+    const nextHistory: Message[] = [...messages, { role: 'user', content: text }];
+    setMessages(nextHistory);
     setLoading(true);
 
     try {
@@ -69,19 +150,19 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMsg,
+          message: text,
           history: messages,
-          mentor: 'baitursynuly',
+          mentor,
           level: 'B1',
           mode: 'dialog',
           topic: selectedTopic,
         }),
       });
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: data.reply || 'Жалғастырайық!', correction: data.correction },
-      ]);
+      const reply = data.reply || 'Жалғастырайық!';
+      const newIdx = nextHistory.length;
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply, correction: data.correction }]);
+      if (voiceMode) setTimeout(() => playMessage(reply, newIdx), 200);
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Жалғастырыңыз!' }]);
     } finally {
@@ -89,23 +170,91 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
     }
   };
 
+  const startRecognition = () => {
+    const w = window as WindowWithSpeech;
+    const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    stopPlayback();
+    const r = new Ctor();
+    r.lang = 'kk-KZ';
+    r.interimResults = false;
+    r.continuous = false;
+    r.onresult = (e) => {
+      const t = e.results?.[0]?.[0]?.transcript?.trim();
+      if (t) sendMessage(t);
+    };
+    r.onerror = () => setRecording(false);
+    r.onend = () => setRecording(false);
+    recogRef.current = r;
+    setRecording(true);
+    try { r.start(); } catch { setRecording(false); }
+  };
+
+  const stopRecognition = () => {
+    try { recogRef.current?.stop(); } catch {}
+    setRecording(false);
+  };
+
+  useEffect(() => () => { stopPlayback(); stopRecognition(); }, [stopPlayback]);
+
   if (!selectedTopic) {
     return (
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          {locale === 'kk' ? 'Диалог тақырыбын таңдаңыз' : 'Выберите тему диалога'}
-        </h2>
-        <p className="text-gray-500 text-sm mb-6">
-          {locale === 'kk'
-            ? 'AI-мен нақты жағдайларда сөйлесуді жаттықтырыңыз'
-            : 'Практикуйте разговор с AI в реальных ситуациях'}
-        </p>
+        <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {isKk ? 'Диалог тақырыбын таңдаңыз' : 'Выберите тему диалога'}
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              {isKk
+                ? 'AI-мен нақты жағдайларда сөйлесуді жаттықтырыңыз'
+                : 'Практикуйте разговор с AI в реальных ситуациях'}
+            </p>
+          </div>
+          <VoiceModeToggle locale={locale} enabled={voiceMode} onToggle={setVoiceMode} speechSupported={speechSupported} />
+        </div>
+
+        <div className="mb-6">
+          <div className="text-sm font-semibold text-gray-700 mb-2">
+            {isKk ? 'Ұстазыңды таңда' : 'Выбери наставника'}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {(Object.keys(MENTORS) as MentorKey[]).map((k) => {
+              const m = MENTORS[k];
+              const active = mentor === k;
+              return (
+                <button
+                  key={k}
+                  onClick={() => setMentor(k)}
+                  className={`text-left rounded-2xl border-2 p-3 transition-all ${
+                    active ? 'border-teal-600 bg-teal-50 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-100 shrink-0">
+                      <Image src={m.image} alt={isKk ? m.name_kk : m.name_ru} fill className="object-cover" sizes="48px" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900 truncate">{isKk ? m.name_kk : m.name_ru}</div>
+                      <div className="text-xs text-gray-500 truncate">{isKk ? m.role_kk : m.role_ru}</div>
+                      <div className="text-[11px] text-gray-400 truncate">🎙 {isKk ? m.tone_kk : m.tone_ru}</div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="text-sm font-semibold text-gray-700 mb-2">
+          {isKk ? 'Тақырып' : 'Тема'}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {DIALOG_TOPICS.map((topic) => (
             <Card key={topic.id} hover className="cursor-pointer" padding="md">
               <button onClick={() => startDialog(topic.id)} className="text-left w-full">
                 <h3 className="font-medium text-gray-900">
-                  {locale === 'kk' ? topic.label_kk : topic.label_ru}
+                  {isKk ? topic.label_kk : topic.label_ru}
                 </h3>
               </button>
             </Card>
@@ -116,14 +265,27 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-250px)] max-h-[600px]">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-900">
-          {locale === 'kk' ? 'Диалог жаттықтырғыш' : 'Тренажёр диалогов'}
-        </h2>
-        <Button variant="ghost" size="sm" onClick={() => { setSelectedTopic(null); setMessages([]); }}>
-          {locale === 'kk' ? 'Тақырып ауыстыру' : 'Сменить тему'}
-        </Button>
+    <div className="flex flex-col h-[calc(100vh-250px)] max-h-[640px]">
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0">
+            <Image src={mentorProfile.image} alt={isKk ? mentorProfile.name_kk : mentorProfile.name_ru} fill className="object-cover" sizes="40px" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-gray-900 leading-tight truncate">
+              {isKk ? mentorProfile.name_kk : mentorProfile.name_ru}
+            </h2>
+            <div className="text-xs text-gray-500 truncate">
+              {isKk ? mentorProfile.role_kk : mentorProfile.role_ru} · 🎙 {mentorProfile.ttsVoice}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <VoiceModeToggle locale={locale} enabled={voiceMode} onToggle={setVoiceMode} speechSupported={speechSupported} />
+          <Button variant="ghost" size="sm" onClick={() => { stopPlayback(); stopRecognition(); setSelectedTopic(null); setMessages([]); }}>
+            {isKk ? 'Тақырып ауыстыру' : 'Сменить тему'}
+          </Button>
+        </div>
       </div>
 
       <Card className="flex-1 overflow-y-auto mb-4" padding="sm">
@@ -139,6 +301,15 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
                   }`}
                 >
                   {msg.content}
+                  {msg.role === 'assistant' && (
+                    <button
+                      onClick={() => (playingIdx === idx ? stopPlayback() : playMessage(msg.content, idx))}
+                      className="ml-2 inline-flex items-center gap-1 text-xs text-teal-700 hover:text-teal-900 align-middle"
+                      title={locale === 'kk' ? 'Тыңдау' : 'Озвучить'}
+                    >
+                      {playingIdx === idx ? '⏸' : '🔊'}
+                    </button>
+                  )}
                 </div>
               </div>
               {msg.correction && (
@@ -161,20 +332,75 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
         </div>
       </Card>
 
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder={locale === 'kk' ? 'Жауабыңызды жазыңыз...' : 'Напишите ваш ответ...'}
-          className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
-          disabled={loading}
-        />
-        <Button onClick={sendMessage} loading={loading}>
-          {locale === 'kk' ? 'Жіберу' : 'Отправить'}
-        </Button>
-      </div>
+      {voiceMode ? (
+        <div className="flex items-center justify-center gap-3 py-3">
+          <button
+            onClick={recording ? stopRecognition : startRecognition}
+            disabled={loading || !speechSupported}
+            className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg transition-all ${
+              recording
+                ? 'bg-red-500 text-white animate-pulse scale-105'
+                : 'bg-teal-700 text-white hover:bg-teal-800 disabled:opacity-40'
+            }`}
+            title={locale === 'kk' ? 'Микрофон' : 'Микрофон'}
+          >
+            {recording ? '⏹' : '🎙️'}
+          </button>
+          <div className="text-sm text-gray-500">
+            {!speechSupported
+              ? (locale === 'kk' ? 'Браузер дауыс енгізуді қолдамайды — Chrome/Edge қолданыңыз' : 'Браузер не поддерживает голосовой ввод — используйте Chrome/Edge')
+              : recording
+              ? (locale === 'kk' ? 'Тыңдап тұр… ұзынша сөйлеңіз' : 'Слушаю… говорите')
+              : (locale === 'kk' ? 'Қазақша сөйлеу үшін басыңыз' : 'Нажмите, чтобы сказать на казахском')}
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder={locale === 'kk' ? 'Жауабыңызды жазыңыз...' : 'Напишите ваш ответ...'}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+            disabled={loading}
+          />
+          <Button onClick={() => sendMessage()} loading={loading}>
+            {locale === 'kk' ? 'Жіберу' : 'Отправить'}
+          </Button>
+        </div>
+      )}
     </div>
+  );
+}
+
+function VoiceModeToggle({
+  locale,
+  enabled,
+  onToggle,
+  speechSupported,
+}: {
+  locale: string;
+  enabled: boolean;
+  onToggle: (v: boolean) => void;
+  speechSupported: boolean;
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 text-sm cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(e) => onToggle(e.target.checked)}
+        className="w-4 h-4 accent-teal-600"
+      />
+      <span className="text-gray-700 font-medium">
+        🎙️ {locale === 'kk' ? 'Дауыс режимі' : 'Голосовой режим'}
+      </span>
+      {!speechSupported && enabled && (
+        <span className="text-xs text-amber-600">
+          ({locale === 'kk' ? 'тек Chrome/Edge' : 'только Chrome/Edge'})
+        </span>
+      )}
+    </label>
   );
 }
