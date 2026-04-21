@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
+import TopNBars from '@/components/admin/TopNBars';
 
 interface Totals {
   users: number;
@@ -35,11 +36,25 @@ interface TopUser {
   language_level: string | null;
 }
 
+interface TopTopic {
+  topic: string;
+  attempts: number;
+}
+
+interface TopNewsItem {
+  id: string;
+  title_ru: string;
+  title_kk: string;
+  updated_at: string | null;
+}
+
 interface AnalyticsData {
   totals: Totals;
   topUsers: TopUser[];
   recentCerts: Array<{ id: string; level: string; score: number; certificate_number: string; issued_at: string }>;
   recentNews: Array<{ id: string; title_ru: string; status: string; updated_at: string }>;
+  topTopics?: TopTopic[];
+  topNews?: TopNewsItem[];
 }
 
 interface Props {
@@ -153,6 +168,38 @@ export default function AnalyticsDashboard({ locale, children }: Props) {
           )}
         </Card>
       </div>
+
+      {(data.topTopics && data.topTopics.length > 0) || (data.topNews && data.topNews.length > 0) ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {data.topTopics ? (
+            <TopNBars
+              locale={locale}
+              title={isKk ? 'Топ белсенді тақырыптар' : 'Топ активных тем'}
+              accent="bg-teal-500"
+              items={data.topTopics.map((t) => ({
+                label: t.topic,
+                value: t.attempts,
+                hint: isKk ? 'әрекет' : 'попыток',
+              }))}
+            />
+          ) : null}
+          {data.topNews ? (
+            <TopNBars
+              locale={locale}
+              title={isKk ? 'Жақында жаңартылған жаңалықтар' : 'Недавно обновлённые новости'}
+              accent="bg-sky-500"
+              items={data.topNews.map((n, i) => ({
+                label: (isKk ? n.title_kk : n.title_ru) || n.title_ru || n.title_kk || `#${n.id}`,
+                // Чем свежее — тем выше бар. Используем ранг (10..1) как относительный вес.
+                value: (data.topNews?.length ?? 10) - i,
+                hint: n.updated_at ? new Date(n.updated_at).toLocaleDateString(isKk ? 'kk-KZ' : 'ru-RU') : undefined,
+              }))}
+              maxValue={data.topNews.length || 10}
+              formatValue={() => ''}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
       {children}
     </div>
