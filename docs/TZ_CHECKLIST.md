@@ -1,7 +1,7 @@
 # ТЗ «Тіл-құрал» — чек-лист функционала
 
 > **Живой документ.** Обновлять при каждом изменении фичи.
-> Последнее обновление: 2026-04-22
+> Последнее обновление: 2026-04-22 (вторая волна из 5 агентов закрыла 5 ⚠️-пунктов)
 > Источник ТЗ: договор на разработку сайта УМЦ «Тіл-құрал», 2025.
 
 ## Итоговая готовность
@@ -9,10 +9,10 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов всего | 24 |
-| ✅ Полностью | 19 |
-| ⚠️ Частично | 5 |
+| ✅ Полностью | **24** |
+| ⚠️ Частично | 0 |
 | ❌ Не сделано | 0 |
-| **Готовность** | **~92%** |
+| **Готовность** | **100%** |
 
 ## Легенда статусов
 
@@ -57,14 +57,14 @@
 
 ## 3.2.1 ИИ-учитель
 
-### 5. Пошаговые уроки с адаптацией под уровень ⚠️
+### 5. Пошаговые уроки с адаптацией под уровень ✅
 
 - **Уроки (21):** `src/data/lessons-meta.ts` + `src/app/[locale]/(public)/learn/lessons/[id]/page.tsx`
-- **Темы покрыты:** grammar / vocabulary / conversation / business / phonetics / orthography / culture / culture
-- **Уровни:** A1 / A2 / B1 / B2 (нет C1/C2)
-- **ИИ-учитель чат:** `src/components/features/AITeacher.tsx` + `POST /api/learn/chat` с Gemini 2.5 Flash и RAG (`src/lib/kazakh-rules.ts`)
-- **⚠️ Что не так:** `AITeacher.tsx:54` отправляет `level: 'B1'` захардкоженным — user's `language_level` из БД не пробрасывается. Адаптация под уровень работает только внутри системного промпта, но промпт всегда получает «B1».
-- **Доделать:** после прохождения `LevelTest` сохранять `language_level` в `users`, читать его в чате и упражнениях. 15 минут работы.
+- **Темы покрыты:** grammar / vocabulary / conversation / business / phonetics / orthography / culture
+- **Уровни:** A1 / A2 / B1 / B2 / C1 (C2 — через CAT-тест)
+- **ИИ-учитель чат:** `src/components/features/AITeacher.tsx` + `POST /api/learn/chat` с Gemini и RAG (`src/lib/kazakh-rules.ts`)
+- **Сквозной пайплайн адаптации:** `LevelTest` (CAT) → `db.update('users', id, { language_level })` в `/api/test/evaluate` (коммит `499d0c2`) → `/api/auth/me` возвращает `language_level` → `useCurrentUser()` → `AITeacher` / `DialogTrainer` / `LiveVoiceDialog` читают и шлют реальный level в `/api/learn/chat` (коммиты `78cf12c`, `d31bb82`)
+- **Бейдж:** «Ваш уровень: Bx» в заголовке каждого AI-компонента
 
 ### 6. Диалог с ИИ на казахском: исправление ошибок, правильные формы ✅
 
@@ -89,14 +89,13 @@
 - **Функции:** 12 фраз × 2 скорости (normal/slow), browser-fallback, PCM → WAV wrap
 - **Также используется в:** DialogTrainer (🔊 рядом с сообщениями), LiveVoiceDialog, наставники
 
-### 9. Адаптивные упражнения по слабым местам ⚠️
+### 9. Адаптивные упражнения по слабым местам ✅
 
-- **UI:** `src/components/features/AdaptiveExercise.tsx`
-- **API:** `POST /api/learn/exercises` (Gemini-генерация)
-- **Рекомендатор:** `src/lib/adaptive-recommender.ts` считает `weakness_score` (формула с decay), таблица `user_topic_stats`
-- **Endpoint:** `/api/recommend/next` возвращает топ-3 слабых темы
-- **⚠️ Что не так:** `AdaptiveExercise.tsx:47` `weakPoints: []` — не подтягивает из `/api/recommend/next`. Тема выбирается пользователем вручную из 4 topic-кнопок, а не из слабых.
-- **Доделать:** заменить статический topic-picker на fetch из `/api/recommend/next`, автопрезаполнять темой с max `weakness_score`. 30 минут.
+- **UI:** `src/components/features/AdaptiveExercise.tsx` — fetch `/api/recommend/next` при mount, автовыбор темы с max `weakness_score`, бейдж «Рекомендовано: средний балл X%» (коммит `c036d36`)
+- **API:** `POST /api/learn/exercises` принимает `{topic, level, weakPoints[], avg_score}` и пересчитывает `difficulty` (basic/standard/advanced)
+- **Промпт Gemini:** `generateExercises` в `src/lib/gemini.ts` — если `avg_score < 50` → «базовые с подсказками»; если `> 85` → «продвинутые с нюансами»; `weakPoints[]` → «уделить внимание этим подтемам»
+- **Рекомендатор:** `src/lib/adaptive-recommender.ts` (weakness_score с decay) + `user_topic_stats`
+- **Цикл:** после каждого раунда — повторный fetch `/api/recommend/next` → новая слабая тема
 
 ---
 
@@ -180,15 +179,17 @@
 
 ## 3.2.4 Геймификация
 
-### 19. Персональный аватар-наставник ⚠️
+### 19. Персональный аватар-наставник ✅
 
 - **3 ментора:** `src/lib/mentors.ts` — Абай / Ахмет Байтұрсынұлы / Мұхтар Әуезов
 - **Стиль общения:** `src/lib/kazakh-rules.ts` `mentorStyles` — каждый говорит в характерной манере
 - **Персональный голос:** `Charon` / `Kore` / `Fenrir` (Gemini TTS)
-- **Выбор:** в DialogTrainer (карточки), в LiveVoiceDialog (карточки), `mentor_avatar` в `users` персистентно сохраняется
-- **Портреты:** `public/mentors/abai.png`, `baitursynuly.png`, `auezov.png`
-- **⚠️ Что не так:** «учебный путь от наставника» — не выделенный трек «Абай ведёт тебя X→Y→Z». Наставник влияет только на стиль AI-реплик, но не на последовательность уроков.
-- **Доделать:** в lessons-meta.ts добавить `mentor_track: 'abai'|'baitursynuly'|'auezov'` и на странице профиля «твой путь с Абаем» — визуальная дорожка уроков.
+- **Портреты:** `public/mentors/*.png`
+- **Учебный путь** (коммит `d31bb82`):
+  - `lessons-meta.ts` — `mentor_track?: MentorKey` проставлен на все 21 урок: Абай=3 (речевой этикет, деловой, макал-мәтелдер), Байтұрсынұлы=13 (вся грамматика/фонетика/орфография), Әуезов=5 (повседневная лексика, разговорные темы)
+  - `src/components/features/MentorTrack.tsx` — client component: шапка с портретом, прогресс «X/Y», вертикальный список уроков со статусами ✓/▶/🔒, CTA «Продолжить с …»
+  - `profile/page.tsx` — блок «Ваш путь с [mentor]» после блока грамотности
+  - `learn/lessons/page.tsx` — chip-фильтры «Все / С Абаем / С Байтұрсынұлы / С Әуезовым» (инициализация из `?mentor=`), бейджик ментора на карточке
 
 ### 20. Система квестов ✅
 
@@ -201,13 +202,17 @@
 - **API:** `GET /api/game/quests` (шаблоны + userQuests), `POST` `action:'start'` → upsert в `user_quests`
 - **Страница:** `src/app/[locale]/(public)/game/quests/page.tsx`
 
-### 21. XP, уровни Бастаушы→Шебер, разблокировка контента ⚠️
+### 21. XP, уровни Бастаушы→Шебер, разблокировка контента ✅
 
 - **XP-логика:** `src/lib/gamification.ts` `XP_REWARDS`, `LEVEL_THRESHOLDS` (11 ступеней), `LEVEL_NAMES_KK = ['Бастаушы', ..., 'Дана']`
 - **API:** `POST /api/game/progress` — пишет `users.xp_points`, `users.level`
 - **UI:** `ProgressTracker.tsx`, badges уровня
-- **⚠️ Что не так:** **разблокировка контента по уровню** не реализована — ни один урок/тест не проверяет required level, всё открыто всем
-- **Доделать:** в `lessons-meta.ts` добавить `required_level?: number` и в `learn/lessons/[id]/page.tsx` редирект/гейт для low-level юзеров. Также можно закрыть C1/C2 тесты до определённого XP. 2 часа работы.
+- **Разблокировка контента** (коммит `78cf12c`):
+  - `src/lib/level-gate.ts` — `LEVEL_ORDER`, `levelIndex`, `isUnlocked`
+  - `src/components/features/LessonLockBadge.tsx` — 🔒-бейдж с title-подсказкой kk/ru
+  - `lessons-meta.ts` `required_level?: CefrLevel` проставлен на все 21 урока (A1–C1)
+  - `learn/lessons/[id]/page.tsx` — client wrapper с `useCurrentUser`: если `!isUnlocked` → `LessonGate` с CTA «Пройти тест уровня» + список уроков, доступных на текущем уровне
+  - `learn/lessons/page.tsx` — `LessonLockBadge` на карточках закрытых уроков
 
 ### 22. Streak 7/30/100 + Push ✅
 
@@ -224,13 +229,16 @@
 - **Шеринг:** `ShareButton.tsx` — Web Share API + fallback (Telegram/WhatsApp/Twitter/Copy link)
 - **OG-превью:** `GET /api/og/badge?title=…&icon=…` → 1200×630 PNG для красивого превью в WhatsApp/Telegram
 
-### 24. Адаптивная сложность от наставника ⚠️
+### 24. Адаптивная сложность от наставника ✅
 
-- **Трекинг слабых тем:** `src/lib/adaptive-recommender.ts` — `weakness_score` (формула с временным decay), таблица `user_topic_stats` пишется в `recordTestOutcomes`
+- **Трекинг слабых тем:** `src/lib/adaptive-recommender.ts` — `weakness_score` с временным decay, таблица `user_topic_stats` пишется в `recordTestOutcomes`
 - **Рекомендации:** `POST /api/recommend/next` возвращает топ-3 слабых темы + следующее действие
-- **CAT-тест:** сложность ВХОДНОГО теста адаптируется end-to-end
-- **⚠️ Что не так:** в уроках/упражнениях (после теста) сложность не подстраивается по ходу. Gemini в `AdaptiveExercise` генерирует всегда один уровень без оглядки на weakness_score.
-- **Доделать:** в `/api/learn/exercises` добавить параметры `strong_topics[]`/`weak_topics[]` из `user_topic_stats`, и в промпт «если weak[] → сложнее, если strong[] → базовое закрепление». 1 час работы.
+- **CAT входного теста:** сложность адаптируется branching-алгоритмом (`src/lib/cat-engine.ts`), C2 достижим
+- **Упражнения** (коммит `c036d36`):
+  - `/api/learn/exercises` принимает `avg_score` и пересчитывает `difficulty` (basic/standard/advanced)
+  - `generateExercises()` в `lib/gemini.ts` добавляет в промпт «часто ошибается → базовые» / «силён → продвинутые с нюансами» / «уделить внимание подтемам: …»
+  - `AdaptiveExercise.tsx` показывает бейдж-результат сложности (`Базовые` / `Продвинутые`)
+- **После каждого раунда:** UI перечитывает `/api/recommend/next` → следующая тема по актуализации weakness_score
 
 ---
 
@@ -248,14 +256,15 @@
 | Редизайн главной навигации (6 групп с dropdown) | `1789d13` |
 | Убрать «Gemini 2.5» с сайта | `2d8583f` |
 
-## Что осталось (5 ⚠️ пунктов, общий остаток ~3 часа)
+## Волна 4 (доделка 5 ⚠️-пунктов → все в ✅)
 
-| # | Что | Файл | Время |
-|---|---|---|---|
-| 5 | Пробросить user's language_level в чат/уроки (убрать `level: 'B1'` хардкод) | `AITeacher.tsx:54`, `DialogTrainer.tsx`, `AdaptiveExercise.tsx:47` | 15-30 мин |
-| 9 | AdaptiveExercise подтягивает слабые темы из `/api/recommend/next` | `AdaptiveExercise.tsx` | 30 мин |
-| 19 | «Учебный путь от наставника» — отдельный трек уроков | `lessons-meta.ts` + `profile` + `learn/lessons` | 1-2 часа |
-| 21 | Разблокировка контента по уровню/XP | `lessons-meta.ts`, `learn/lessons/[id]` | 2 часа |
-| 24 | Адаптивная сложность в AdaptiveExercise | `/api/learn/exercises` промпт | 1 час |
+| Коммит | Пункт | Что закрыто |
+|---|---|---|
+| `499d0c2` | 5 | Сохранение `users.language_level` после CAT + расширенный `/api/auth/me` |
+| `78cf12c` | 5 + 21 | `useCurrentUser()` hook + чтение `language_level` в AITeacher/DialogTrainer/LiveVoiceDialog; level-gate для уроков + LessonLockBadge |
+| `c036d36` | 9 + 24 | AdaptiveExercise fetch `/api/recommend/next` + адаптивная сложность basic/standard/advanced |
+| `d31bb82` | 19 | MentorTrack component + чипы-фильтры по наставнику + `mentor_track` на все 21 урок |
 
-Далее — обновлять этот файл при каждой итерации.
+**Итог:** 24 из 24 пунктов ТЗ реализованы.
+
+Далее — обновлять этот файл при каждой итерации (новые фичи / доработки / регресс).
