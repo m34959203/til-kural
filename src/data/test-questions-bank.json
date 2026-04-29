@@ -1715,5 +1715,1501 @@
     "correct_answer": "Ай нұрын шашқан түн",
     "explanation_kk": "Көркемдегіш тәсіл (метафора) — көркем әдебиет стиліне тән.",
     "explanation_ru": "Метафора — признак художественного стиля."
+  },
+  {
+    "id": "t_family_g37s566f",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Ана» сөзінің мағынасы:",
+    "question_ru": "Значение слова «Ана»:",
+    "options": [
+      "Мама",
+      "Бабушка",
+      "Тётя",
+      "Сестра"
+    ],
+    "correct_answer": "Мама",
+    "explanation_kk": "Ана — анасы. Әке — отец.",
+    "explanation_ru": "Ана — мама. Әке — отец."
+  },
+  {
+    "id": "t_family_ja5oepd4",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Ата» дегеніміз кім?",
+    "question_ru": "Кто такой «Ата»?",
+    "options": [
+      "Дедушка",
+      "Дядя",
+      "Старший брат",
+      "Отец"
+    ],
+    "correct_answer": "Дедушка",
+    "explanation_kk": "Ата — атасы (дед). Әже — әжесі (бабушка).",
+    "explanation_ru": "Ата — дедушка. Әже — бабушка."
+  },
+  {
+    "id": "t_family_k0hx2abi",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Әже» дегеніміз кім?",
+    "question_ru": "Кто такая «Әже»?",
+    "options": [
+      "Бабушка",
+      "Тётя",
+      "Сестра",
+      "Подруга"
+    ],
+    "correct_answer": "Бабушка",
+    "explanation_kk": "Әже — әжесі (бабушка).",
+    "explanation_ru": "Әже — бабушка."
+  },
+  {
+    "id": "t_family_glbptf3x",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Апа» — это:",
+    "question_ru": "«Апа» — это:",
+    "options": [
+      "Старшая сестра / тётя",
+      "Младшая сестра",
+      "Бабушка",
+      "Подруга"
+    ],
+    "correct_answer": "Старшая сестра / тётя",
+    "explanation_kk": "Апа — старшая женщина в семье: старшая сестра или тётя/бабушка по диалекту.",
+    "explanation_ru": "Апа — старшая сестра / тётя. В южных диалектах — мама."
+  },
+  {
+    "id": "t_family_dchi2hxh",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Қарындас» — кто это?",
+    "question_ru": "«Қарындас» — кто это?",
+    "options": [
+      "Младшая сестра (для брата)",
+      "Младший брат",
+      "Подруга",
+      "Старшая сестра"
+    ],
+    "correct_answer": "Младшая сестра (для брата)",
+    "explanation_kk": "Қарындас — младшая сестра, обращение брата.",
+    "explanation_ru": "Қарындас — младшая сестра (так её называет брат)."
+  },
+  {
+    "id": "t_family_lvwpuhex",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Ұл» сөзінің аудармасы:",
+    "question_ru": "Перевод слова «Ұл»:",
+    "options": [
+      "Сын",
+      "Дочь",
+      "Внук",
+      "Племянник"
+    ],
+    "correct_answer": "Сын",
+    "explanation_kk": "Ұл — ұлы (сын). Қыз — қызы (дочь).",
+    "explanation_ru": "Ұл — сын. Қыз — дочь."
+  },
+  {
+    "id": "t_family_73x5a34j",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A1",
+    "question_kk": "«Қыз» — это:",
+    "question_ru": "«Қыз» — это:",
+    "options": [
+      "Дочь / девушка",
+      "Сын",
+      "Сестра",
+      "Тётя"
+    ],
+    "correct_answer": "Дочь / девушка",
+    "explanation_kk": "Қыз — дочь, девушка.",
+    "explanation_ru": "Қыз — дочь или девушка."
+  },
+  {
+    "id": "t_family_vqo8j8wy",
+    "test_type": "thematic",
+    "topic": "family",
+    "difficulty": "A2",
+    "question_kk": "«Менің атым» означает:",
+    "question_ru": "«Менің атым» означает:",
+    "options": [
+      "Меня зовут …",
+      "Мой отец",
+      "Мой дом",
+      "Моё имя — …"
+    ],
+    "correct_answer": "Меня зовут …",
+    "explanation_kk": "Менің атым — конструкция представления.",
+    "explanation_ru": "«Менің атым …» — «Меня зовут …». Литер. «моё имя — …»."
+  },
+  {
+    "id": "t_food_c3ulzyfc",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Сүт» — это:",
+    "question_ru": "«Сүт» — это:",
+    "options": [
+      "Молоко",
+      "Чай",
+      "Сок",
+      "Вода"
+    ],
+    "correct_answer": "Молоко",
+    "explanation_kk": "Сүт — молоко. Шай — чай. Су — вода.",
+    "explanation_ru": "Сүт — молоко."
+  },
+  {
+    "id": "t_food_kojkjrut",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Ет» означает:",
+    "question_ru": "«Ет» означает:",
+    "options": [
+      "Мясо",
+      "Хлеб",
+      "Рыба",
+      "Овощ"
+    ],
+    "correct_answer": "Мясо",
+    "explanation_kk": "Ет — мясо. Балық — рыба.",
+    "explanation_ru": "Ет — мясо."
+  },
+  {
+    "id": "t_food_nwi1pct0",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Су» — это:",
+    "question_ru": "«Су» — это:",
+    "options": [
+      "Вода",
+      "Молоко",
+      "Чай",
+      "Сок"
+    ],
+    "correct_answer": "Вода",
+    "explanation_kk": "Су — су (вода).",
+    "explanation_ru": "Су — вода."
+  },
+  {
+    "id": "t_food_9fo5svow",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Шай» — это:",
+    "question_ru": "«Шай» — это:",
+    "options": [
+      "Чай",
+      "Кофе",
+      "Молоко",
+      "Сок"
+    ],
+    "correct_answer": "Чай",
+    "explanation_kk": "Шай — қазақтың дәстүрлі сусыны.",
+    "explanation_ru": "Шай — чай (национальный напиток)."
+  },
+  {
+    "id": "t_food_90jo4ret",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Алма» — это:",
+    "question_ru": "«Алма» — это:",
+    "options": [
+      "Яблоко",
+      "Апельсин",
+      "Груша",
+      "Виноград"
+    ],
+    "correct_answer": "Яблоко",
+    "explanation_kk": "Алма — алма. Алматы — қала аты.",
+    "explanation_ru": "Алма — яблоко (отсюда название Алматы)."
+  },
+  {
+    "id": "t_food_e1cw66x5",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Қант» — это:",
+    "question_ru": "«Қант» — это:",
+    "options": [
+      "Сахар",
+      "Соль",
+      "Перец",
+      "Мука"
+    ],
+    "correct_answer": "Сахар",
+    "explanation_kk": "Қант — қант. Тұз — соль.",
+    "explanation_ru": "Қант — сахар. Тұз — соль."
+  },
+  {
+    "id": "t_food_1zxks5gy",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A1",
+    "question_kk": "«Тұз» означает:",
+    "question_ru": "«Тұз» означает:",
+    "options": [
+      "Соль",
+      "Сахар",
+      "Мука",
+      "Масло"
+    ],
+    "correct_answer": "Соль",
+    "explanation_kk": "Тұз — соль.",
+    "explanation_ru": "Тұз — соль."
+  },
+  {
+    "id": "t_food_qy7kqxyy",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A2",
+    "question_kk": "«Бесбармақ» — это:",
+    "question_ru": "«Бесбармақ» — это:",
+    "options": [
+      "Национальное блюдо из мяса и теста",
+      "Сладкий напиток",
+      "Хлеб",
+      "Овощной салат"
+    ],
+    "correct_answer": "Национальное блюдо из мяса и теста",
+    "explanation_kk": "Бесбармақ — бес саусақ (пять пальцев). Дәстүрлі ас.",
+    "explanation_ru": "Бесбармақ — главное национальное блюдо казахов: мясо и тонко раскатанное тесто."
+  },
+  {
+    "id": "t_food_ra2f7bp9",
+    "test_type": "thematic",
+    "topic": "food",
+    "difficulty": "A2",
+    "question_kk": "«Қазы» — это:",
+    "question_ru": "«Қазы» — это:",
+    "options": [
+      "Колбаса из конины",
+      "Творог",
+      "Кисломолочный напиток",
+      "Лепёшка"
+    ],
+    "correct_answer": "Колбаса из конины",
+    "explanation_kk": "Қазы — жылқы етінен жасалған.",
+    "explanation_ru": "Қазы — традиционная колбаса из конины."
+  },
+  {
+    "id": "t_colors_1c9yv09x",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Ақ» — это:",
+    "question_ru": "«Ақ» — это:",
+    "options": [
+      "Белый",
+      "Чёрный",
+      "Красный",
+      "Синий"
+    ],
+    "correct_answer": "Белый",
+    "explanation_kk": "Ақ — белый. Қара — чёрный.",
+    "explanation_ru": "Ақ — белый."
+  },
+  {
+    "id": "t_colors_q8l5f4ia",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Қара» означает:",
+    "question_ru": "«Қара» означает:",
+    "options": [
+      "Чёрный",
+      "Белый",
+      "Серый",
+      "Коричневый"
+    ],
+    "correct_answer": "Чёрный",
+    "explanation_kk": "Қара — қара түс.",
+    "explanation_ru": "Қара — чёрный."
+  },
+  {
+    "id": "t_colors_xo3r8mhc",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Қызыл» — это:",
+    "question_ru": "«Қызыл» — это:",
+    "options": [
+      "Красный",
+      "Розовый",
+      "Оранжевый",
+      "Жёлтый"
+    ],
+    "correct_answer": "Красный",
+    "explanation_kk": "Қызыл — қызыл түс. Қызғылт — розовый.",
+    "explanation_ru": "Қызыл — красный."
+  },
+  {
+    "id": "t_colors_jm4qqvoj",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Сары» — это:",
+    "question_ru": "«Сары» — это:",
+    "options": [
+      "Жёлтый",
+      "Зелёный",
+      "Оранжевый",
+      "Коричневый"
+    ],
+    "correct_answer": "Жёлтый",
+    "explanation_kk": "Сары — сары түс.",
+    "explanation_ru": "Сары — жёлтый."
+  },
+  {
+    "id": "t_colors_yv9kkn05",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Жасыл» означает:",
+    "question_ru": "«Жасыл» означает:",
+    "options": [
+      "Зелёный",
+      "Жёлтый",
+      "Голубой",
+      "Синий"
+    ],
+    "correct_answer": "Зелёный",
+    "explanation_kk": "Жасыл — жасыл түс.",
+    "explanation_ru": "Жасыл — зелёный."
+  },
+  {
+    "id": "t_colors_3bv4hr4q",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Қоңыр» — это:",
+    "question_ru": "«Қоңыр» — это:",
+    "options": [
+      "Коричневый",
+      "Серый",
+      "Чёрный",
+      "Тёмный"
+    ],
+    "correct_answer": "Коричневый",
+    "explanation_kk": "Қоңыр — қоңыр түс.",
+    "explanation_ru": "Қоңыр — коричневый."
+  },
+  {
+    "id": "t_colors_rjncqypp",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A2",
+    "question_kk": "«Сұр» означает:",
+    "question_ru": "«Сұр» означает:",
+    "options": [
+      "Серый",
+      "Белый",
+      "Тёмно-синий",
+      "Серебряный"
+    ],
+    "correct_answer": "Серый",
+    "explanation_kk": "Сұр — сұр түс.",
+    "explanation_ru": "Сұр — серый."
+  },
+  {
+    "id": "t_colors_7gp8cdjg",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A2",
+    "question_kk": "«Қызғылт» — это:",
+    "question_ru": "«Қызғылт» — это:",
+    "options": [
+      "Розовый",
+      "Тёмно-красный",
+      "Оранжевый",
+      "Бордовый"
+    ],
+    "correct_answer": "Розовый",
+    "explanation_kk": "Қызғылт — қызыл+ғылт суффикс «легко-».",
+    "explanation_ru": "Қызғылт — розовый (буквально «слегка красный»)."
+  },
+  {
+    "id": "t_colors_wxc72de5",
+    "test_type": "thematic",
+    "topic": "colors",
+    "difficulty": "A1",
+    "question_kk": "«Көк түс» означает:",
+    "question_ru": "«Көк түс» означает:",
+    "options": [
+      "Синий / голубой цвет",
+      "Зелёный",
+      "Жёлтый",
+      "Чёрный"
+    ],
+    "correct_answer": "Синий / голубой цвет",
+    "explanation_kk": "Көк — небесный цвет, аспан көгі.",
+    "explanation_ru": "Көк — синий, голубой; в поэзии — небесный."
+  },
+  {
+    "id": "t_numbers_z1lmy4aq",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Бір» — это:",
+    "question_ru": "«Бір» — это:",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correct_answer": "1",
+    "explanation_kk": "Бір — 1. Бірінші — первый.",
+    "explanation_ru": "Бір — 1."
+  },
+  {
+    "id": "t_numbers_o9d56783",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Бес» — это:",
+    "question_ru": "«Бес» — это:",
+    "options": [
+      "5",
+      "3",
+      "7",
+      "10"
+    ],
+    "correct_answer": "5",
+    "explanation_kk": "Бес — 5. Бесінші — пятый.",
+    "explanation_ru": "Бес — 5."
+  },
+  {
+    "id": "t_numbers_8zwvk0uy",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Жеті» означает:",
+    "question_ru": "«Жеті» означает:",
+    "options": [
+      "7",
+      "8",
+      "9",
+      "17"
+    ],
+    "correct_answer": "7",
+    "explanation_kk": "Жеті — 7. Жетінші — седьмой.",
+    "explanation_ru": "Жеті — 7."
+  },
+  {
+    "id": "t_numbers_xybkktsy",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Он» — это:",
+    "question_ru": "«Он» — это:",
+    "options": [
+      "10",
+      "100",
+      "1",
+      "11"
+    ],
+    "correct_answer": "10",
+    "explanation_kk": "Он — 10. Жүз — 100.",
+    "explanation_ru": "Он — 10."
+  },
+  {
+    "id": "t_numbers_7i6vxy7n",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Жиырма» — это:",
+    "question_ru": "«Жиырма» — это:",
+    "options": [
+      "20",
+      "30",
+      "12",
+      "22"
+    ],
+    "correct_answer": "20",
+    "explanation_kk": "Жиырма — 20. Жиырмасыншы — двадцатый.",
+    "explanation_ru": "Жиырма — 20."
+  },
+  {
+    "id": "t_numbers_egajuree",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Жүз» означает:",
+    "question_ru": "«Жүз» означает:",
+    "options": [
+      "100",
+      "10",
+      "1000",
+      "15"
+    ],
+    "correct_answer": "100",
+    "explanation_kk": "Жүз — 100. Мың — 1000.",
+    "explanation_ru": "Жүз — 100."
+  },
+  {
+    "id": "t_numbers_e5lyydn4",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Мың» — это:",
+    "question_ru": "«Мың» — это:",
+    "options": [
+      "1000",
+      "100",
+      "10000",
+      "100000"
+    ],
+    "correct_answer": "1000",
+    "explanation_kk": "Мың — 1000.",
+    "explanation_ru": "Мың — 1000."
+  },
+  {
+    "id": "t_numbers_ust5cjld",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A2",
+    "question_kk": "Реттік сан есім «бірінші» означает:",
+    "question_ru": "Порядковое числительное «бірінші» означает:",
+    "options": [
+      "Первый",
+      "Один",
+      "Однажды",
+      "Половина"
+    ],
+    "correct_answer": "Первый",
+    "explanation_kk": "-нші/-ыншы — реттік жұрнағы.",
+    "explanation_ru": "Бірінші — первый. Суффикс -ыншы/-інші делает порядковое."
+  },
+  {
+    "id": "t_numbers_klwqwlqp",
+    "test_type": "thematic",
+    "topic": "numbers",
+    "difficulty": "A1",
+    "question_kk": "«Үш бала» (правильно)?",
+    "question_ru": "«Үш бала» (правильно)?",
+    "options": [
+      "Үш бала",
+      "Үш балалар",
+      "Үш балалары",
+      "Балалар үш"
+    ],
+    "correct_answer": "Үш бала",
+    "explanation_kk": "Сан есімнен кейін зат есім көптік алмайды.",
+    "explanation_ru": "После числительного существительное НЕ получает мн. число."
+  },
+  {
+    "id": "t_days_1okwejxl",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Дүйсенбі» означает:",
+    "question_ru": "«Дүйсенбі» означает:",
+    "options": [
+      "Понедельник",
+      "Вторник",
+      "Воскресенье",
+      "Суббота"
+    ],
+    "correct_answer": "Понедельник",
+    "explanation_kk": "Дүйсенбі — апта басы.",
+    "explanation_ru": "Дүйсенбі — понедельник."
+  },
+  {
+    "id": "t_days_ijqnvjml",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Сейсенбі» — это:",
+    "question_ru": "«Сейсенбі» — это:",
+    "options": [
+      "Вторник",
+      "Среда",
+      "Четверг",
+      "Пятница"
+    ],
+    "correct_answer": "Вторник",
+    "explanation_kk": "Сей — два, бі — день (от перс.).",
+    "explanation_ru": "Сейсенбі — вторник."
+  },
+  {
+    "id": "t_days_zmy6eyag",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Сәрсенбі» — это:",
+    "question_ru": "«Сәрсенбі» — это:",
+    "options": [
+      "Среда",
+      "Вторник",
+      "Четверг",
+      "Пятница"
+    ],
+    "correct_answer": "Среда",
+    "explanation_kk": "Сәр — три (от перс.).",
+    "explanation_ru": "Сәрсенбі — среда."
+  },
+  {
+    "id": "t_days_vvbfl6ya",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Бейсенбі» означает:",
+    "question_ru": "«Бейсенбі» означает:",
+    "options": [
+      "Четверг",
+      "Пятница",
+      "Среда",
+      "Суббота"
+    ],
+    "correct_answer": "Четверг",
+    "explanation_kk": "Бей — четыре.",
+    "explanation_ru": "Бейсенбі — четверг."
+  },
+  {
+    "id": "t_days_x0j33l8w",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Жұма» — это:",
+    "question_ru": "«Жұма» — это:",
+    "options": [
+      "Пятница",
+      "Суббота",
+      "Четверг",
+      "Воскресенье"
+    ],
+    "correct_answer": "Пятница",
+    "explanation_kk": "Жұма — священный день в исламе.",
+    "explanation_ru": "Жұма — пятница."
+  },
+  {
+    "id": "t_days_3ekcyxiz",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Сенбі» означает:",
+    "question_ru": "«Сенбі» означает:",
+    "options": [
+      "Суббота",
+      "Воскресенье",
+      "Пятница",
+      "Понедельник"
+    ],
+    "correct_answer": "Суббота",
+    "explanation_kk": "Сен — семь (от перс. шанбе).",
+    "explanation_ru": "Сенбі — суббота."
+  },
+  {
+    "id": "t_days_m3fwt2mf",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Жексенбі» — это:",
+    "question_ru": "«Жексенбі» — это:",
+    "options": [
+      "Воскресенье",
+      "Пятница",
+      "Суббота",
+      "Понедельник"
+    ],
+    "correct_answer": "Воскресенье",
+    "explanation_kk": "Жек — один.",
+    "explanation_ru": "Жексенбі — воскресенье."
+  },
+  {
+    "id": "t_days_0zbhqa80",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Бүгін» означает:",
+    "question_ru": "«Бүгін» означает:",
+    "options": [
+      "Сегодня",
+      "Завтра",
+      "Вчера",
+      "Сейчас"
+    ],
+    "correct_answer": "Сегодня",
+    "explanation_kk": "Бүгін — ертең (завтра), кеше (вчера).",
+    "explanation_ru": "Бүгін — сегодня. Кеше — вчера. Ертең — завтра."
+  },
+  {
+    "id": "t_days_6m041c9i",
+    "test_type": "thematic",
+    "topic": "days",
+    "difficulty": "A1",
+    "question_kk": "«Ертең» означает:",
+    "question_ru": "«Ертең» означает:",
+    "options": [
+      "Завтра",
+      "Вчера",
+      "Утро",
+      "Послезавтра"
+    ],
+    "correct_answer": "Завтра",
+    "explanation_kk": "Ертең — следующий день.",
+    "explanation_ru": "Ертең — завтра."
+  },
+  {
+    "id": "t_greetings_c5khb1bu",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Сәлеметсіз бе!» используется когда:",
+    "question_ru": "«Сәлеметсіз бе!» используется когда:",
+    "options": [
+      "Здороваются вежливо",
+      "Прощаются",
+      "Извиняются",
+      "Благодарят"
+    ],
+    "correct_answer": "Здороваются вежливо",
+    "explanation_kk": "Сәлеметсіз бе — формальное приветствие.",
+    "explanation_ru": "«Сәлеметсіз бе!» — формальное «Здравствуйте!» (обращение на «Сіз»)."
+  },
+  {
+    "id": "t_greetings_s8lv54uc",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Сәлем!» — это:",
+    "question_ru": "«Сәлем!» — это:",
+    "options": [
+      "Привет (неформально)",
+      "До свидания",
+      "Спасибо",
+      "Извините"
+    ],
+    "correct_answer": "Привет (неформально)",
+    "explanation_kk": "Сәлем — досқа.",
+    "explanation_ru": "«Сәлем!» — «Привет!» к ровесникам / друзьям."
+  },
+  {
+    "id": "t_greetings_2unsrreh",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Қайырлы таң!» — это:",
+    "question_ru": "«Қайырлы таң!» — это:",
+    "options": [
+      "Доброе утро!",
+      "Добрый вечер!",
+      "Спокойной ночи!",
+      "Добрый день!"
+    ],
+    "correct_answer": "Доброе утро!",
+    "explanation_kk": "Таң — рассвет. Қайырлы — благое.",
+    "explanation_ru": "«Қайырлы таң!» — «Доброе утро!»"
+  },
+  {
+    "id": "t_greetings_br0385j4",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Қайырлы күн!» означает:",
+    "question_ru": "«Қайырлы күн!» означает:",
+    "options": [
+      "Добрый день!",
+      "Доброе утро!",
+      "Спокойной ночи!",
+      "С Новым годом!"
+    ],
+    "correct_answer": "Добрый день!",
+    "explanation_kk": "Күн — день.",
+    "explanation_ru": "«Қайырлы күн!» — «Добрый день!»"
+  },
+  {
+    "id": "t_greetings_8k4lam8g",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Қайырлы кеш!» — это:",
+    "question_ru": "«Қайырлы кеш!» — это:",
+    "options": [
+      "Добрый вечер!",
+      "Доброе утро!",
+      "С праздником!",
+      "До свидания!"
+    ],
+    "correct_answer": "Добрый вечер!",
+    "explanation_kk": "Кеш — вечер.",
+    "explanation_ru": "«Қайырлы кеш!» — «Добрый вечер!»"
+  },
+  {
+    "id": "t_greetings_9la4qp3j",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Қалыңыз қалай?» означает:",
+    "question_ru": "«Қалыңыз қалай?» означает:",
+    "options": [
+      "Как Ваши дела?",
+      "Как Вас зовут?",
+      "Откуда Вы?",
+      "Сколько Вам лет?"
+    ],
+    "correct_answer": "Как Ваши дела?",
+    "explanation_kk": "Сіз-форма приветствия.",
+    "explanation_ru": "«Қалыңыз қалай?» — «Как Ваши дела?» (на «Сіз»)."
+  },
+  {
+    "id": "t_greetings_qgvu0f8b",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Рақмет» — это:",
+    "question_ru": "«Рақмет» — это:",
+    "options": [
+      "Спасибо",
+      "Пожалуйста",
+      "Извините",
+      "Здравствуйте"
+    ],
+    "correct_answer": "Спасибо",
+    "explanation_kk": "Рақмет — рахмет.",
+    "explanation_ru": "«Рақмет» — «Спасибо»."
+  },
+  {
+    "id": "t_greetings_sv7b2o3q",
+    "test_type": "thematic",
+    "topic": "greetings",
+    "difficulty": "A1",
+    "question_kk": "«Кешіріңіз» означает:",
+    "question_ru": "«Кешіріңіз» означает:",
+    "options": [
+      "Извините",
+      "Спасибо",
+      "Пожалуйста",
+      "Конечно"
+    ],
+    "correct_answer": "Извините",
+    "explanation_kk": "Кешіру — простить.",
+    "explanation_ru": "«Кешіріңіз» — «Извините» (на «Сіз»)."
+  },
+  {
+    "id": "t_professions_cbxvy9q8",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Мұғалім» — это:",
+    "question_ru": "«Мұғалім» — это:",
+    "options": [
+      "Учитель",
+      "Врач",
+      "Инженер",
+      "Строитель"
+    ],
+    "correct_answer": "Учитель",
+    "explanation_kk": "Мұғалім — мектепте сабақ беретін.",
+    "explanation_ru": "Мұғалім — учитель."
+  },
+  {
+    "id": "t_professions_nyycfx9e",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Сатушы» — это:",
+    "question_ru": "«Сатушы» — это:",
+    "options": [
+      "Продавец",
+      "Покупатель",
+      "Кассир",
+      "Кладовщик"
+    ],
+    "correct_answer": "Продавец",
+    "explanation_kk": "Сату — продавать. -шы — кәсіп жұрнағы.",
+    "explanation_ru": "Сатушы — продавец. Суффикс -шы — для профессий."
+  },
+  {
+    "id": "t_professions_e7f5vm6x",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Жүргізуші» означает:",
+    "question_ru": "«Жүргізуші» означает:",
+    "options": [
+      "Водитель",
+      "Пешеход",
+      "Пассажир",
+      "Ремонтник"
+    ],
+    "correct_answer": "Водитель",
+    "explanation_kk": "Жүргізу — вести.",
+    "explanation_ru": "Жүргізуші — водитель."
+  },
+  {
+    "id": "t_professions_25x61sno",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Аспазшы» — это:",
+    "question_ru": "«Аспазшы» — это:",
+    "options": [
+      "Повар",
+      "Официант",
+      "Кассир",
+      "Официант"
+    ],
+    "correct_answer": "Повар",
+    "explanation_kk": "Аспаз — повар. -шы — деятель.",
+    "explanation_ru": "Аспазшы — повар."
+  },
+  {
+    "id": "t_professions_qustysh5",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Жазушы» означает:",
+    "question_ru": "«Жазушы» означает:",
+    "options": [
+      "Писатель",
+      "Редактор",
+      "Журналист",
+      "Актёр"
+    ],
+    "correct_answer": "Писатель",
+    "explanation_kk": "Жазу — писать.",
+    "explanation_ru": "Жазушы — писатель (например, Мухтар Ауэзов)."
+  },
+  {
+    "id": "t_professions_10kjlkf1",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A1",
+    "question_kk": "«Дәрігер» — это:",
+    "question_ru": "«Дәрігер» — это:",
+    "options": [
+      "Врач",
+      "Медсестра",
+      "Стоматолог",
+      "Аптекарь"
+    ],
+    "correct_answer": "Врач",
+    "explanation_kk": "Дәрі — лекарство.",
+    "explanation_ru": "Дәрігер — врач."
+  },
+  {
+    "id": "t_professions_1piqv9um",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A2",
+    "question_kk": "«Зерттеуші» означает:",
+    "question_ru": "«Зерттеуші» означает:",
+    "options": [
+      "Исследователь / учёный",
+      "Студент",
+      "Студент",
+      "Художник"
+    ],
+    "correct_answer": "Исследователь / учёный",
+    "explanation_kk": "Зерттеу — исследовать.",
+    "explanation_ru": "Зерттеуші — исследователь, учёный."
+  },
+  {
+    "id": "t_professions_ejzutot9",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A2",
+    "question_kk": "«Заңгер» — это:",
+    "question_ru": "«Заңгер» — это:",
+    "options": [
+      "Юрист",
+      "Полицейский",
+      "Судья",
+      "Прокурор"
+    ],
+    "correct_answer": "Юрист",
+    "explanation_kk": "Заң — закон.",
+    "explanation_ru": "Заңгер — юрист."
+  },
+  {
+    "id": "t_professions_ap8kqt56",
+    "test_type": "thematic",
+    "topic": "professions",
+    "difficulty": "A2",
+    "question_kk": "«Аудармашы» означает:",
+    "question_ru": "«Аудармашы» означает:",
+    "options": [
+      "Переводчик",
+      "Писатель",
+      "Учитель",
+      "Журналист"
+    ],
+    "correct_answer": "Переводчик",
+    "explanation_kk": "Аудару — переводить.",
+    "explanation_ru": "Аудармашы — переводчик."
+  },
+  {
+    "id": "t_city_1uwftklq",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Қала» означает:",
+    "question_ru": "«Қала» означает:",
+    "options": [
+      "Город",
+      "Село",
+      "Деревня",
+      "Аул"
+    ],
+    "correct_answer": "Город",
+    "explanation_kk": "Қала — қала. Ауыл — село.",
+    "explanation_ru": "Қала — город."
+  },
+  {
+    "id": "t_city_ifhn6zfo",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Үй» — это:",
+    "question_ru": "«Үй» — это:",
+    "options": [
+      "Дом",
+      "Школа",
+      "Улица",
+      "Парк"
+    ],
+    "correct_answer": "Дом",
+    "explanation_kk": "Үй — дом, юрта.",
+    "explanation_ru": "Үй — дом."
+  },
+  {
+    "id": "t_city_ly03s7yq",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Дүкен» означает:",
+    "question_ru": "«Дүкен» означает:",
+    "options": [
+      "Магазин",
+      "Аптека",
+      "Банк",
+      "Школа"
+    ],
+    "correct_answer": "Магазин",
+    "explanation_kk": "Дүкен — дүкеншік.",
+    "explanation_ru": "Дүкен — магазин."
+  },
+  {
+    "id": "t_city_3o7vhkjw",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Мектеп» — это:",
+    "question_ru": "«Мектеп» — это:",
+    "options": [
+      "Школа",
+      "Университет",
+      "Детский сад",
+      "Институт"
+    ],
+    "correct_answer": "Школа",
+    "explanation_kk": "Мектеп — мектеп.",
+    "explanation_ru": "Мектеп — школа."
+  },
+  {
+    "id": "t_city_3inirg7t",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Аурухана» означает:",
+    "question_ru": "«Аурухана» означает:",
+    "options": [
+      "Больница",
+      "Школа",
+      "Магазин",
+      "Театр"
+    ],
+    "correct_answer": "Больница",
+    "explanation_kk": "Ауру — болезнь, -хана — место.",
+    "explanation_ru": "Аурухана — больница (буквально «дом болезней»)."
+  },
+  {
+    "id": "t_city_vzyqfnzr",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Дәріхана» — это:",
+    "question_ru": "«Дәріхана» — это:",
+    "options": [
+      "Аптека",
+      "Больница",
+      "Магазин",
+      "Кафе"
+    ],
+    "correct_answer": "Аптека",
+    "explanation_kk": "Дәрі — лекарство, -хана — место.",
+    "explanation_ru": "Дәріхана — аптека."
+  },
+  {
+    "id": "t_city_iyr13d35",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Саябақ» означает:",
+    "question_ru": "«Саябақ» означает:",
+    "options": [
+      "Парк",
+      "Сад",
+      "Лес",
+      "Двор"
+    ],
+    "correct_answer": "Парк",
+    "explanation_kk": "Саябақ — городской парк.",
+    "explanation_ru": "Саябақ — парк."
+  },
+  {
+    "id": "t_city_uqucur09",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A1",
+    "question_kk": "«Көше» — это:",
+    "question_ru": "«Көше» — это:",
+    "options": [
+      "Улица",
+      "Площадь",
+      "Двор",
+      "Дорога"
+    ],
+    "correct_answer": "Улица",
+    "explanation_kk": "Көше — улица. Жол — дорога.",
+    "explanation_ru": "Көше — улица. Жол — дорога / путь."
+  },
+  {
+    "id": "t_city_xj1nwv2m",
+    "test_type": "thematic",
+    "topic": "city",
+    "difficulty": "A2",
+    "question_kk": "«Метро» означает:",
+    "question_ru": "«Метро» означает:",
+    "options": [
+      "Метро",
+      "Автобус",
+      "Трамвай",
+      "Поезд"
+    ],
+    "correct_answer": "Метро",
+    "explanation_kk": "Кірме сөз. Алматыда метро бар.",
+    "explanation_ru": "Метро — заимствование. Есть в Алматы."
+  },
+  {
+    "id": "t_nature_az0835qt",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Тау» — это:",
+    "question_ru": "«Тау» — это:",
+    "options": [
+      "Гора",
+      "Река",
+      "Озеро",
+      "Лес"
+    ],
+    "correct_answer": "Гора",
+    "explanation_kk": "Тау — биік. Алатау — Великие горы.",
+    "explanation_ru": "Тау — гора."
+  },
+  {
+    "id": "t_nature_jwsfsdgr",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Өзен» означает:",
+    "question_ru": "«Өзен» означает:",
+    "options": [
+      "Река",
+      "Озеро",
+      "Море",
+      "Ручей"
+    ],
+    "correct_answer": "Река",
+    "explanation_kk": "Өзен — су ағыны.",
+    "explanation_ru": "Өзен — река."
+  },
+  {
+    "id": "t_nature_fmxusty7",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Көл» — это:",
+    "question_ru": "«Көл» — это:",
+    "options": [
+      "Озеро",
+      "Море",
+      "Река",
+      "Болото"
+    ],
+    "correct_answer": "Озеро",
+    "explanation_kk": "Көл — Балқаш, Қапшағай.",
+    "explanation_ru": "Көл — озеро."
+  },
+  {
+    "id": "t_nature_4qcvd9yu",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Орман» означает:",
+    "question_ru": "«Орман» означает:",
+    "options": [
+      "Лес",
+      "Степь",
+      "Поле",
+      "Сад"
+    ],
+    "correct_answer": "Лес",
+    "explanation_kk": "Орман — ағаштар.",
+    "explanation_ru": "Орман — лес."
+  },
+  {
+    "id": "t_nature_7hhumjs0",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Дала» — это:",
+    "question_ru": "«Дала» — это:",
+    "options": [
+      "Степь",
+      "Лес",
+      "Поле",
+      "Пустыня"
+    ],
+    "correct_answer": "Степь",
+    "explanation_kk": "Қазақ даласы.",
+    "explanation_ru": "Дала — степь (Великая Казахская степь)."
+  },
+  {
+    "id": "t_nature_wk88gx26",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Ағаш» означает:",
+    "question_ru": "«Ағаш» означает:",
+    "options": [
+      "Дерево",
+      "Цветок",
+      "Куст",
+      "Трава"
+    ],
+    "correct_answer": "Дерево",
+    "explanation_kk": "Ағаш — өсімдік.",
+    "explanation_ru": "Ағаш — дерево."
+  },
+  {
+    "id": "t_nature_2b7mzhn0",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Гүл» — это:",
+    "question_ru": "«Гүл» — это:",
+    "options": [
+      "Цветок",
+      "Трава",
+      "Лист",
+      "Семя"
+    ],
+    "correct_answer": "Цветок",
+    "explanation_kk": "Гүл — гүлденуі.",
+    "explanation_ru": "Гүл — цветок."
+  },
+  {
+    "id": "t_nature_oa3nrqnf",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Шөл» означает:",
+    "question_ru": "«Шөл» означает:",
+    "options": [
+      "Пустыня / жажда",
+      "Снег",
+      "Дождь",
+      "Ветер"
+    ],
+    "correct_answer": "Пустыня / жажда",
+    "explanation_kk": "Шөл — қарашалы.",
+    "explanation_ru": "Шөл — пустыня; также «жажда»."
+  },
+  {
+    "id": "t_nature_t4hhahys",
+    "test_type": "thematic",
+    "topic": "nature",
+    "difficulty": "A1",
+    "question_kk": "«Аспан» — это:",
+    "question_ru": "«Аспан» — это:",
+    "options": [
+      "Небо",
+      "Земля",
+      "Океан",
+      "Луна"
+    ],
+    "correct_answer": "Небо",
+    "explanation_kk": "Аспан — көк.",
+    "explanation_ru": "Аспан — небо."
+  },
+  {
+    "id": "t_weather_zicbihhb",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Күн» означает (среди погоды):",
+    "question_ru": "«Күн» означает (среди погоды):",
+    "options": [
+      "Солнце / день",
+      "Дождь",
+      "Облако",
+      "Ветер"
+    ],
+    "correct_answer": "Солнце / день",
+    "explanation_kk": "Күн — солнце; также «день».",
+    "explanation_ru": "Күн — солнце или день."
+  },
+  {
+    "id": "t_weather_ocgpoczp",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Жаңбыр» — это:",
+    "question_ru": "«Жаңбыр» — это:",
+    "options": [
+      "Дождь",
+      "Снег",
+      "Туман",
+      "Гроза"
+    ],
+    "correct_answer": "Дождь",
+    "explanation_kk": "Жаңбыр жауып тұр — идёт дождь.",
+    "explanation_ru": "Жаңбыр — дождь."
+  },
+  {
+    "id": "t_weather_i1tcf0sd",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Қар» означает:",
+    "question_ru": "«Қар» означает:",
+    "options": [
+      "Снег",
+      "Дождь",
+      "Лёд",
+      "Град"
+    ],
+    "correct_answer": "Снег",
+    "explanation_kk": "Қар жауды — выпал снег.",
+    "explanation_ru": "Қар — снег."
+  },
+  {
+    "id": "t_weather_xt0iptn7",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Жел» — это:",
+    "question_ru": "«Жел» — это:",
+    "options": [
+      "Ветер",
+      "Туман",
+      "Гроза",
+      "Облако"
+    ],
+    "correct_answer": "Ветер",
+    "explanation_kk": "Жел соғып тұр — дует ветер.",
+    "explanation_ru": "Жел — ветер."
+  },
+  {
+    "id": "t_weather_mdch6nji",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Ыстық» означает:",
+    "question_ru": "«Ыстық» означает:",
+    "options": [
+      "Жарко",
+      "Холодно",
+      "Тепло",
+      "Прохладно"
+    ],
+    "correct_answer": "Жарко",
+    "explanation_kk": "Бүгін ыстық — сегодня жарко.",
+    "explanation_ru": "Ыстық — жарко."
+  },
+  {
+    "id": "t_weather_4ine0f3p",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Суық» — это:",
+    "question_ru": "«Суық» — это:",
+    "options": [
+      "Холодно",
+      "Жарко",
+      "Тепло",
+      "Облачно"
+    ],
+    "correct_answer": "Холодно",
+    "explanation_kk": "Қыс суық — зима холодная.",
+    "explanation_ru": "Суық — холодно."
+  },
+  {
+    "id": "t_weather_dtwzzpis",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Бұлт» означает:",
+    "question_ru": "«Бұлт» означает:",
+    "options": [
+      "Облако",
+      "Ветер",
+      "Дождь",
+      "Молния"
+    ],
+    "correct_answer": "Облако",
+    "explanation_kk": "Бұлтты ауа райы.",
+    "explanation_ru": "Бұлт — облако."
+  },
+  {
+    "id": "t_weather_w68j5oyv",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A2",
+    "question_kk": "«Ауа райы қандай?» — это:",
+    "question_ru": "«Ауа райы қандай?» — это:",
+    "options": [
+      "Какая погода?",
+      "Сколько градусов?",
+      "Когда дождь?",
+      "Что это?"
+    ],
+    "correct_answer": "Какая погода?",
+    "explanation_kk": "Ауа райы — погода.",
+    "explanation_ru": "Ауа райы — погода. Қандай — какой/какая."
+  },
+  {
+    "id": "t_weather_eh6kehjc",
+    "test_type": "thematic",
+    "topic": "weather",
+    "difficulty": "A1",
+    "question_kk": "«Тұман» означает:",
+    "question_ru": "«Тұман» означает:",
+    "options": [
+      "Туман",
+      "Дождь",
+      "Облако",
+      "Снег"
+    ],
+    "correct_answer": "Туман",
+    "explanation_kk": "Тұман — дымка.",
+    "explanation_ru": "Тұман — туман."
   }
 ]
