@@ -27,6 +27,12 @@ interface AdaptiveExerciseProps {
   locale: string;
   /** Если задан — после завершения раунда вызовем POST /api/lessons/:id/complete со score. */
   lessonId?: string;
+  /** Заголовок урока (название темы) — передаётся в AI-промпт, чтобы упражнения были по теме урока. */
+  lessonTitle?: string;
+  /** Целевой словарь темы (10–20 слов). */
+  targetVocab?: string[];
+  /** Релевантная грамматика темы (заголовки или описания правил). */
+  targetGrammar?: string[];
 }
 
 const TOPIC_LABELS: Record<string, { kk: string; ru: string }> = {
@@ -47,7 +53,7 @@ function labelForTopic(slug: string, locale: string, fallbackKk?: string, fallba
   return slug;
 }
 
-export default function AdaptiveExercise({ locale, lessonId }: AdaptiveExerciseProps) {
+export default function AdaptiveExercise({ locale, lessonId, lessonTitle, targetVocab, targetGrammar }: AdaptiveExerciseProps) {
   const { user } = useCurrentUser();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -123,6 +129,10 @@ export default function AdaptiveExercise({ locale, lessonId }: AdaptiveExerciseP
         body: JSON.stringify({
           topic,
           level,
+          locale: locale === 'kk' ? 'kk' : 'ru',
+          ...(lessonTitle ? { lessonTitle } : {}),
+          ...(targetVocab && targetVocab.length > 0 ? { targetVocab } : {}),
+          ...(targetGrammar && targetGrammar.length > 0 ? { targetGrammar } : {}),
           weakPoints,
           ...(typeof avgScore === 'number' ? { avg_score: avgScore } : {}),
         }),
@@ -266,8 +276,17 @@ export default function AdaptiveExercise({ locale, lessonId }: AdaptiveExerciseP
         )}
 
         <Button onClick={generateExercises} loading={loading}>
-          {locale === 'kk' ? 'Жаттығулар жасау' : 'Создать упражнения'}
+          {loading
+            ? (locale === 'kk' ? 'AI жаттығулар дайындап жатыр…' : 'AI готовит задания…')
+            : (locale === 'kk' ? 'Жаттығулар жасау' : 'Создать упражнения')}
         </Button>
+        {loading && (
+          <p className="text-xs text-gray-500 mt-2">
+            {locale === 'kk'
+              ? 'Бұл 10–20 секунд алуы мүмкін.'
+              : 'Это может занять 10–20 секунд.'}
+          </p>
+        )}
       </div>
     );
   }

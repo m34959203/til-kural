@@ -28,7 +28,7 @@ interface DBLesson {
   topic: string;
   difficulty: string;
   content?: unknown;
-  sort_order?: number;
+  sort_order?: number | null;
   mentor_track?: string | null;
   required_level?: string | null;
   rule_ids?: string[] | null;
@@ -68,14 +68,26 @@ async function loadDbLessons(): Promise<DBLesson[]> {
 
 function mergeLessons(meta: LessonMeta[], dbRows: DBLesson[]): LessonMeta[] {
   if (dbRows.length === 0) return meta;
-  const dbById = new Map(dbRows.map((r) => [String(r.id), r]));
-  const usedDbIds = new Set<string>();
+
+  // Источник истины — meta-каталог (id="1".."21"). БД хранит те же уроки, но с UUID-id
+  // и sort_order=1..21. Раньше merge матчил по id и не находил совпадений → 21 + 21 = 42
+  // дубля (P0-1 audit). Теперь матчим по sort_order; если sort_order совпадает с числовым
+  // id meta-урока — БД-строка лишь обновляет title/description, не плодит дубль.
+  // Для будущих новых уроков (sort_order > 21) — добавляем как новый, но с meta-id'ом
+  // вида `db-${row.id}` чтобы /lessons/[id] страница могла найти его.
+  const metaBySortOrder = new Map<number, LessonMeta>();
+  for (const m of meta) {
+    const n = Number(m.id);
+    if (Number.isFinite(n)) metaBySortOrder.set(n, m);
+  }
+  const matchedSortOrders = new Set<number>();
 
   const merged: LessonMeta[] = meta.map((m) => {
-    const dbRow = dbById.get(String(m.id));
+    const n = Number(m.id);
+    if (!Number.isFinite(n)) return m;
+    const dbRow = dbRows.find((r) => Number(r.sort_order) === n);
     if (!dbRow) return m;
-    usedDbIds.add(String(m.id));
-    // БД переопределяет заголовок/описание/сложность, остальные метаполя берём из каталога
+    matchedSortOrders.add(n);
     return {
       ...m,
       title_kk: dbRow.title_kk ?? m.title_kk,
@@ -87,11 +99,11 @@ function mergeLessons(meta: LessonMeta[], dbRows: DBLesson[]): LessonMeta[] {
     };
   });
 
-  // Новые уроки из БД (которых нет в meta-каталоге) — добавляем в конец
+  // Новые уроки из БД (sort_order, которого нет в meta) — добавляем.
   for (const row of dbRows) {
-    if (!usedDbIds.has(String(row.id))) {
-      merged.push(dbToMeta(row));
-    }
+    const n = Number(row.sort_order);
+    if (Number.isFinite(n) && matchedSortOrders.has(n)) continue;
+    if (!metaBySortOrder.has(n)) merged.push(dbToMeta(row));
   }
   return merged;
 }

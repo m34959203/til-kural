@@ -10,6 +10,7 @@ import LessonLockBadge from '@/components/features/LessonLockBadge';
 import Card from '@/components/ui/Card';
 import LevelBadge from '@/components/ui/LevelBadge';
 import { findLesson, LESSONS, type LessonMeta } from '@/data/lessons-meta';
+import { LESSON_CONTENT } from '@/data/lesson-content';
 import { isUnlocked } from '@/lib/level-gate';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import rulesData from '@/data/kazakh-grammar-rules.json';
@@ -38,6 +39,12 @@ export default function LessonPage({ params }: { params: Promise<{ locale: strin
   const unlocked = isUnlocked(userLevel, requiredLevel);
 
   const rules = (rulesData as Rule[]).filter((r) => lesson.rule_ids.includes(r.id));
+  const content = LESSON_CONTENT[lesson.id];
+  const goals = locale === 'kk' ? content?.goals_kk : content?.goals_ru;
+  const culturalNote = locale === 'kk' ? content?.culturalNote_kk : content?.culturalNote_ru;
+  const lessonTitle = locale === 'kk' ? lesson.title_kk : lesson.title_ru;
+  const targetVocab = content?.vocabulary?.map((v) => `${v.kk} (${v.ru})`) ?? [];
+  const targetGrammar = rules.map((r) => locale === 'kk' ? r.title_kk : r.title_ru);
 
   // Пока ждём ответ /api/auth/me — показываем скелетон, чтобы гейт не мигал
   // (иначе успеем отрендерить контент до загрузки user и он мелькнёт для анонимов).
@@ -82,6 +89,60 @@ export default function LessonPage({ params }: { params: Promise<{ locale: strin
           {locale === 'kk' ? lesson.description_kk : lesson.description_ru}
         </p>
       </div>
+
+      {goals && goals.length > 0 && (
+        <Card>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            🎯 {locale === 'kk' ? 'Сіз нені үйренесіз' : 'Чему вы научитесь'}
+          </h2>
+          <ul className="space-y-1.5 text-sm text-gray-700 list-disc list-inside">
+            {goals.map((g, i) => <li key={i}>{g}</li>)}
+          </ul>
+        </Card>
+      )}
+
+      {content?.vocabulary && content.vocabulary.length > 0 && (
+        <Card>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            📚 {locale === 'kk' ? 'Тақырып сөздігі' : 'Словарь темы'}
+          </h2>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            {content.vocabulary.map((v, i) => (
+              <li key={i} className="flex flex-wrap items-baseline gap-2">
+                <span className="font-semibold text-gray-900">{v.kk}</span>
+                {v.tr && <span className="text-xs text-gray-400">{v.tr}</span>}
+                <span className="text-gray-600">— {v.ru}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {content?.dialogue && (
+        <Card>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            💬 {locale === 'kk' ? content.dialogue.title_kk : content.dialogue.title_ru}
+          </h2>
+          <div className="space-y-2.5">
+            {content.dialogue.lines.map((line, i) => (
+              <div key={i} className="border-l-2 border-teal-300 pl-3">
+                <div className="text-xs font-semibold text-teal-700 uppercase tracking-wide">{line.speaker}</div>
+                <div className="text-sm text-gray-900">{line.kk}</div>
+                <div className="text-xs text-gray-500 italic">{line.ru}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {culturalNote && (
+        <Card className="border-amber-100 bg-amber-50/40">
+          <h2 className="text-base font-semibold text-amber-900 mb-1.5 flex items-center gap-2">
+            🇰🇿 {locale === 'kk' ? 'Мәдени ескертпе' : 'Культурная заметка'}
+          </h2>
+          <p className="text-sm text-amber-900/90">{culturalNote}</p>
+        </Card>
+      )}
 
       {rules.length > 0 && (
         <Card>
@@ -130,7 +191,13 @@ export default function LessonPage({ params }: { params: Promise<{ locale: strin
         <h2 className="text-lg font-semibold text-gray-900 mb-3">
           {locale === 'kk' ? 'Жаттығулар' : 'Упражнения'}
         </h2>
-        <AdaptiveExercise locale={locale} lessonId={lesson.id} />
+        <AdaptiveExercise
+          locale={locale}
+          lessonId={lesson.id}
+          lessonTitle={lessonTitle}
+          targetVocab={targetVocab.length > 0 ? targetVocab : undefined}
+          targetGrammar={targetGrammar.length > 0 ? targetGrammar : undefined}
+        />
       </div>
 
       <div className="pt-2">

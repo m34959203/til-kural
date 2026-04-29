@@ -64,14 +64,29 @@ export async function analyzeImage(
   return result.response.text();
 }
 
+export interface ExerciseGenContext {
+  /** Тема урока, на котором запущен генератор. Передаётся в промпт, чтобы
+   *  AI генерировал задачи именно по теме (а не случайные про прошедшее время). */
+  lessonTitle?: string;
+  /** Целевой словарь темы (10–20 ключевых слов). Если задан — упражнения должны
+   *  использовать ИМЕННО эти слова. */
+  targetVocab?: string[];
+  /** Целевая грамматика темы (правила из rule_ids). */
+  targetGrammar?: string[];
+  /** Локаль интерфейса — на каком языке давать пояснения. По умолчанию kk. */
+  locale?: 'kk' | 'ru';
+}
+
 export async function generateExercises(
   topic: string,
   level: string,
   weakPoints: string[] = [],
-  avgScore?: number
+  avgScore?: number,
+  ctx: ExerciseGenContext = {},
 ): Promise<string> {
   const hasScore = typeof avgScore === 'number' && !Number.isNaN(avgScore);
   const scorePct = hasScore ? Math.round(avgScore as number) : null;
+  const locale: 'kk' | 'ru' = ctx.locale === 'ru' ? 'ru' : 'kk';
 
   let difficultyBlock = '';
   let difficultyTag = 'standard';
@@ -91,19 +106,41 @@ export async function generateExercises(
     ? `Уделить особое внимание этим подтемам: ${weakPoints.join(', ')}.`
     : '';
 
-  const systemPrompt = `Сен қазақ тілі мұғалімісің. Берілген тақырып пен деңгейге сай жаттығулар жаса.
-Деңгей (CEFR): ${level}
-Тақырып: ${topic}
+  const lessonBlock = ctx.lessonTitle
+    ? `КОНТЕКСТ УРОКА: «${ctx.lessonTitle}». Все упражнения должны быть про эту тему — лексика, ситуации и грамматика должны соответствовать теме урока, а не случайной грамматике.`
+    : '';
+
+  const vocabBlock = ctx.targetVocab && ctx.targetVocab.length > 0
+    ? `ОБЯЗАТЕЛЬНО использовать в упражнениях эти слова темы (минимум 5 из списка): ${ctx.targetVocab.slice(0, 30).join(', ')}.`
+    : '';
+
+  const grammarBlock = ctx.targetGrammar && ctx.targetGrammar.length > 0
+    ? `Грамматическая фокусировка: ${ctx.targetGrammar.join('; ')}.`
+    : '';
+
+  const localeNote = locale === 'ru'
+    ? 'Поле "question" — пишется ПО-РУССКИ с пропуском для казахского слова или предложения; либо казахское предложение с пропуском, но переводом в скобках. Поле "explanation" — на русском.'
+    : 'Поле "question" және "explanation" — қазақ тілінде.';
+
+  const systemPrompt = `Ты — учитель казахского языка. Сгенерируй упражнения по заданной теме и уровню.
+Уровень (CEFR): ${level}
+Категория: ${topic}
+${lessonBlock}
+${vocabBlock}
+${grammarBlock}
 Режим сложности: ${difficultyTag}
 ${difficultyBlock}
 ${weakBlock}
+${localeNote}
 
-JSON форматында тек 5 жаттығу бер (массив), ешқандай түсіндірмесіз:
+Верни ТОЛЬКО JSON-массив из 5 упражнений, без обрамления и комментариев:
 [{"question": "...", "options": ["..."], "correct": "...", "explanation": "..."}]
 
-В поле "explanation" обязательно отмечай сложность словом "базовые" (basic), "стандартные" или "продвинутые" (advanced) согласно режиму сложности "${difficultyTag}".`;
+В поле "explanation" обязательно отмечай сложность словом "базовые" (basic), "стандартные" или "продвинутые" (advanced) согласно режиму "${difficultyTag}".`;
 
-  const userMessage = `${topic} тақырыбынан ${level} деңгейіне сай 5 жаттығу жаса (режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`;
+  const userMessage = locale === 'ru'
+    ? `Сделай 5 упражнений по теме «${ctx.lessonTitle || topic}» (категория: ${topic}, уровень ${level}, режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`
+    : `${ctx.lessonTitle || topic} тақырыбынан ${level} деңгейіне сай 5 жаттығу жаса (категория: ${topic}, режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`;
 
   return chatWithAI(systemPrompt, userMessage);
 }
