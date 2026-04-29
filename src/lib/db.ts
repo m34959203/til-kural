@@ -261,8 +261,16 @@ class PostgresDB implements DB {
     if (opts?.orderBy) sql += ` ORDER BY "${opts.orderBy}" ${opts.order === 'desc' ? 'DESC' : 'ASC'}`;
     if (opts?.limit) sql += ` LIMIT ${Number(opts.limit)}`;
     if (opts?.offset) sql += ` OFFSET ${Number(opts.offset)}`;
-    const res: QueryResult = await this.pool.query(sql, values);
-    return res.rows;
+    try {
+      const res: QueryResult = await this.pool.query(sql, values);
+      return res.rows;
+    } catch (err: any) {
+      // 22P02: invalid_text_representation — например, '/api/lessons/not-a-uuid'
+      // приводит к касту строки в UUID-колонку. Превращаем 500 в пустой результат,
+      // чтобы вызывающие маршруты возвращали 404.
+      if (err?.code === '22P02') return [];
+      throw err;
+    }
   }
 
   async findOne(table: string, filter: Record<string, any>) {
@@ -286,13 +294,23 @@ class PostgresDB implements DB {
     const values = Object.values(data);
     const set = keys.map((k, i) => `"${k}" = $${i + 1}`).join(', ');
     const sql = `UPDATE "${table}" SET ${set} WHERE id = $${keys.length + 1} RETURNING *`;
-    const res = await this.pool.query(sql, [...values, id]);
-    return res.rows[0] || null;
+    try {
+      const res = await this.pool.query(sql, [...values, id]);
+      return res.rows[0] || null;
+    } catch (err: any) {
+      if (err?.code === '22P02') return null;
+      throw err;
+    }
   }
 
   async delete(table: string, id: string) {
-    const res = await this.pool.query(`DELETE FROM "${table}" WHERE id = $1`, [id]);
-    return (res.rowCount ?? 0) > 0;
+    try {
+      const res = await this.pool.query(`DELETE FROM "${table}" WHERE id = $1`, [id]);
+      return (res.rowCount ?? 0) > 0;
+    } catch (err: any) {
+      if (err?.code === '22P02') return false;
+      throw err;
+    }
   }
 
   async count(table: string, filter?: Record<string, any>) {

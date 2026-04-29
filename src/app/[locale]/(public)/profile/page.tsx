@@ -13,6 +13,7 @@ import LevelBadge from '@/components/ui/LevelBadge';
 import MentorAvatar from '@/components/features/MentorAvatar';
 import MentorTrack from '@/components/features/MentorTrack';
 import AdminProfile from '@/components/features/AdminProfile';
+import PushOptIn from '@/components/features/PushOptIn';
 
 const ADMIN_ROLES = ['admin', 'editor', 'moderator'];
 
@@ -59,6 +60,7 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
   const [stats, setStats] = useState<Stats | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'unauth'>('loading');
   const [literacy, setLiteracy] = useState<LiteracyHistoryResponse | null>(null);
+  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +106,23 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
           }
         } catch {
           /* ignore — блок рендерит пустое состояние */
+        }
+
+        // Список завершённых уроков (для MentorTrack).
+        try {
+          const lr = await fetch('/api/profile/lessons', {
+            headers,
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          if (lr.ok) {
+            const lj = (await lr.json()) as { completedLessonIds?: string[] };
+            if (!cancelled && Array.isArray(lj.completedLessonIds)) {
+              setCompletedLessonIds(lj.completedLessonIds);
+            }
+          }
+        } catch {
+          /* ignore */
         }
       } catch {
         if (!cancelled) setStatus('unauth');
@@ -156,6 +175,7 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
   const logoutUser = async () => {
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     try { localStorage.removeItem('token'); } catch {}
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth-change'));
     router.push(`/${locale}`);
     setTimeout(() => router.refresh(), 100);
   };
@@ -272,9 +292,22 @@ export default function ProfilePage({ params }: { params: Promise<{ locale: stri
       <MentorTrack
         mentor={user.mentor_avatar}
         currentLevel={totals.language_level}
-        completedLessonIds={[]}
+        completedLessonIds={completedLessonIds}
         locale={locale}
       />
+
+      {/* 🔔 Push-уведомления (streak-reminders, события) */}
+      <Card className="mt-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          🔔 {locale === 'kk' ? 'Хабарландырулар' : 'Уведомления'}
+        </h2>
+        <p className="text-sm text-gray-500 mb-3">
+          {locale === 'kk'
+            ? 'Күнделікті streak-еске салулар мен жаңа сабақтар туралы push-хабарландырулар.'
+            : 'Push-напоминания о streak и новых уроках. Можно отключить в любой момент.'}
+        </p>
+        <PushOptIn locale={locale} />
+      </Card>
     </div>
   );
 }

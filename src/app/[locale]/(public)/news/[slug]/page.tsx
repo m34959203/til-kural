@@ -25,14 +25,16 @@ interface NewsRow {
 }
 
 async function loadNews(slug: string): Promise<NewsRow | null> {
+  // Только опубликованные новости показываем публично. Черновики/архив — 404.
+  // Админ-предпросмотр черновика идёт через /admin/news/[id], не через публичный URL.
   try {
-    const bySlug = await db.findOne('news', { slug });
+    const bySlug = await db.findOne('news', { slug, status: 'published' });
     if (bySlug) return bySlug as NewsRow;
   } catch {
     /* ignore */
   }
   try {
-    const byId = await db.findOne('news', { id: slug });
+    const byId = await db.findOne('news', { id: slug, status: 'published' });
     if (byId) return byId as NewsRow;
   } catch {
     /* ignore */

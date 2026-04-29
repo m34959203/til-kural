@@ -2,6 +2,7 @@ import { getMessages, isValidLocale } from '@/lib/i18n';
 import { buildMetadata, SITE } from '@/lib/seo';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import CookieConsent from '@/components/layout/CookieConsent';
 
 export async function generateMetadata({
   params,
@@ -34,6 +35,7 @@ export default async function LocaleLayout({
     <>
       <span className="sr-only">{messages.common.siteName}</span>
       {children}
+      <CookieConsent locale={locale} />
     </>
   );
 }

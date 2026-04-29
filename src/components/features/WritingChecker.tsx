@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface WritingCheckerProps {
   locale: string;
@@ -25,6 +26,7 @@ interface CheckResult {
 }
 
 export default function WritingChecker({ locale }: WritingCheckerProps) {
+  const { user } = useCurrentUser();
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -35,10 +37,11 @@ export default function WritingChecker({ locale }: WritingCheckerProps) {
     setResult(null);
 
     try {
+      const userLevel = user?.language_level || 'A2';
       const res = await fetch('/api/learn/check-writing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim(), level: 'B1' }),
+        body: JSON.stringify({ text: text.trim(), level: userLevel }),
       });
       const data = await res.json();
       setResult(data.result || {

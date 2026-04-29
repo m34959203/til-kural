@@ -165,6 +165,74 @@ Sampling `buildQuestions()` берёт стратифицированно: 4L/4R
 
 ## История существенных изменений
 
+- **2026-04-29** — Закрыты все P0/P1 находки `docs/PROJECT_AUDIT_2026-04-28.md` (15 P0 + 38 P1):
+  **Безопасность:**
+  - JWT_SECRET ротирован (`openssl rand -hex 64` → `.env.local`).
+  - CSRF Origin/Referer-чек в `requireAdminApi` для всех мутирующих запросов; safelist через `NEXT_PUBLIC_APP_URL` + host.
+  - PUT `/api/admin/users/:id` теперь sanitize'ит response (без `password_hash`); защита от self-delete / self-demote / удаления «последнего» admin'а.
+  - `/api/upload` → admin-only (`requireAdminApi`); SVG исключён (XSS); MAX_FILE_SIZE читается из env.
+  - Rate-limit добавлен на `/api/admin/*` (60/min), photo-check для anon ужесточён до 5/min.
+  - Register теперь ставит httpOnly cookie `tk-token` (как login), middleware больше не отбрасывает свежезарегистрированного admin/editor на `/login`.
+  **Сломанный продуктовый flow:**
+  - Кнопка `<MarkComplete />` в `/learn/lessons/[id]`; AdaptiveExercise при finish автоматически вызывает `/api/lessons/:id/complete` со score → XP/streak/achievements.
+  - `/game` — реальные XP/level/streak из `/api/profile/stats`; rank — из `/api/game/leaderboard`.
+  - `/game/achievements` — earned-коды из нового `/api/profile/achievements` (читает `user_achievements`).
+  - `/game/quests` — `started`/`progress` из `/api/game/quests` (поле `userQuests`).
+  - `/test/results` (`TestResults.tsx`) — данные из `/api/profile/stats.recent.tests`.
+  - `/admin/settings` setSetting → `INSERT … ON CONFLICT (key) DO UPDATE`; убран паразитный `id`-инсерт.
+  - `/api/lessons/{bad-id}` теперь 404, а не 500 (Postgres error 22P02 ловится в `db.query/update/delete`); добавлен helper `isUuid`.
+  - Hero убрал «50K+ Білімалушы»: статистика теперь честные «0₸ / 21 правило / A1→C2».
+  **Retention loop:**
+  - `<PushOptIn />` подключён в `/profile` (новый блок «Хабарландырулар»); ENV-плейсхолдеры для VAPID/SMTP/CRON_TOKEN.
+  - В `docs/DEPLOYMENT.md` — гайд по `production-домен`, GitHub Actions cron, VAPID.
+  - Forgot-password flow: `/api/auth/forgot-password`, `/api/auth/reset-password`, страницы `/{kk,ru}/forgot-password` и `/reset-password`. SQL миграция `008_password_resets.sql` (применена к til-kural-db-1).
+  **Контент:**
+  - `sql/006_content_seeds.sql` регенерирован из живой БД (`bash scripts/regenerate-content-seeds.sh`); 146 INSERT'ов с ON CONFLICT DO NOTHING.
+  - `loadNews(slug)` фильтрует по `status='published'`; черновики/архив для публики → 404.
+  - Сертификат `/test/certificate/[id]` теперь проверяет cert по `certificates`; `/anything` → 404 (раньше рендерил «valid-looking» PDF).
+  - speechSynthesis fallback удалён из `DialogTrainer` и `PronunciationPractice` (нарушал memory-правило `feedback_no_browser_tts.md`).
+  - ThematicTest на финиш постит результат в `/api/test/evaluate?mode=thematic` → XP/streak.
+  - DialogTrainer на «Сменить тему» вызывает `/api/dialog/finish` (XP при ≥4 turn'ах юзера).
+  - Lesson #5 (Дүкенде сатып алу) `required_level: B1 → A2` (auezov-track теперь A1→A2→B1→B2 без скачка).
+  **Профиль:**
+  - `MentorTrack` сохраняет выбор через PUT `/api/profile/mentor` (новый endpoint).
+  - `WritingChecker` использует фактический `user.language_level` вместо hardcoded 'B1'.
+  - Profile подгружает `completedLessonIds` из `/api/profile/lessons` для MentorTrack.
+  - DELETE `/api/profile/me` — анонимизация по политике (email→`deleted-{id}@…`, чистка push subs).
+  **Privacy / GDPR-style:**
+  - `<CookieConsent />` подключён в `[locale]/layout.tsx`; `<Analytics />` грузит GA4/YM ТОЛЬКО после `data-cc="accepted"` на `<html>`.
+  **Админ CRUD:**
+  - `/admin/lessons` форма: добавлены `required_level`, `mentor_track`, `rule_ids`, `content`.
+  - `slugify()` транслитерирует кириллицу (включая kk-специфику ә/ғ/қ/ң/ө/ұ/ү/і) → URL-friendly slug.
+  - `/api/admin/settings` валидирует `menu_json` (must be JSON array of objects with `href: string`).
+  - `/api/tests` POST — проверка `correct_answer ∈ options` (нерешаемые вопросы → 400).
+  **UX/UI:**
+  - Footer соц-иконы — реальные ссылки из `site_settings.social_*` (если пусто, блок не рендерится).
+  - Skip-to-content link для a11y.
+  - Header/MobileNav breakpoint выровнены на `lg:hidden` (раньше Header lg, MobileNav xl — между 1024-1280px меню было «в DOM, но недоступно»).
+  **DB-слой:**
+  - `db.query/update/delete` в Postgres-режиме ловят `22P02` (invalid_text_representation) → возвращают пустой результат вместо throw, что превращает «GET /api/lessons/bad-id» из 500 в 404 для всех `[id]`-роутов разом.
+  - ✅ `npm run build` прошёл; smoke-тесты на :3015: bad-uuid → 404, home → 200, forgot-password → 200, CSRF без Origin → 403, upload anon → 401, news draft → 404.
+  - ⚠️ Lint выдаёт 21 ошибку «set-state-in-effect» / «refs-during-render» — это новое правило `next/typescript`, попадает и на старый код (analytics, resizable-image и т.п.). Не блокирует build, разбираться отдельно.
+- **2026-04-28 (вечер 2)** — Применены P0+P1+P2 правки контентного аудита (см. `docs/CONTENT_AUDIT_2026-04-28.md`):
+  - **Грамматические правила** (`src/data/kazakh-grammar-rules.json` + `src/data/seeds/grammar-rules.json` + БД через UPDATE по id): rule_02, 05, 06, 07, 08, 09, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 — переписаны/уточнены. Все 21 правил синхронизированы.
+  - **Уроки** (`src/data/lessons-meta.ts` + БД UPDATE по sort_order): Lesson 1, 5, 8, 9, 15, 17, 18, 19, 20 — описания и переводы исправлены.
+  - **MENTOR_META**: name_ru транслитерированы (`Байтұрсынұлы` → `Байтурсынулы`, `Әуезов` → `Ауэзов`).
+  - **Тесты** (`src/data/test-questions-bank.json` + БД UPDATE по question_kk LIKE): 13 правок — q002 (объяснение арабизм), q008 (-ім опции), q009 (термин), q016 (RU калька), q032 (кеңшілік→аумақ), q039 (бірлесе→бірден), q040 (-ты-→-ні), q046 (H₂O), kz091/kz111 (термин), kz101 (қанша→неше), kz102 (формулировка), kz108 (аталады→тойланады), kz118 (-п→-ыз).
+  - ✅ Build + restart + smoke: API `/api/grammar-rules` возвращает свежие данные (rule_18 examples с `таң`, rule_21 topic `Мақал-мәтелдер`); БД обновлена. Всего применено 17 правил + 21 урок (через DB UPDATE) + 13 тестов = **51 правка**.
+  - ⚠️ `sql/006_content_seeds.sql` остаётся со СТАРЫМИ значениями — на свежей БД этот seed засеит устаревший контент. TODO: регенерировать 006 из текущих JSON/TS перед deploy на новую среду.
+- **2026-04-28 (вечер)** — В `/admin/editor` добавлена возможность удалять статьи:
+  - `src/components/admin/DeleteArticleButton.tsx` — клиентский компонент с confirm() + DELETE через `/api/news/[id]`. Bearer-токен берёт из `localStorage.token`, плюс `credentials:'include'` для cookie-fallback.
+  - Подключён в список (`editor/page.tsx`, рядом с "Редактировать") и в форму редактирования (`editor/[id]/page.tsx`, кнопка вверху справа, после удаления редирект на список).
+  - Smoke: DELETE без auth → 401, с Bearer → 200, запись удалена из БД, страница списка рендерится 200.
+- **2026-04-28** — Server-side gamification engine (XP/streak/level/achievements):
+  - `src/lib/award-progress.ts` — единая транзакционная точка начисления; perfect-bonus при score≥90; streak milestones 7/30/100; пересчёт level.
+  - `sql/099_seed_achievements.sql` — каталог 13 ачивок (idempotent ON CONFLICT по code). Применён к til-kural-db-1.
+  - Интеграция в endpoints: `/api/test/evaluate` (adaptive + legacy ветви), `/api/learn/check-writing`, `/api/photo-check`, новый `POST /api/lessons/[id]/complete` (idempotent upsert score/weak_points + awardProgress).
+  - Все вызовы awardProgress обёрнуты в try/catch, чтобы провал начисления не валил основной ответ endpoint-а.
+  - Admin password reset: `admin@til-kural.kz / Admin#TilKural2026`.
+  - ⚠️ Ловушка: `weak_points` jsonb — node-pg сериализует JS-массив как PG array literal `{...}`. В route.ts передаём `JSON.stringify(weakPoints)`. Та же ловушка возможна в любых будущих jsonb-инсёртах через `db.insert`.
+  - ✅ Build + E2E smoke прошли (admin@til-kural.kz): первый POST `/api/lessons/:id/complete` со score=95 → XP +75 (50+25 perfect-bonus), streak=1, ачивка `first_lesson` выдана. Повторный POST с тем же lesson_id → `progress: null`, xp не задублирован, но score/weak_points обновлены.
 - **2026-04-21** — Адаптивный CAT-входной тест A1-C2 с branching по сложности: `cat-engine.ts`, `/api/test/next-question`, режим `adaptive` в `/api/test/evaluate`, переписанный `LevelTest.tsx` (динамические вопросы + live current level). Банк пополнен до 8+ level-вопросов на уровень. Сертификат C2 достижим при 3+ правильных C2.
 - **2026-04-19 (вторая сессия)** — КАЗТЕСТ 100-балльная шкала с секциями и разбором ошибок, банк вопросов 5 → 40, раздел `/learn/basics` (21 правило грамматики), каталог уроков с привязкой к правилам.
 - **2026-04-19** — Большой рефакторинг (Opus 4.7): Postgres-слой, rate-limit, SEO (sitemap/robots/JSON-LD), полный админ-CRUD (news/events/lessons/banners/settings), медиатека с реальным сохранением файлов, Gemini TTS (kk), GA4+Метрика, 2GIS/OSM карта, Web Push + email-reminders, динамическое меню из `site_settings`. Аудит до ≈ 92%.

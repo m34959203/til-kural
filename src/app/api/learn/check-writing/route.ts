@@ -1,6 +1,7 @@
 import { checkWriting } from '@/lib/gemini';
 import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { awardProgress } from '@/lib/award-progress';
 
 export async function POST(request: Request) {
   try {
@@ -34,9 +35,9 @@ export async function POST(request: Request) {
 
     // Persist (skip if no user)
     let checkId: string | null = null;
-    try {
-      const user = await getUserFromRequest(request);
-      if (user) {
+    const user = await getUserFromRequest(request);
+    if (user) {
+      try {
         const row = await db.insert('writing_checks', {
           user_id: user.id,
           input_text: text,
@@ -44,9 +45,14 @@ export async function POST(request: Request) {
           score: parsed.score ?? 0,
         });
         checkId = row?.id ?? null;
+      } catch (dbErr) {
+        console.warn('[check-writing] db insert skipped:', dbErr);
       }
-    } catch (dbErr) {
-      console.warn('[check-writing] db insert skipped:', dbErr);
+      try {
+        await awardProgress(user.id, 'writing_check', { score: parsed.score ?? 0 });
+      } catch (e) {
+        console.warn('[check-writing] awardProgress skipped:', e);
+      }
     }
 
     return Response.json({ result: parsed, id: checkId });

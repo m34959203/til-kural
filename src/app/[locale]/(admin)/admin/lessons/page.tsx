@@ -40,6 +40,42 @@ export default async function AdminLessonsPage({ params }: { params: Promise<{ l
         defaultValue: 'A1',
         options: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((l) => ({ value: l, label_kk: l, label_ru: l })),
       },
+      {
+        name: 'required_level',
+        label_kk: 'Қол жетімділік деңгейі',
+        label_ru: 'Уровень доступа (gate)',
+        type: 'select',
+        defaultValue: '',
+        options: [
+          { value: '', label_kk: '— ашық —', label_ru: '— открытый —' },
+          ...['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((l) => ({ value: l, label_kk: l, label_ru: l })),
+        ],
+      },
+      {
+        name: 'mentor_track',
+        label_kk: 'Тәлімгер тректі',
+        label_ru: 'Трек наставника',
+        type: 'select',
+        defaultValue: '',
+        options: [
+          { value: '', label_kk: '— жоқ —', label_ru: '— нет —' },
+          { value: 'abai', label_kk: 'Абай', label_ru: 'Абай' },
+          { value: 'baitursynuly', label_kk: 'Байтұрсынұлы', label_ru: 'Байтурсынулы' },
+          { value: 'auezov', label_kk: 'Әуезов', label_ru: 'Ауэзов' },
+        ],
+      },
+      {
+        name: 'rule_ids',
+        label_kk: 'Ереже ID-лер (JSON)',
+        label_ru: 'ID правил (JSON-массив)',
+        type: 'textarea',
+      },
+      {
+        name: 'content',
+        label_kk: 'Контент (JSON)',
+        label_ru: 'Контент урока (JSON)',
+        type: 'textarea',
+      },
       { name: 'sort_order', label_kk: 'Реті', label_ru: 'Порядок', type: 'number', defaultValue: 0 },
     ],
     columns: [

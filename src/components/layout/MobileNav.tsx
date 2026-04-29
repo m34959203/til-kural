@@ -76,7 +76,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
       {/* Overlay */}
       <div
         className={cn(
-          'xl:hidden fixed inset-0 z-50 bg-tk-night/50 backdrop-blur-sm transition-opacity duration-300',
+          'lg:hidden fixed inset-0 z-50 bg-tk-night/50 backdrop-blur-sm transition-opacity duration-300',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
         onClick={() => setOpen(false)}
@@ -87,7 +87,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
       <aside
         id="tk-mobile-drawer"
         className={cn(
-          'xl:hidden fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm bg-tk-beige shadow-2xl transform transition-transform duration-300 ease-out flex flex-col',
+          'lg:hidden fixed top-0 right-0 bottom-0 z-50 w-[85%] max-w-sm bg-tk-beige shadow-2xl transform transition-transform duration-300 ease-out flex flex-col',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
         role="dialog"
@@ -215,6 +215,7 @@ function MobileActions({ locale, close }: { locale: string; close: () => void })
   const logout = async () => {
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     try { localStorage.removeItem('token'); } catch {}
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth-change'));
     close();
     router.push(`/${locale}`);
     setTimeout(() => router.refresh(), 100);

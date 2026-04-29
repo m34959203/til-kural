@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -16,10 +16,47 @@ export default function ThematicTest({ locale, topic }: ThematicTestProps) {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [progress, setProgress] = useState<{
+    xp_gained?: number;
+    current_streak?: number;
+  } | null>(null);
 
   const questions = questionsData.filter((q) =>
     topic ? q.topic === topic : q.test_type === 'thematic'
   ).slice(0, 10);
+
+  // При показе финального экрана — отправим результат на сервер,
+  // чтобы XP/streak/achievements начислились через `awardProgress`.
+  useEffect(() => {
+    if (!finished || progress) return;
+    let correct = 0;
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.correct_answer) correct++;
+    });
+    if (questions.length === 0) return;
+    const score = Math.round((correct / questions.length) * 100);
+    const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+    fetch('/api/test/evaluate', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({
+        mode: 'thematic',
+        topic: topic || 'thematic',
+        score,
+        total: questions.length,
+        correct,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.progress) setProgress(data.progress);
+      })
+      .catch(() => { /* not a UX blocker */ });
+  }, [finished, answers, questions, topic, progress]);
 
   if (questions.length === 0) {
     return (
@@ -45,7 +82,12 @@ export default function ThematicTest({ locale, topic }: ThematicTestProps) {
         <p className="text-gray-500 mb-4">
           {correct}/{questions.length} {locale === 'kk' ? 'дұрыс' : 'правильно'}
         </p>
-        <Button onClick={() => { setFinished(false); setCurrentIdx(0); setAnswers({}); setShowResult(false); }}>
+        {progress && (progress.xp_gained ?? 0) > 0 && (
+          <p className="text-emerald-700 mb-4 text-sm">
+            +{progress.xp_gained} XP{progress.current_streak ? ` · 🔥 ${progress.current_streak}` : ''}
+          </p>
+        )}
+        <Button onClick={() => { setFinished(false); setCurrentIdx(0); setAnswers({}); setShowResult(false); setProgress(null); }}>
           {locale === 'kk' ? 'Қайта тапсыру' : 'Пересдать'}
         </Button>
       </Card>

@@ -185,6 +185,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
                 { href: `/${locale}/learn`, label_kk: 'Сабақтар', label_ru: 'Уроки', desc_kk: '21 сабақ A1–B2', desc_ru: '21 урок A1–B2', icon: '📚' },
                 { href: `/${locale}/learn/basics`, label_kk: 'Тіл негіздері', label_ru: 'Основы языка', desc_kk: '21 грамматика ережесі', desc_ru: '21 правило грамматики', icon: '📖' },
                 { href: `/${locale}/learn/dialog`, label_kk: 'AI-диалог', label_ru: 'AI-диалог', desc_kk: 'Live дауыстық сөйлесу', desc_ru: 'Живой голос с AI', icon: '🎙️' },
+                { href: `/${locale}/learn/pronunciation`, label_kk: 'Айтылым', label_ru: 'Произношение', desc_kk: 'Сөздердің дұрыс айтылуы', desc_ru: 'Правильное произношение', icon: '🔊' },
                 { href: `/${locale}/photo-check`, label_kk: 'Фото-тексеру', label_ru: 'Фото-проверка', desc_kk: 'Қолжазбаны сканерлеу', desc_ru: 'Распознавание рукописи', icon: '📸' },
                 { href: `/${locale}/game`, label_kk: 'Ойын', label_ru: 'Игра', desc_kk: 'Квесттер мен XP', desc_ru: 'Квесты и XP', icon: '🎮' },
               ]}

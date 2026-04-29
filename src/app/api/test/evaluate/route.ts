@@ -2,6 +2,7 @@ import questionsData from '@/data/test-questions-bank.json';
 import { getUserFromRequest } from '@/lib/auth';
 import { recordTestOutcomes, type QuestionOutcome } from '@/lib/adaptive-recommender';
 import { db } from '@/lib/db';
+import { awardProgress } from '@/lib/award-progress';
 import {
   estimateLevel,
   isCEFR,
@@ -23,6 +24,43 @@ export async function POST(request: Request) {
       mode,
       answered: adaptiveAnswered,
     } = body ?? {};
+
+    // --- Ветка thematic (минимальный score-only ввод от ThematicTest) ---
+    if (mode === 'thematic') {
+      const score = Number(body?.score ?? 0);
+      const total = Number(body?.total ?? 0);
+      const correct = Number(body?.correct ?? 0);
+      const themeTopic = typeof body?.topic === 'string' ? body.topic : 'thematic';
+      const user = await getUserFromRequest(request);
+      let progress = null;
+      if (user) {
+        try {
+          await db.insert('test_sessions', {
+            user_id: user.id,
+            test_type: 'thematic',
+            topic: themeTopic,
+            questions: [],
+            answers: [],
+            score,
+            level_result: null,
+            started_at: new Date().toISOString(),
+            completed_at: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn('[test/evaluate thematic] db insert skipped:', dbErr);
+        }
+        try {
+          progress = await awardProgress(
+            user.id,
+            score >= 90 ? 'test_perfect' : 'test_complete',
+            { score },
+          );
+        } catch (e) {
+          console.warn('[test/evaluate thematic] awardProgress skipped:', e);
+        }
+      }
+      return Response.json({ mode: 'thematic', score, total, correct, progress });
+    }
 
     // --- Ветка adaptive (CAT) ---
     if (mode === 'adaptive') {
@@ -94,6 +132,12 @@ export async function POST(request: Request) {
         } catch (updErr) {
           console.warn('[test/evaluate adaptive] language_level update skipped:', updErr);
         }
+        // XP/streak/level/achievements за пройденный adaptive тест.
+        try {
+          await awardProgress(user.id, score >= 90 ? 'test_perfect' : 'test_complete', { score });
+        } catch (e) {
+          console.warn('[test/evaluate adaptive] awardProgress skipped:', e);
+        }
       }
 
       return Response.json({
@@ -158,6 +202,12 @@ export async function POST(request: Request) {
         sessionId = row?.id ?? null;
       } catch (dbErr) {
         console.warn('[test/evaluate] db insert skipped:', dbErr);
+      }
+      // XP/streak/level/achievements за пройденный legacy тест.
+      try {
+        await awardProgress(user.id, score >= 90 ? 'test_perfect' : 'test_complete', { score });
+      } catch (e) {
+        console.warn('[test/evaluate] awardProgress skipped:', e);
       }
     }
 

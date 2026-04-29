@@ -5,6 +5,7 @@ import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AdaptiveExercise from '@/components/features/AdaptiveExercise';
+import MarkComplete from '@/components/features/MarkComplete';
 import LessonLockBadge from '@/components/features/LessonLockBadge';
 import Card from '@/components/ui/Card';
 import LevelBadge from '@/components/ui/LevelBadge';
@@ -129,7 +130,11 @@ export default function LessonPage({ params }: { params: Promise<{ locale: strin
         <h2 className="text-lg font-semibold text-gray-900 mb-3">
           {locale === 'kk' ? 'Жаттығулар' : 'Упражнения'}
         </h2>
-        <AdaptiveExercise locale={locale} />
+        <AdaptiveExercise locale={locale} lessonId={lesson.id} />
+      </div>
+
+      <div className="pt-2">
+        <MarkComplete lessonId={lesson.id} locale={locale} />
       </div>
     </div>
   );

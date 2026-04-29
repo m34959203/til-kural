@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import Card from '@/components/ui/Card';
 import { formatDateTime } from '@/lib/utils';
+import DeleteArticleButton from '@/components/admin/DeleteArticleButton';
 
 interface NewsRow {
   id: string;
@@ -106,12 +107,19 @@ export default async function AdminEditorListPage({
                         {row.updated_at ? formatDateTime(row.updated_at, locale) : '—'}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/${locale}/admin/editor/${row.id}`}
-                          className="text-teal-700 hover:text-teal-800 font-medium text-sm"
-                        >
-                          {isKk ? 'Өңдеу' : 'Редактировать'}
-                        </Link>
+                        <div className="inline-flex items-center gap-4">
+                          <Link
+                            href={`/${locale}/admin/editor/${row.id}`}
+                            className="text-teal-700 hover:text-teal-800 font-medium text-sm"
+                          >
+                            {isKk ? 'Өңдеу' : 'Редактировать'}
+                          </Link>
+                          <DeleteArticleButton
+                            id={row.id}
+                            locale={locale}
+                            label={row.title_ru || row.title_kk || row.slug}
+                          />
+                        </div>
                       </td>
                     </tr>
                   );

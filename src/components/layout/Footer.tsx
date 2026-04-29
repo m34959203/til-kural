@@ -7,11 +7,19 @@ interface FooterProps {
     common: Record<string, string>;
     footer: Record<string, string>;
   };
+  socials?: {
+    instagram?: string;
+    facebook?: string;
+    telegram?: string;
+  };
 }
 
-export default function Footer({ locale, messages }: FooterProps) {
+export default function Footer({ locale, messages, socials }: FooterProps) {
   const t = messages.common;
   const f = messages.footer;
+  const sIg = socials?.instagram?.trim();
+  const sFb = socials?.facebook?.trim();
+  const sTg = socials?.telegram?.trim();
 
   const year = new Date().getFullYear();
 
@@ -55,44 +63,49 @@ export default function Footer({ locale, messages }: FooterProps) {
               ? 'AI технологиясымен қазақ тілін оқытудың жаңа деңгейі. Байтұрсынұлының мұрасы — заманауи платформада.'
               : 'Новый уровень обучения казахскому языку с AI. Наследие Байтурсынулы — на современной платформе.'}
           </p>
-          <div className="mt-5 flex gap-3">
-            <a
-              href="#"
-              aria-label="Twitter"
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M22 5.8a8.5 8.5 0 01-2.36.64 4.13 4.13 0 001.81-2.27 8.21 8.21 0 01-2.61 1 4.1 4.1 0 00-7 3.74 11.64 11.64 0 01-8.45-4.29 4.16 4.16 0 001.27 5.49A4.09 4.09 0 012 9.7v.05a4.1 4.1 0 003.29 4A4.1 4.1 0 013.4 14a4.1 4.1 0 003.83 2.85A8.23 8.23 0 012 18.56a11.6 11.6 0 006.29 1.84A11.59 11.59 0 0020 8.66c0-.18 0-.35-.01-.53A8.18 8.18 0 0022 5.8z" />
-              </svg>
-            </a>
-            <a
-              href="#"
-              aria-label="Telegram"
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 01-1.93.07 4.28 4.28 0 004 2.98 8.521 8.521 0 01-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z" />
-              </svg>
-            </a>
-            <a
-              href="#"
-              aria-label="Facebook"
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 008.44-9.9c0-5.53-4.5-10.02-10-10.02z" />
-              </svg>
-            </a>
-            <a
-              href="#"
-              aria-label="YouTube"
-              className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-            </a>
-          </div>
+          {(sIg || sTg || sFb) && (
+            <div className="mt-5 flex gap-3">
+              {sIg && (
+                <a
+                  href={sIg}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.05.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.05.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.05-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.05-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 1.84c-3.14 0-3.5.01-4.74.07-1.07.05-1.65.23-2.04.38-.51.2-.88.44-1.27.83-.39.39-.63.76-.83 1.27-.15.39-.33.97-.38 2.04C2.69 9.5 2.68 9.86 2.68 13s.01 3.5.07 4.74c.05 1.07.23 1.65.38 2.04.2.51.44.88.83 1.27.39.39.76.63 1.27.83.39.15.97.33 2.04.38C9.5 21.31 9.86 21.32 13 21.32s3.5-.01 4.74-.07c1.07-.05 1.65-.23 2.04-.38.51-.2.88-.44 1.27-.83.39-.39.63-.76.83-1.27.15-.39.33-.97.38-2.04.06-1.24.07-1.6.07-4.74s-.01-3.5-.07-4.74c-.05-1.07-.23-1.65-.38-2.04a3.4 3.4 0 0 0-.83-1.27 3.4 3.4 0 0 0-1.27-.83c-.39-.15-.97-.33-2.04-.38C15.5 4.01 15.14 4 12 4zm0 3.13a4.87 4.87 0 1 1 0 9.74 4.87 4.87 0 0 1 0-9.74zm0 8.04a3.17 3.17 0 1 0 0-6.34 3.17 3.17 0 0 0 0 6.34zm6.2-8.27a1.13 1.13 0 1 1-2.26 0 1.13 1.13 0 0 1 2.26 0z" />
+                  </svg>
+                </a>
+              )}
+              {sTg && (
+                <a
+                  href={sTg}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Telegram"
+                  className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M9.78 17.6 9.6 14l8.96-8.07c.4-.36-.09-.54-.62-.22L7.06 12.69 2.3 11.18c-1.02-.31-1.03-1.02.22-1.5l18.6-7.18c.85-.39 1.66.21 1.34 1.51l-3.16 14.93c-.22 1.05-.85 1.3-1.72.81l-4.74-3.51-2.28 2.21c-.27.27-.49.49-.98.49z" />
+                  </svg>
+                </a>
+              )}
+              {sFb && (
+                <a
+                  href={sFb}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Facebook"
+                  className="w-10 h-10 rounded-xl bg-white/10 hover:bg-tk-gold hover:text-tk-night flex items-center justify-center transition"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 008.44-9.9c0-5.53-4.5-10.02-10-10.02z" />
+                  </svg>
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation */}

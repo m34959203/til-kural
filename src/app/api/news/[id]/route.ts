@@ -1,11 +1,17 @@
 import { db } from '@/lib/db';
-import { requireAdminApi, apiError } from '@/lib/api';
+import { requireAdminApi, apiError, isUuid } from '@/lib/api';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const byId = await db.findOne('news', { id });
+  // News допускает GET по slug — поэтому пробуем UUID-поиск только если id похож на UUID.
+  const byId = isUuid(id) ? await db.findOne('news', { id }) : null;
   const item = byId || (await db.findOne('news', { slug: id }));
   if (!item) return apiError(404, 'Not found');
+  // Публично отдаём только опубликованные. Черновики/архивные доступны только админу.
+  if (item.status !== 'published') {
+    const auth = await requireAdminApi(_req);
+    if (auth instanceof Response) return apiError(404, 'Not found');
+  }
   return Response.json({ news: item });
 }
 
@@ -13,6 +19,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const auth = await requireAdminApi(request);
   if (auth instanceof Response) return auth;
   const { id } = await params;
+  if (!isUuid(id)) return apiError(404, 'Not found');
   try {
     const body = await request.json();
     const allowed: Record<string, unknown> = {};
@@ -38,6 +45,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const auth = await requireAdminApi(request);
   if (auth instanceof Response) return auth;
   const { id } = await params;
+  if (!isUuid(id)) return apiError(404, 'Not found');
   const ok = await db.delete('news', id);
   if (!ok) return apiError(404, 'Not found');
   return Response.json({ ok: true });

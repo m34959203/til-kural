@@ -86,13 +86,22 @@ export async function POST(request: Request) {
     }
     const data = result.data;
 
+    const opts = normalizeOptions(data.options);
+    // Не даём сохранить нерешаемый вопрос: correct_answer должен быть в options.
+    if (opts.length > 0 && !opts.map(String).includes(String(data.correct_answer))) {
+      return Response.json(
+        { error: 'Validation failed', errors: [{ field: 'correct_answer', message: 'Дұрыс жауап options ішінде болуы керек' }] },
+        { status: 400 },
+      );
+    }
+
     const row = await db.insert('test_questions', {
       test_type: data.test_type,
       topic: data.topic,
       difficulty: data.difficulty,
       question_kk: data.question_kk,
       question_ru: data.question_ru || null,
-      options: normalizeOptions(data.options),
+      options: opts,
       correct_answer: data.correct_answer,
       explanation_kk: data.explanation_kk || null,
       explanation_ru: data.explanation_ru || null,

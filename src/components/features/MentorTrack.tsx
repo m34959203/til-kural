@@ -68,6 +68,23 @@ export default function MentorTrack({
     isKnownMentor(mentor) ? mentor : null
   );
 
+  // Сохраняем выбор на сервере: если refresh — выбор не сбрасывается.
+  const persistMentor = (k: MentorKey) => {
+    setSelected(k);
+    try {
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+      void fetch('/api/profile/mentor', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ mentor: k }),
+      });
+    } catch { /* offline — выбор остаётся в локальном state */ }
+  };
+
   const active: MentorKey | null = selected;
 
   if (!active) {
@@ -89,7 +106,7 @@ export default function MentorTrack({
               <button
                 key={k}
                 type="button"
-                onClick={() => setSelected(k)}
+                onClick={() => persistMentor(k)}
                 className={cn(
                   'text-left rounded-xl border p-4 transition-colors hover:shadow-md',
                   accent.card

@@ -58,16 +58,19 @@ export async function getSettings(force = false): Promise<SiteSettings> {
 }
 
 export async function setSetting(key: string, value: string) {
-  const existing = await db.findOne('site_settings', { key });
-  if (existing) {
-    if (db.isPostgres) {
-      await db.raw('UPDATE site_settings SET value = $1 WHERE key = $2', [value, key]);
-    } else {
-      // In-memory store keys as id too
-      await db.update('site_settings', existing.id || key, { value });
-    }
+  // site_settings(key PK, value). Никаких `id` колонок — иначе INSERT падает.
+  if (db.isPostgres) {
+    await db.raw(
+      'INSERT INTO site_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
+      [key, value],
+    );
   } else {
-    await db.insert('site_settings', { id: key, key, value });
+    const existing = await db.findOne('site_settings', { key });
+    if (existing) {
+      await db.update('site_settings', existing.id || key, { value });
+    } else {
+      await db.insert('site_settings', { key, value });
+    }
   }
   cache = null;
 }

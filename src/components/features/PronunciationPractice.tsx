@@ -30,15 +30,6 @@ export default function PronunciationPractice({ locale }: PronunciationPracticeP
   const [loadingAudio, setLoadingAudio] = useState<'normal' | 'slow' | null>(null);
   const currentWord = PRACTICE_WORDS[currentIndex];
 
-  const playBrowserFallback = (text: string, rate = 0.9) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'kk-KZ';
-      u.rate = rate;
-      speechSynthesis.speak(u);
-    }
-  };
-
   const speak = async (text: string, slow = false) => {
     setLoadingAudio(slow ? 'slow' : 'normal');
     try {
@@ -52,11 +43,11 @@ export default function PronunciationPractice({ locale }: PronunciationPracticeP
         const audio = new Audio(`data:${data.audio.mimeType};base64,${data.audio.audioBase64}`);
         audio.playbackRate = slow ? 0.75 : 1;
         await audio.play();
-      } else {
-        playBrowserFallback(text, slow ? 0.6 : 0.9);
       }
+      // Если Gemini TTS не вернул аудио — молча выходим. Browser speechSynthesis
+      // на kk-KZ озвучивает по-английски (фонетически неверно), что портит обучение.
     } catch {
-      playBrowserFallback(text, slow ? 0.6 : 0.9);
+      /* без fallback */
     } finally {
       setLoadingAudio(null);
     }

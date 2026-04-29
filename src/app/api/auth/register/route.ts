@@ -2,6 +2,13 @@ import { db } from '@/lib/db';
 import { hashPassword, signToken } from '@/lib/auth';
 import { validateRegistration } from '@/lib/validators';
 
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+
+function buildAuthCookie(token: string): string {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}${secure}`;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -33,7 +40,7 @@ export async function POST(request: Request) {
 
     const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
-    return Response.json({
+    const res = Response.json({
       token,
       user: {
         id: user.id,
@@ -48,6 +55,10 @@ export async function POST(request: Request) {
         longest_streak: user.longest_streak ?? 0,
       },
     });
+    // Зеркалим поведение /login: ставим httpOnly cookie tk-token, чтобы middleware
+    // не отбрасывал свежезарегистрированного admin/editor на /login.
+    res.headers.append('Set-Cookie', buildAuthCookie(token));
+    return res;
   } catch (error) {
     return Response.json({ error: 'Registration failed', details: String(error) }, { status: 500 });
   }

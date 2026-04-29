@@ -94,14 +94,8 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data?.audio?.audioBase64) {
-        // Fallback: browser TTS на kk-KZ (работает так себе, но хоть что-то)
-        if ('speechSynthesis' in window) {
-          const u = new SpeechSynthesisUtterance(text);
-          u.lang = 'kk-KZ';
-          u.onend = () => setPlayingIdx(null);
-          window.speechSynthesis.speak(u);
-          return;
-        }
+        // Без Gemini TTS просто молчим — browser speechSynthesis не выговаривает kk-KZ
+        // нормально (даёт английскую транслитерацию) и портит UX больше, чем помогает.
         setPlayingIdx(null);
         return;
       }
@@ -317,7 +311,35 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
         <div className="flex items-center gap-2">
           <LevelBadge locale={locale} level={currentLevel} />
           <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
-          <Button variant="ghost" size="sm" onClick={() => { stopPlayback(); stopRecognition(); setSelectedTopic(null); setMessages([]); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              stopPlayback();
+              stopRecognition();
+              // Финализация: сообщаем серверу о завершении диалог-сессии,
+              // чтобы начислить XP / streak / achievements за live-разговор.
+              const userTurns = messages.filter((m) => m.role === 'user').length;
+              if (userTurns > 0) {
+                const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+                fetch('/api/dialog/finish', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  },
+                  body: JSON.stringify({
+                    topic: selectedTopic ?? null,
+                    turns: userTurns,
+                    mentor: mentorProfile.key,
+                  }),
+                }).catch(() => { /* не блокируем UX */ });
+              }
+              setSelectedTopic(null);
+              setMessages([]);
+            }}
+          >
             {isKk ? 'Тақырып ауыстыру' : 'Сменить тему'}
           </Button>
         </div>

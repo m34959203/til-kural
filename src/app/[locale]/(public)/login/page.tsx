@@ -73,6 +73,9 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
       // Cookie уже поставлен сервером (httpOnly) — основной механизм для middleware.
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', data.token);
+        // Триггерим перечитку useCurrentUser в Header/UserMenu — иначе
+        // после router.replace кнопка остаётся «Войти» до hard reload.
+        window.dispatchEvent(new Event('auth-change'));
       }
       // next из query или профиль
       const dest =
@@ -139,6 +142,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         {t.noAccount}{' '}
         <Link href={`/${locale}/register`} className="font-medium text-teal-700 hover:text-teal-800">
           {t.register}
+        </Link>
+      </p>
+
+      <p className="mt-2 text-center text-sm text-gray-500">
+        <Link
+          href={`/${locale}/forgot-password`}
+          className="font-medium text-teal-700 hover:text-teal-800"
+        >
+          {locale === 'kk' ? 'Құпиясөзді ұмыттыңыз ба?' : 'Забыли пароль?'}
         </Link>
       </p>
     </div>

@@ -58,6 +58,7 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
   const logout = async () => {
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     try { localStorage.removeItem('token'); } catch {}
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth-change'));
     router.push(`/${locale}`);
     setTimeout(() => router.refresh(), 100);
   };

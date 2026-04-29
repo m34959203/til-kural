@@ -1,10 +1,22 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import CertificateView from '@/components/features/CertificateView';
 import { SITE } from '@/lib/seo';
+import { db } from '@/lib/db';
+import { isUuid } from '@/lib/api';
 
 interface Params {
   locale: string;
   id: string;
+}
+
+async function loadCertificate(id: string) {
+  if (!isUuid(id)) return null;
+  try {
+    return await db.findOne('certificates', { id });
+  } catch {
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -59,6 +71,10 @@ export async function generateMetadata({
 
 export default async function CertificatePage({ params }: { params: Promise<Params> }) {
   const { locale, id } = await params;
+  // Проверяем подлинность сертификата по БД — иначе любой `/anything` рендерил бы
+  // «valid-looking» сертификат, что недопустимо для УМЦ.
+  const cert = await loadCertificate(id);
+  if (!cert) notFound();
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <CertificateView locale={locale} certificateId={id} />

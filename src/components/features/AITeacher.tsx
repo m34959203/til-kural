@@ -35,7 +35,9 @@ export default function AITeacher({ locale }: AITeacherProps) {
   const currentLevel = user?.language_level || 'B1';
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Скроллим chat внутри его контейнера, не всю страницу.
+    // Без `block: 'nearest'` initial greeting улетал страницу в самый низ.
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
 
   useEffect(() => {

@@ -20,7 +20,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     chkRules: isKk ? '21 грамматика ережесі' : '21 правило грамматики',
     chkKaztest: isKk ? 'КАЗТЕСТ дайындық' : 'Подготовка к КАЗТЕСТ',
     chkPhoto: isKk ? 'AI-фото тексеру' : 'AI-проверка фото',
-    statStudents: isKk ? 'Білімалушы' : 'Учеников',
+    statFree: isKk ? 'Тегін бастау' : 'Старт бесплатно',
     statRules: isKk ? 'Грамм. ережесі' : 'Правил грамм.',
     statLevels: isKk ? '6 деңгей' : '6 уровней',
     featSection: isKk ? 'Мүмкіндіктер' : 'Возможности',
@@ -319,8 +319,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
             <div className="mt-10 grid grid-cols-3 gap-4 max-w-lg">
               <div>
-                <div className="text-3xl font-extrabold text-[#0F4C81]">50K+</div>
-                <div className="text-xs text-[#6B6A63] mt-1">{t.statStudents}</div>
+                <div className="text-3xl font-extrabold text-[#0F4C81]">0₸</div>
+                <div className="text-xs text-[#6B6A63] mt-1">{t.statFree}</div>
               </div>
               <div className="border-l border-[#F3ECD8] pl-4">
                 <div className="text-3xl font-extrabold text-[#0F4C81]">21</div>

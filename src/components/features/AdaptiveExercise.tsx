@@ -25,6 +25,8 @@ interface WeakTopic {
 
 interface AdaptiveExerciseProps {
   locale: string;
+  /** Если задан — после завершения раунда вызовем POST /api/lessons/:id/complete со score. */
+  lessonId?: string;
 }
 
 const TOPIC_LABELS: Record<string, { kk: string; ru: string }> = {
@@ -45,7 +47,7 @@ function labelForTopic(slug: string, locale: string, fallbackKk?: string, fallba
   return slug;
 }
 
-export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
+export default function AdaptiveExercise({ locale, lessonId }: AdaptiveExerciseProps) {
   const { user } = useCurrentUser();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -57,6 +59,7 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
   const [weakTopics, setWeakTopics] = useState<WeakTopic[]>([]);
   const [recommendedTopic, setRecommendedTopic] = useState<WeakTopic | null>(null);
   const [difficultyMode, setDifficultyMode] = useState<'basic' | 'standard' | 'advanced' | null>(null);
+  const [lessonCompleted, setLessonCompleted] = useState(false);
 
   const fallbackTopics = [
     { id: 'grammar', label: locale === 'kk' ? 'Грамматика' : 'Грамматика' },
@@ -162,6 +165,24 @@ export default function AdaptiveExercise({ locale }: AdaptiveExerciseProps) {
     // чтобы следующая тема подтянулась по актуальным данным.
     if (newIdx >= exercises.length) {
       loadRecommendations();
+      // Авто-завершение урока: если рендеримся внутри урока и пользователь авторизован —
+      // тихо вызываем complete с фактическим score. UI-кнопка <MarkComplete /> остаётся
+      // как fallback (даёт пользователю явное действие и видимый прогресс).
+      if (lessonId && user && !lessonCompleted && exercises.length > 0) {
+        const finalScore = Math.round((score / exercises.length) * 100);
+        const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+        fetch(`/api/lessons/${lessonId}/complete`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ score: finalScore }),
+        })
+          .then(() => setLessonCompleted(true))
+          .catch(() => { /* не блокируем UI */ });
+      }
     }
   };
 

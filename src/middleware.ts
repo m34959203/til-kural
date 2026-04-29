@@ -95,10 +95,17 @@ export async function middleware(request: NextRequest) {
   // --- Rate limiting for API ---
   if (pathname.startsWith('/api/')) {
     let rule: { limit: number; windowMs: number; scope: string } | null = null;
-    if (pathname.startsWith('/api/auth/login') || pathname.startsWith('/api/auth/register')) {
+    if (
+      pathname.startsWith('/api/auth/login') ||
+      pathname.startsWith('/api/auth/register') ||
+      pathname.startsWith('/api/auth/forgot-password') ||
+      pathname.startsWith('/api/auth/reset-password')
+    ) {
       rule = { limit: 10, windowMs: 60_000, scope: 'auth' };
     } else if (pathname.startsWith('/api/photo-check')) {
-      rule = { limit: 15, windowMs: 60_000, scope: 'photo' };
+      // Anon photo-check жёстче, чтобы не жгли Gemini Vision API.
+      // Авторизованные ходят под `requireAdminApi` или внутренней rate-limit logic'ой.
+      rule = { limit: 5, windowMs: 60_000, scope: 'photo-anon' };
     } else if (pathname.startsWith('/api/learn/tts')) {
       rule = { limit: 30, windowMs: 60_000, scope: 'tts' };
     } else if (pathname.startsWith('/api/learn/')) {
@@ -109,6 +116,9 @@ export async function middleware(request: NextRequest) {
       rule = { limit: 10, windowMs: 60_000, scope: 'push' };
     } else if (pathname.startsWith('/api/contact')) {
       rule = { limit: 5, windowMs: 60_000, scope: 'contact' };
+    } else if (pathname.startsWith('/api/admin/')) {
+      // Защита админ-API от brute-force и massive scraping.
+      rule = { limit: 60, windowMs: 60_000, scope: 'admin' };
     }
     if (rule) {
       const key = clientKey(request, rule.scope);
