@@ -11,8 +11,12 @@ const ALLOWED_VOICES = new Set([
 
 export async function POST(request: Request) {
   try {
-    const { text, mode = 'audio', voice } = await request.json();
-    if (!text || typeof text !== 'string') return apiError(400, 'Text is required');
+    const body = await request.json();
+    const text: string = typeof body?.text === 'string' ? body.text : '';
+    const mode: string = typeof body?.mode === 'string' ? body.mode : 'audio';
+    const voice = body?.voice;
+    const locale: 'kk' | 'ru' = body?.locale === 'ru' ? 'ru' : 'kk';
+    if (!text) return apiError(400, 'Text is required');
     // Dialog-ответы ИИ могут быть длинными. Режем до 2000 символов (последняя граница предложения).
     let clean = text.trim();
     if (clean.length > 2000) {
@@ -22,14 +26,14 @@ export async function POST(request: Request) {
     }
 
     if (mode === 'guide') {
-      const guide = await getPronunciationGuide(clean);
+      const guide = await getPronunciationGuide(clean, locale);
       return Response.json({ guide });
     }
 
     const chosenVoice = typeof voice === 'string' && ALLOWED_VOICES.has(voice) ? voice : 'Aoede';
     const audio = await generateSpeech(clean, chosenVoice);
     if (!audio) {
-      const guide = await getPronunciationGuide(clean);
+      const guide = await getPronunciationGuide(clean, locale);
       return Response.json({ audio: null, guide, fallback: 'browser-tts' });
     }
     return Response.json({ audio });

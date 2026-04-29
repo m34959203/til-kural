@@ -87,20 +87,29 @@ export async function generateSpeech(text: string, voice = 'Aoede'): Promise<TTS
   }
 }
 
-export async function getPronunciationGuide(text: string): Promise<string> {
+export async function getPronunciationGuide(text: string, locale: 'kk' | 'ru' = 'kk'): Promise<string> {
   if (!apiKey) return `[${text}] — Дұрыс айтылуы: әр буынды анық айтыңыз.`;
   try {
+    const prompt = locale === 'ru'
+      ? `Ты — преподаватель казахской фонетики. Объясни произношение фразы "${text}" для русскоязычного ученика, СТРОГО НА РУССКОМ.
+
+Структура ответа (markdown):
+**1. Деление на слоги:** разбей по слогам с дефисами.
+**2. Ударение:** в казахском ударение почти всегда на последнем слоге — укажи его заглавными.
+**3. Специфические звуки:** для каждого казахского звука в фразе (ә, і, ң, ғ, қ, ө, ұ, ү, һ) — дай:
+   • МФА-транскрипцию в квадратных скобках (например, қ [q], ң [ŋ], ғ [ʁ])
+   • сравнение с русским / английским / немецким звуком ("как русское К, но язык глубже в горле, как при покашливании", "как английское ng в sing", "как немецкое ö в schön")
+4. **Частые ошибки русскоязычных:** 2–3 типичные ошибки (например, замена қ на к, ы на и).
+
+Без казахского текста в объяснениях, только в цитатах примеров.`
+      : `Қазақ тілі маманы ретінде "${text}" сөзінің дұрыс айтылуын қысқа түсіндір: буын бөлу, екпін, ерекше дыбыстар (МФА қос: қ [q], ң [ŋ], ғ [ʁ]), жиі кететін қателер.`;
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Қазақ тілі маманы ретінде "${text}" сөзінің дұрыс айтылуын қысқа түсіндір: буын бөлу, екпін, жиі кететін қателер.`,
-            }],
-          }],
+          contents: [{ parts: [{ text: prompt }] }],
         }),
       },
     );
