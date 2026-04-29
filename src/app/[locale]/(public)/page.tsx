@@ -531,7 +531,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {/* Декоративный орнамент. На mobile уменьшен и приглушён, чтобы не
                   перекрывать описание; aria-hidden — он чисто визуальный. */}
               <Image
-                src="/outputs/img/badge.webp"
+                src="/outputs/img/badge.png"
                 alt=""
                 aria-hidden="true"
                 width={144}
