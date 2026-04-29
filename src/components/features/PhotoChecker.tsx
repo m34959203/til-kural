@@ -91,6 +91,17 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
   const tRuleExplain = locale === 'kk' ? 'Ереже түсіндірмесі' : 'Объяснение правила';
   const tExamples = locale === 'kk' ? 'Дұрыс мысалдар' : 'Правильные примеры';
   const tLearnMore = locale === 'kk' ? 'Ережені ашу' : 'Открыть правило';
+  const tPractice = locale === 'kk' ? 'Тақырыпты жаттықтыру' : 'Тренировать эту тему';
+
+  // UI safety-net: если AI всё-таки вернул казахские технические маркеры
+  // вроде «(алынды)» — переводим их на язык интерфейса.
+  const localizeMarker = (s: string): string => {
+    if (locale !== 'ru') return s;
+    return s
+      .replace(/\(алынды\)/gi, '(удалить)')
+      .replace(/\(жою\)/gi, '(удалить)')
+      .replace(/\(алып тастау\)/gi, '(удалить)');
+  };
 
   return (
     <div className="space-y-6">
@@ -105,18 +116,48 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
         />
 
         {!preview ? (
-          <div
-            onClick={() => fileRef.current?.click()}
-            className="cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-10 hover:border-teal-400 transition-colors"
-          >
-            <div className="text-4xl mb-3">📷</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
-              {locale === 'kk' ? 'Фотоны жүктеңіз' : 'Загрузите фото'}
-            </h3>
-            <p className="text-sm text-gray-500">
-              {locale === 'kk' ? 'JPG, PNG форматтағы фото (10MB дейін)' : 'Фото в формате JPG, PNG (до 10МБ)'}
-            </p>
-          </div>
+          <>
+            <div
+              onClick={() => fileRef.current?.click()}
+              className="cursor-pointer border-2 border-dashed border-gray-300 rounded-xl p-10 hover:border-teal-400 transition-colors"
+            >
+              <div className="text-4xl mb-3">📷</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
+                {locale === 'kk' ? 'Фотоны жүктеңіз' : 'Загрузите фото'}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {locale === 'kk' ? 'JPG, PNG форматтағы фото (10MB дейін)' : 'Фото в формате JPG, PNG (до 10МБ)'}
+              </p>
+            </div>
+            {/* Подсказка по съёмке: что AI хорошо видит, что не видит */}
+            <div className="mt-4 text-left text-xs text-gray-600 max-w-md mx-auto bg-teal-50/40 border border-teal-100 rounded-lg p-3">
+              <p className="font-semibold text-teal-900 mb-1">
+                💡 {locale === 'kk' ? 'Қалай дұрыс түсіру керек:' : 'Как сделать хорошее фото:'}
+              </p>
+              <ul className="list-disc list-inside space-y-0.5 text-teal-900/90">
+                <li>
+                  {locale === 'kk'
+                    ? 'Жарық жақсы болсын, қағазда жалт жоқ.'
+                    : 'Хорошее освещение, без бликов на бумаге.'}
+                </li>
+                <li>
+                  {locale === 'kk'
+                    ? 'Мәтін кадрдың 80% алсын, қашықтан түсірмеңіз.'
+                    : 'Текст занимает ≈80% кадра — не снимайте издалека.'}
+                </li>
+                <li>
+                  {locale === 'kk'
+                    ? 'Қағазды камераға параллель ұстаңыз (бұрышсыз).'
+                    : 'Бумага параллельна камере (без перспективного искажения).'}
+                </li>
+                <li>
+                  {locale === 'kk'
+                    ? 'Жазу анық болсын — дәрігерлік қолтаңбаны AI оқи алмауы мүмкін.'
+                    : 'Чёткий почерк — врачебный «прыгающий» AI может не разобрать.'}
+                </li>
+              </ul>
+            </div>
+          </>
         ) : (
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -194,7 +235,7 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
                       errorTypeColors[err.type] || 'bg-gray-50 border-gray-200'
                     )}
                   >
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/50">
                         {errorTypeLabels[err.type]?.[locale] || err.type}
                       </span>
@@ -203,14 +244,22 @@ export default function PhotoChecker({ locale }: PhotoCheckerProps) {
                           href={`/${locale}/learn/basics#${err.rule_slug}`}
                           className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/70 hover:bg-white underline-offset-2 hover:underline"
                         >
-                          {tLearnMore} →
+                          📖 {tLearnMore} →
+                        </Link>
+                      )}
+                      {err.rule_slug && (
+                        <Link
+                          href={`/${locale}/learn/exercises`}
+                          className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/70 hover:bg-white underline-offset-2 hover:underline"
+                        >
+                          🎯 {tPractice} →
                         </Link>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="line-through">{err.word}</span>
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
+                      <span className="line-through break-words">{err.word}</span>
                       <span>→</span>
-                      <span className="font-medium">{err.correction}</span>
+                      <span className="font-medium break-words">{localizeMarker(err.correction)}</span>
                     </div>
                     <p className="text-xs mt-1 font-medium opacity-90">{err.rule}</p>
 
