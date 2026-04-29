@@ -333,8 +333,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </div>
           </div>
 
-          {/* RIGHT: AI-chat mock */}
-          <div className="relative fade-in delay-2 min-w-0">
+          {/* RIGHT: AI-chat mock — на мобильных скрыт, чтобы hero сфокусировал
+              CTA и ничего не обрезалось. На md+ показывается превью разговора
+              с Ахметом Байтұрсынұлы (см. PROJECT_AUDIT chat-mock report). */}
+          <div className="hidden md:block relative fade-in delay-2 min-w-0">
             <div className="absolute -top-8 -right-4 w-32 h-32 rounded-full sun-rays opacity-60 blur-sm" />
             <div className="absolute -inset-6 rounded-[48px] bg-gradient-to-br from-[#0F4C81]/10 via-transparent to-[#F5C518]/15" />
 
@@ -364,17 +366,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
               <div className="space-y-3 py-5">
                 <div className="flex gap-2">
-                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[80%]">
+                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[80%] break-words [overflow-wrap:anywhere]">
                     {isKk ? 'Сәлеметсіз бе! Бүгін «Жұрнақтар» тақырыбын бастайық па?' : 'Здравствуйте! Начнём сегодня тему «Суффиксы»?'}
                   </div>
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <div className="gradient-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[80%]">
+                  <div className="gradient-blue text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm max-w-[80%] break-words [overflow-wrap:anywhere]">
                     {isKk ? 'Иә, бастайық. Мысал келтіріңізші.' : 'Да, начнём. Приведите пример.'}
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[85%]">
+                  <div className="bg-[#FAF6EC] rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm max-w-[85%] break-words [overflow-wrap:anywhere]">
                     <div>
                       {isKk ? 'Мынаны қараңыз: ' : 'Посмотрите: '}
                       <b className="text-[#C2461A]">
@@ -393,7 +395,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4 border-t border-[#F3ECD8]">
+              <div className="flex items-center gap-2 pt-4 border-t border-[#F3ECD8] min-w-0">
                 <button className="w-11 h-11 rounded-xl bg-[#F5C518]/20 text-[#E8A30C] flex items-center justify-center shrink-0" aria-label="Mic">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4" />
