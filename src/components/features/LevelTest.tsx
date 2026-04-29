@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
@@ -26,11 +27,17 @@ interface AnsweredRecord {
   difficulty: string;
   selected: string;
   correctAnswer?: string;
+  /** Снимок самого вопроса — нужен для review-режима после теста. */
+  question_kk?: string;
+  question_ru?: string;
+  topic?: string;
 }
 
 type EvaluateDetails = Array<{ questionId: string; correct: boolean; correctAnswer: string }>;
 
-const MAX_QUESTIONS = 15;
+const MAX_QUESTIONS = 25;
+const QUESTION_TIMER_SECONDS = 60;
+const CEFR_RANK: Record<string, number> = { A1: 1, A2: 2, B1: 3, B2: 4, C1: 5, C2: 6 };
 
 export default function LevelTest({ locale }: LevelTestProps) {
   const [started, setStarted] = useState(false);
@@ -51,6 +58,11 @@ export default function LevelTest({ locale }: LevelTestProps) {
   const [certificateEligible, setCertificateEligible] = useState(false);
   const [certificateMinScore, setCertificateMinScore] = useState(80);
   const [error, setError] = useState<string | null>(null);
+  // Таймер на текущий вопрос (audit P1 — 30-60 сек на вопрос).
+  const [secondsLeft, setSecondsLeft] = useState<number>(QUESTION_TIMER_SECONDS);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Review-режим после теста — показать все вопросы с правильными ответами.
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const t = (kk: string, ru: string) => (locale === 'kk' ? kk : ru);
 
@@ -133,10 +145,43 @@ export default function LevelTest({ locale }: LevelTestProps) {
     await fetchNextQuestion([]);
   }
 
-  async function submitAnswer(): Promise<void> {
-    if (!question || !selected) return;
-    // Для клиента корректность ответа определяется на сервере evaluate,
-    // но чтобы CAT работал в stateless-режиме — проверим через эндпоинт.
+  // Сбрасывать таймер при появлении нового вопроса.
+  useEffect(() => {
+    if (!question || finished || !started) return;
+    setSecondsLeft(QUESTION_TIMER_SECONDS);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          // Время вышло — фиксируем как неправильный ответ.
+          void submitAnswer(true);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question?.id, started, finished]);
+
+  async function submitAnswer(timeout = false): Promise<void> {
+    if (!question || (!selected && !timeout)) return;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    // На таймауте отправляем заведомо неверный «пустой» ответ — сервер
+    // зачтёт его как ошибку, CAT-движок понизит сложность следующего вопроса.
+    const submittedAnswer = timeout ? '__TIMEOUT__' : (selected ?? '__TIMEOUT__');
     setLoading(true);
     try {
       const res = await fetch('/api/test/evaluate', {
@@ -144,7 +189,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionIds: [question.id],
-          answers: [selected],
+          answers: [submittedAnswer],
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -156,8 +201,11 @@ export default function LevelTest({ locale }: LevelTestProps) {
         questionId: question.id,
         correct: isCorrect,
         difficulty: question.difficulty,
-        selected,
+        selected: selected ?? submittedAnswer,
         correctAnswer: detail?.correctAnswer,
+        question_kk: question.question_kk,
+        question_ru: question.question_ru,
+        topic: question.topic,
       };
       const nextHistory = [...answered, record];
       setAnswered(nextHistory);
@@ -297,9 +345,24 @@ export default function LevelTest({ locale }: LevelTestProps) {
             )}
           </div>
         )}
-        <div className="flex justify-center gap-3 flex-wrap">
+        {/* Sparkline уровня по вопросам — визуализация пути (audit P2) */}
+        {answered.length > 0 && (
+          <div className="mx-auto mb-6 max-w-md">
+            <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">
+              {t('Деңгейіңіздің траекториясы', 'Траектория уровня')}
+            </p>
+            <Sparkline answered={answered} />
+          </div>
+        )}
+
+        <div className="flex justify-center gap-3 flex-wrap mb-4">
           <Button variant="outline" onClick={resetTest}>
             {t('Қайта тапсыру', 'Пересдать')}
+          </Button>
+          <Button variant="ghost" onClick={() => setReviewOpen((v) => !v)}>
+            {reviewOpen
+              ? t('Талдауды жасыру', 'Скрыть разбор')
+              : t('Сұрақтарды талдау', 'Разбор вопросов')}
           </Button>
           <Button
             onClick={handleDownloadCertificate}
@@ -313,6 +376,55 @@ export default function LevelTest({ locale }: LevelTestProps) {
               : t('Сертификат алу', 'Получить сертификат')}
           </Button>
         </div>
+
+        {/* Review-режим: все ответы с правильным вариантом (audit P1) */}
+        {reviewOpen && (
+          <div className="mt-4 text-left max-w-2xl mx-auto space-y-2">
+            {answered.map((a, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'rounded-lg border p-3 text-sm',
+                  a.correct ? 'border-emerald-200 bg-emerald-50/40' : 'border-red-200 bg-red-50/40',
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-xs text-gray-400">#{idx + 1}</span>
+                  <LevelBadge level={a.difficulty} size="sm" />
+                  <span className="text-xs text-gray-500">{a.topic}</span>
+                  <span className={cn('ml-auto text-xs font-semibold', a.correct ? 'text-emerald-700' : 'text-red-700')}>
+                    {a.correct ? t('✓ Дұрыс', '✓ Правильно') : t('✗ Қате', '✗ Ошибка')}
+                  </span>
+                </div>
+                <p className="text-gray-800 mb-1">
+                  {locale === 'kk' ? (a.question_kk || a.question_ru) : (a.question_ru || a.question_kk)}
+                </p>
+                {!a.correct && a.correctAnswer && (
+                  <p className="text-xs text-gray-700">
+                    <span className="font-medium">{t('Дұрыс жауап:', 'Правильный ответ:')}</span>{' '}
+                    <span className="text-emerald-700">{a.correctAnswer}</span>
+                  </p>
+                )}
+                {a.selected && a.selected !== '__TIMEOUT__' && (
+                  <p className="text-xs text-gray-500">
+                    <span className="font-medium">{t('Сіздің жауабыңыз:', 'Ваш ответ:')}</span>{' '}
+                    <span className={a.correct ? 'text-emerald-700' : 'text-red-700 line-through'}>
+                      {a.selected}
+                    </span>
+                  </p>
+                )}
+                {a.selected === '__TIMEOUT__' && (
+                  <p className="text-xs text-amber-700">
+                    ⏱ {t('Уақыт бітті — жауап есептелмеді', 'Время вышло — ответ не засчитан')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Рекомендации после теста (audit P2) */}
+        <Recommendations locale={locale} level={finalLevel} />
       </Card>
     );
   }
@@ -343,9 +455,18 @@ export default function LevelTest({ locale }: LevelTestProps) {
       <Progress value={progress.current} max={progress.max} color="teal" />
 
       <Card>
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <LevelBadge level={question.difficulty} size="sm" />
           <span className="text-xs text-gray-400 uppercase tracking-wide">{question.topic}</span>
+          <span
+            className={cn(
+              'ml-auto text-xs font-mono px-2 py-0.5 rounded-full',
+              secondsLeft <= 10 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600',
+            )}
+            title={t('Уақыт', 'Время на ответ')}
+          >
+            ⏱ {secondsLeft}с
+          </span>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           {locale === 'kk' ? question.question_kk : question.question_ru || question.question_kk}
@@ -381,7 +502,7 @@ export default function LevelTest({ locale }: LevelTestProps) {
             'После ответа вернуться назад нельзя',
           )}
         </span>
-        <Button onClick={submitAnswer} disabled={!selected || loading}>
+        <Button onClick={() => submitAnswer()} disabled={!selected || loading}>
           {loading ? t('Жүктелуде…', 'Загрузка…') : t('Келесі →', 'Далее →')}
         </Button>
       </div>
@@ -415,4 +536,85 @@ function localEstimate(history: AnsweredRecord[]): { level: string; score: numbe
     level: best,
     score: Math.round((correct.length / Math.max(1, history.length)) * 100),
   };
+}
+
+
+/* ───────────── Sparkline + Recommendations ───────────── */
+
+function Sparkline({ answered }: { answered: AnsweredRecord[] }) {
+  if (answered.length === 0) return null;
+  const w = 320;
+  const h = 80;
+  const padX = 8;
+  const padY = 12;
+  const stepX = (w - 2 * padX) / Math.max(1, answered.length - 1);
+  const points = answered.map((a, i) => {
+    const rank = CEFR_RANK[a.difficulty] ?? 1; // 1..6
+    const y = h - padY - ((rank - 1) / 5) * (h - 2 * padY);
+    const x = padX + i * stepX;
+    return { x, y, correct: a.correct, level: a.difficulty };
+  });
+  const path = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(" ");
+  const labels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label="level trajectory">
+      {labels.map((lvl, i) => {
+        const y = h - padY - (i / 5) * (h - 2 * padY);
+        return (
+          <g key={lvl}>
+            <line x1={padX} y1={y} x2={w - padX} y2={y} stroke="#eee" strokeDasharray="2 4" />
+            <text x={2} y={y + 3} fontSize="9" fill="#94a3b8">{lvl}</text>
+          </g>
+        );
+      })}
+      <path d={path} fill="none" stroke="#0d9488" strokeWidth="2" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={3} fill={p.correct ? "#10b981" : "#ef4444"} />
+      ))}
+    </svg>
+  );
+}
+
+interface RecProps { locale: string; level: string }
+function Recommendations({ locale, level }: RecProps) {
+  const isKk = locale === "kk";
+  // Подбираем 1-2 урока и 1-2 правила, релевантные уровню.
+  const lessonId = level === "A1" ? 1 : level === "A2" ? 5 : level === "B1" ? 8 : level === "B2" ? 10 : 17;
+  const ruleAnchor = level === "A1" ? "rule_22" : level === "A2" ? "rule_04" : level === "B1" ? "rule_06" : level === "B2" ? "rule_17" : "rule_20";
+  return (
+    <div className="mt-6 max-w-md mx-auto rounded-xl border border-teal-100 bg-teal-50/50 p-4 text-left">
+      <h4 className="font-semibold text-teal-900 mb-2">
+        {isKk ? `Деңгей ${level} үшін ұсыныстар` : `Что делать дальше для уровня ${level}`}
+      </h4>
+      <ul className="text-sm text-teal-900 space-y-1 list-disc list-inside">
+        <li>
+          <Link href={`/${locale}/learn/lessons/${lessonId}`} className="underline hover:text-teal-950">
+            📚 {isKk ? "Сабақ" : "Урок"} #{lessonId}
+          </Link>
+        </li>
+        <li>
+          <Link href={`/${locale}/learn/basics#${ruleAnchor}`} className="underline hover:text-teal-950">
+            📖 {isKk ? "Ереже" : "Правило"} {ruleAnchor}
+          </Link>
+        </li>
+        <li>
+          <Link href={`/${locale}/learn/dialog`} className="underline hover:text-teal-950">
+            💬 {isKk ? "Тілдік диалог жаттықтырғыш" : "Тренажёр диалогов"}
+          </Link>
+        </li>
+        <li>
+          <Link href={`/${locale}/learn/exercises`} className="underline hover:text-teal-950">
+            🎯 {isKk ? "Бейімделген жаттығулар" : "Адаптивные упражнения"}
+          </Link>
+        </li>
+        {(level === "B2" || level === "C1" || level === "C2") && (
+          <li>
+            <Link href={`/${locale}/test/kaztest`} className="underline hover:text-teal-950">
+              🏅 {isKk ? "ҚАЗТЕСТ дайындық" : "Подготовка к ҚАЗТЕСТ"}
+            </Link>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
 }

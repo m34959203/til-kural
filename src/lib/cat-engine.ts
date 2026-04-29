@@ -43,9 +43,9 @@ export interface CATSession {
   usedIds: Set<string>;
 }
 
-export const MIN_QUESTIONS = 10;
-export const MAX_QUESTIONS = 15;
-export const STABILIZATION_WINDOW = 6; // сколько последних вопросов смотрим на «залип» уровень
+export const MIN_QUESTIONS = 12;
+export const MAX_QUESTIONS = 25; // расширено с 15 (audit P1: для уверенной оценки A1–C2 нужно 25–30)
+export const STABILIZATION_WINDOW = 8; // больше вопросов → шире окно стабилизации
 
 export function isCEFR(x: unknown): x is CEFR {
   return typeof x === 'string' && (CEFR_ORDER as readonly string[]).includes(x);
