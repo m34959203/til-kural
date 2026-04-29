@@ -1,13 +1,15 @@
 import { db } from '@/lib/db';
 import { requireAdminApi, apiError } from '@/lib/api';
 import { hashPassword } from '@/lib/auth';
+import { maskEmail, shouldUnmaskEmail, recordAudit } from '@/lib/audit';
 
 const ALLOWED_FIELDS = ['name', 'role', 'phone', 'language_level'];
 
-function sanitize(u: Record<string, unknown>) {
+function sanitize(u: Record<string, unknown>, opts: { unmask: boolean }) {
+  const email = typeof u.email === 'string' ? u.email : '';
   return {
     id: u.id,
-    email: u.email,
+    email: opts.unmask ? email : maskEmail(email),
     name: u.name,
     role: u.role,
     phone: u.phone,
@@ -44,9 +46,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         return apiError(400, 'Cannot demote the last admin');
       }
     }
+    const before = await db.findOne('users', { id });
     const row = await db.update('users', id, patch);
     if (!row) return apiError(404, 'Not found');
-    return Response.json({ user: sanitize(row) });
+    await recordAudit(request, auth, {
+      action: 'user.update',
+      target_type: 'user',
+      target_id: String(id),
+      metadata: {
+        patch,
+        before_role: before?.role,
+        before_language_level: before?.language_level,
+      },
+    });
+    const unmask = shouldUnmaskEmail(auth, typeof row.email === 'string' ? row.email : '');
+    return Response.json({ user: sanitize(row, { unmask }) });
   } catch (err) {
     return apiError(500, 'Failed to update user', String(err));
   }
@@ -69,6 +83,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!existing) return apiError(404, 'Not found');
       const password_hash = await hashPassword(newPassword);
       await db.update('users', id, { password_hash });
+      await recordAudit(request, auth, {
+        action: 'user.reset_password',
+        target_type: 'user',
+        target_id: String(id),
+        metadata: { target_email: typeof existing.email === 'string' ? existing.email : null },
+      });
       return Response.json({ ok: true });
     }
 
@@ -90,5 +110,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   }
   const ok = await db.delete('users', id);
   if (!ok) return apiError(404, 'Not found');
+  await recordAudit(request, auth, {
+    action: 'user.delete',
+    target_type: 'user',
+    target_id: String(id),
+    metadata: {
+      deleted_email: typeof target.email === 'string' ? target.email : null,
+      deleted_role: target.role,
+    },
+  });
   return Response.json({ ok: true });
 }

@@ -1,15 +1,17 @@
 import { db } from '@/lib/db';
 import { requireAdminApi, apiError } from '@/lib/api';
 import { hashPassword } from '@/lib/auth';
+import { maskEmail, shouldUnmaskEmail, recordAudit } from '@/lib/audit';
 
 const ALLOWED_ROLES = ['user', 'admin', 'editor', 'moderator'] as const;
 const ALLOWED_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function sanitize(u: Record<string, unknown>) {
+function sanitize(u: Record<string, unknown>, opts: { unmask: boolean }) {
+  const email = typeof u.email === 'string' ? u.email : '';
   return {
     id: u.id,
-    email: u.email,
+    email: opts.unmask ? email : maskEmail(email),
     name: u.name,
     role: u.role,
     phone: u.phone,
@@ -27,7 +29,12 @@ export async function GET(request: Request) {
   if (auth instanceof Response) return auth;
   try {
     const rows = await db.query('users', undefined, { orderBy: 'created_at', order: 'desc', limit: 500 });
-    const safe = rows.map(sanitize);
+    // Email не-self раскрываем только super-admin'ам (env SUPER_ADMIN_EMAILS).
+    // Обычные admin/editor/moderator видят маску a***@til-kural.kz —
+    // снижает риск утечки PII при компрометации одного admin-аккаунта.
+    const safe = rows.map((u) =>
+      sanitize(u, { unmask: shouldUnmaskEmail(auth, typeof u.email === 'string' ? u.email : '') }),
+    );
     return Response.json({ users: safe });
   } catch (err) {
     return apiError(500, 'Failed to load users', String(err));
@@ -66,7 +73,13 @@ export async function POST(request: Request) {
       phone: phone || null,
       language_level,
     });
-    return Response.json({ user: sanitize(row) }, { status: 201 });
+    await recordAudit(request, auth, {
+      action: 'user.create',
+      target_type: 'user',
+      target_id: String(row?.id ?? ''),
+      metadata: { email, role, language_level },
+    });
+    return Response.json({ user: sanitize(row, { unmask: true }) }, { status: 201 });
   } catch (err) {
     return apiError(500, 'Failed to create user', String(err));
   }

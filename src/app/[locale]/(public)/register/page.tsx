@@ -83,8 +83,12 @@ export default function RegisterPage({ params }: { params: Promise<{ locale: str
         setSubmitting(false);
         return;
       }
+      // SECURITY: НЕ сохраняем токен в localStorage (audit P0-sec). Cookie
+      // tk-token (httpOnly) ставит сервер в register-route. Снижает риск
+      // кражи токена через XSS.
       if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token);
+        try { localStorage.removeItem('token'); } catch { /* ignore */ }
+        window.dispatchEvent(new Event('auth-change'));
       }
       const dest = nextPath && nextPath.startsWith('/') ? nextPath : `/${locale}/profile`;
       router.replace(dest);

@@ -68,11 +68,15 @@ export default function LoginPage({ params }: { params: Promise<{ locale: string
         setSubmitting(false);
         return;
       }
-      // Сохраняем token в localStorage для совместимости с существующими клиентами
-      // (profile, админ-фетчи), которые шлют Authorization: Bearer.
-      // Cookie уже поставлен сервером (httpOnly) — основной механизм для middleware.
+      // SECURITY: токен НЕ кладём в localStorage (audit P0-sec). Cookie tk-token
+      // (httpOnly + SameSite=Lax) — единственный механизм аутентификации. Это
+      // снижает риск кражи токена через XSS. Все клиентские fetch-и, которые
+      // ранее читали `localStorage.getItem('token')`, теперь полагаются на
+      // `credentials: 'include' | 'same-origin'`, который автоматически
+      // отправляет cookie на same-origin запросы.
       if (typeof window !== 'undefined') {
-        localStorage.setItem('token', data.token);
+        // Удалим старый токен у пользователей, которые уже логинились до этого фикса.
+        try { localStorage.removeItem('token'); } catch { /* ignore */ }
         // Триггерим перечитку useCurrentUser в Header/UserMenu — иначе
         // после router.replace кнопка остаётся «Войти» до hard reload.
         window.dispatchEvent(new Event('auth-change'));
