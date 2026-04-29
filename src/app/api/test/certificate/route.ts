@@ -9,6 +9,10 @@ function makeCertNumber(level: string) {
   return `TK-${year}-${level}-${rand}`;
 }
 
+// Минимальный балл для выдачи сертификата (P0 audit /test/level): нельзя
+// выдавать C2-сертификат при 60% правильных. Согласовано: ≥80 — pass.
+const CERTIFICATE_MIN_SCORE = 80;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -22,6 +26,21 @@ export async function POST(request: Request) {
       locale,
     } = body;
     const certLocale: 'kk' | 'ru' = locale === 'kk' ? 'kk' : 'ru';
+
+    // Гейт по баллу: AI выдаёт сертификат только при достаточно уверенной оценке.
+    if (typeof score === 'number' && score < CERTIFICATE_MIN_SCORE) {
+      return Response.json(
+        {
+          error: 'Score too low for certificate',
+          details: certLocale === 'ru'
+            ? `Сертификат выдаётся при ≥${CERTIFICATE_MIN_SCORE}% правильных. Ваш балл: ${score}%.`
+            : `Сертификат тек ≥${CERTIFICATE_MIN_SCORE}% дұрыс жауапта беріледі. Сіздің балыңыз: ${score}%.`,
+          min_score: CERTIFICATE_MIN_SCORE,
+          score,
+        },
+        { status: 403 },
+      );
+    }
 
     const user = await getUserFromRequest(request);
     const certificate_number = certificateId || makeCertNumber(level);

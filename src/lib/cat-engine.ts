@@ -170,38 +170,61 @@ export function shouldStop(history: AnsweredItem[]): boolean {
 }
 
 /**
- * Оценка финального уровня по истории.
- * Правила:
- *  1) Если правильных ответов на C2 ≥ 3 — итог C2.
- *  2) Иначе — mode уровней последних 4 *правильных* ответов.
- *  3) Если правильных нет вообще — A1.
+ * Оценка финального уровня по истории — взвешенная theta.
+ *
+ * Раньше использовался mode последних 4 правильных ответов + правило
+ * «если 3 правильных C2 → итог C2». Это давало завышение: при 9/15
+ * правильных (включая 3 правильных C2 в начале и 5 ошибок подряд в
+ * конце) итог получался C2, хотя реально это уровень B1–B2 — см.
+ * audit /test/level.
+ *
+ * Новая формула (P0 audit): theta = Σ(correct × diff) / Σ(diff),
+ * где diff — числовой ранг 1..6 (A1..C2). Это учитывает все ответы
+ * и даёт долю успеха «взвешенную сложностью». Затем по шкале:
+ *
+ *   theta ≥ 0.90 → C2
+ *   theta ≥ 0.75 → C1
+ *   theta ≥ 0.60 → B2
+ *   theta ≥ 0.45 → B1
+ *   theta ≥ 0.30 → A2
+ *   иначе         → A1
+ *
+ * Дополнительный capping: финальный уровень не может быть выше
+ * максимальной сложности правильно решённых задач.
  */
 export function estimateLevel(history: AnsweredItem[]): CEFR {
-  const correctAnswers = history.filter((a) => a.correct && isCEFR(a.difficulty)) as Array<
+  const items = history.filter((a) => isCEFR(a.difficulty)) as Array<
     AnsweredItem & { difficulty: CEFR }
   >;
+  if (items.length === 0) return 'A1';
 
-  const c2Count = correctAnswers.filter((a) => a.difficulty === 'C2').length;
-  if (c2Count >= 3) return 'C2';
-
-  if (correctAnswers.length === 0) return 'A1';
-
-  // mode последних 4 правильных
-  const recent = correctAnswers.slice(-4);
-  const counts = new Map<CEFR, number>();
-  for (const a of recent) {
-    counts.set(a.difficulty, (counts.get(a.difficulty) || 0) + 1);
-  }
-  let bestLevel: CEFR = recent[recent.length - 1].difficulty;
-  let bestCount = -1;
-  for (const [lvl, cnt] of counts.entries()) {
-    if (
-      cnt > bestCount ||
-      (cnt === bestCount && CEFR_ORDER.indexOf(lvl) > CEFR_ORDER.indexOf(bestLevel))
-    ) {
-      bestLevel = lvl;
-      bestCount = cnt;
+  let totalWeight = 0;
+  let earnedWeight = 0;
+  let maxCorrectIdx = -1;
+  for (const a of items) {
+    const diffIdx = CEFR_ORDER.indexOf(a.difficulty) + 1; // 1..6
+    totalWeight += diffIdx;
+    if (a.correct) {
+      earnedWeight += diffIdx;
+      if (diffIdx > maxCorrectIdx) maxCorrectIdx = diffIdx;
     }
   }
-  return bestLevel;
+  if (totalWeight === 0) return 'A1';
+  const theta = earnedWeight / totalWeight;
+
+  let level: CEFR;
+  if (theta >= 0.90) level = 'C2';
+  else if (theta >= 0.75) level = 'C1';
+  else if (theta >= 0.60) level = 'B2';
+  else if (theta >= 0.45) level = 'B1';
+  else if (theta >= 0.30) level = 'A2';
+  else level = 'A1';
+
+  // Capping: уровень не может быть выше самого сложного правильного
+  // ответа. Если ни одного правильного — A1.
+  if (maxCorrectIdx < 0) return 'A1';
+  const maxByCorrect = clampLevel(maxCorrectIdx - 1);
+  const levelIdx = CEFR_ORDER.indexOf(level);
+  const cappedIdx = Math.min(levelIdx, CEFR_ORDER.indexOf(maxByCorrect));
+  return clampLevel(cappedIdx);
 }

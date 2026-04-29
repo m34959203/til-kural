@@ -150,6 +150,11 @@ export async function POST(request: Request) {
         sessionId,
         level_saved: levelSaved,
         language_level: levelSaved ? level : null,
+        // P0 audit: сертификат выдаётся только при ≥80% правильных, иначе
+        // оценка слишком неточна. UI должен делать кнопку «Получить сертификат»
+        // disabled (или скрывать) при certificate_eligible=false.
+        certificate_eligible: score >= 80,
+        certificate_min_score: 80,
       });
     }
 
@@ -218,6 +223,8 @@ export async function POST(request: Request) {
       level,
       details,
       sessionId,
+      certificate_eligible: score >= 80,
+      certificate_min_score: 80,
     });
   } catch (error) {
     return Response.json({ error: 'Evaluation failed', details: String(error) }, { status: 500 });

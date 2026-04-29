@@ -48,6 +48,8 @@ export default function LevelTest({ locale }: LevelTestProps) {
   const [finalScore, setFinalScore] = useState(0);
   const [levelSaved, setLevelSaved] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [certificateEligible, setCertificateEligible] = useState(false);
+  const [certificateMinScore, setCertificateMinScore] = useState(80);
   const [error, setError] = useState<string | null>(null);
 
   const t = (kk: string, ru: string) => (locale === 'kk' ? kk : ru);
@@ -106,6 +108,10 @@ export default function LevelTest({ locale }: LevelTestProps) {
       setFinalLevel(data.level || 'A1');
       setFinalScore(typeof data.score === 'number' ? data.score : 0);
       setLevelSaved(!!data.level_saved);
+      setCertificateEligible(!!data.certificate_eligible);
+      if (typeof data.certificate_min_score === 'number') {
+        setCertificateMinScore(data.certificate_min_score);
+      }
       setFinished(true);
     } catch (e) {
       console.error('[LevelTest] evaluate failed', e);
@@ -280,11 +286,28 @@ export default function LevelTest({ locale }: LevelTestProps) {
             )}
           </div>
         )}
+        {!certificateEligible && (
+          <div
+            role="status"
+            className="mx-auto mb-6 max-w-md rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900"
+          >
+            {t(
+              `Сертификат тек ${certificateMinScore}%+ дұрыс жауапта беріледі. Сіздің балыңыз: ${finalScore}%.`,
+              `Сертификат выдаётся при ≥${certificateMinScore}% правильных. Ваш балл: ${finalScore}%. Пересдайте тест, чтобы получить сертификат.`,
+            )}
+          </div>
+        )}
         <div className="flex justify-center gap-3 flex-wrap">
           <Button variant="outline" onClick={resetTest}>
             {t('Қайта тапсыру', 'Пересдать')}
           </Button>
-          <Button onClick={handleDownloadCertificate} disabled={downloading}>
+          <Button
+            onClick={handleDownloadCertificate}
+            disabled={downloading || !certificateEligible}
+            title={!certificateEligible
+              ? t(`Кемінде ${certificateMinScore}% қажет`, `Минимум ${certificateMinScore}% правильных`)
+              : undefined}
+          >
             {downloading
               ? t('Жүктелуде…', 'Загрузка…')
               : t('Сертификат алу', 'Получить сертификат')}
