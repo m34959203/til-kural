@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Progress from '@/components/ui/Progress';
@@ -8,6 +8,14 @@ import Badge from '@/components/ui/Badge';
 import LevelBadge from '@/components/ui/LevelBadge';
 import { cn } from '@/lib/utils';
 import questionsData from '@/data/test-questions-bank.json';
+
+// Извлекает казахскую фразу из question_kk: то что в «...» / "..."
+// или весь текст, если кавычек нет.
+function extractAudioPhrase(text: string): string {
+  if (!text) return '';
+  const m = text.match(/[«"]([^»"]+)[»"]/);
+  return (m?.[1] || text).trim();
+}
 import {
   computeKaztestResult,
   SECTION_LABELS,
@@ -65,6 +73,13 @@ export default function KaztestPractice({ locale }: Props) {
   const [timeLeft, setTimeLeft] = useState(TEST_DURATION_SEC);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [seed, setSeed] = useState(0);
+  // TTS-аудио для секции «Аудирование» (audit P0).
+  const [playingAudio, setPlayingAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Open-input для секции «Письмо» (audit P0): textarea + AI-проверка.
+  const [writingDraft, setWritingDraft] = useState('');
+  const [writingResult, setWritingResult] = useState<{ score: number; feedback: string } | null>(null);
+  const [writingChecking, setWritingChecking] = useState(false);
 
   const questions = useMemo(() => buildQuestions(), [seed]);
 
@@ -78,6 +93,65 @@ export default function KaztestPractice({ locale }: Props) {
     }, 1000);
     return () => clearInterval(timer);
   }, [started, finished]);
+
+  // При смене вопроса — стопаем аудио и сбрасываем writing-черновик.
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingAudio(false);
+    setWritingDraft('');
+    setWritingResult(null);
+  }, [currentIdx]);
+
+  const playPhrase = async (text: string) => {
+    if (!text || playingAudio) return;
+    setPlayingAudio(true);
+    try {
+      const res = await fetch('/api/learn/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, mode: 'audio' }),
+      });
+      const data = await res.json();
+      if (data.audio?.audioBase64) {
+        const audio = new Audio(`data:${data.audio.mimeType};base64,${data.audio.audioBase64}`);
+        audio.onended = () => setPlayingAudio(false);
+        audio.onerror = () => setPlayingAudio(false);
+        audioRef.current = audio;
+        await audio.play();
+      } else {
+        setPlayingAudio(false);
+      }
+    } catch {
+      setPlayingAudio(false);
+    }
+  };
+
+  const checkOpenWriting = async () => {
+    const text = writingDraft.trim();
+    if (!text || writingChecking) return;
+    setWritingChecking(true);
+    setWritingResult(null);
+    try {
+      const res = await fetch('/api/learn/check-writing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, level: 'B1', locale: locale === 'kk' ? 'kk' : 'ru', genre: 'free' }),
+      });
+      const data = await res.json();
+      const r = data?.result;
+      setWritingResult({
+        score: typeof r?.score === 'number' ? r.score : 0,
+        feedback: r?.feedback || '',
+      });
+    } catch {
+      setWritingResult({ score: 0, feedback: locale === 'kk' ? 'Тексеру қатесі' : 'Ошибка проверки' });
+    } finally {
+      setWritingChecking(false);
+    }
+  };
 
   const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
@@ -254,6 +328,27 @@ export default function KaztestPractice({ locale }: Props) {
       <Progress value={currentIdx + 1} max={questions.length} color="teal" size="sm" />
 
       <Card>
+        {/* Listening section — TTS-кнопка для проигрывания казахской фразы (audit P0). */}
+        {q.topic === 'listening' && (() => {
+          const phrase = extractAudioPhrase(q.question_kk);
+          return phrase ? (
+            <div className="mb-4 rounded-lg border border-teal-200 bg-teal-50 p-3">
+              <p className="text-xs uppercase tracking-wide text-teal-700 font-semibold mb-2">
+                🔊 {locale === 'kk' ? 'Тыңдау' : 'Прослушайте'}
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button size="sm" variant="outline" onClick={() => playPhrase(phrase)} loading={playingAudio}>
+                  ▶ {locale === 'kk' ? 'Ойнату' : 'Воспроизвести'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => playPhrase(phrase.split('').join(' '))} loading={playingAudio}>
+                  🐢 {locale === 'kk' ? 'Баяу' : 'Медленнее'}
+                </Button>
+                <span className="text-xs text-teal-700 italic">«{phrase}»</span>
+              </div>
+            </div>
+          ) : null;
+        })()}
+
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           {locale === 'kk' ? q.question_kk : (q.question_ru || q.question_kk)}
         </h3>
@@ -271,6 +366,46 @@ export default function KaztestPractice({ locale }: Props) {
             </button>
           ))}
         </div>
+
+        {/* Writing section — открытый ввод с AI-проверкой (audit P0).
+            Отдельно от теста: не влияет на score, тренировочный блок. */}
+        {q.topic === 'writing' && (
+          <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+            <p className="text-xs uppercase tracking-wide text-amber-800 font-semibold mb-2">
+              ✍️ {locale === 'kk' ? 'Еркін жазу (AI тексереді)' : 'Свободное письмо (AI-проверка)'}
+            </p>
+            <p className="text-xs text-gray-600 mb-2">
+              {locale === 'kk'
+                ? 'Қазақша 1-2 сөйлем жазып, AI стиль мен грамматиканы тексерсін. Бұл блок тест нәтижесіне әсер етпейді.'
+                : 'Напишите 1–2 предложения по-казахски — AI разберёт стиль и грамматику. Этот блок не влияет на итоговый балл.'}
+            </p>
+            <textarea
+              value={writingDraft}
+              onChange={(e) => setWritingDraft(e.target.value)}
+              placeholder={locale === 'kk' ? 'Мәтінді мұнда жазыңыз...' : 'Напишите текст здесь...'}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[80px] resize-y"
+              disabled={writingChecking}
+            />
+            <div className="mt-2 flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs text-gray-500">
+                {writingDraft.trim().split(/\s+/).filter(Boolean).length} {locale === 'kk' ? 'сөз' : 'слов'}
+              </span>
+              <Button size="sm" onClick={checkOpenWriting} loading={writingChecking} disabled={writingDraft.trim().length < 5}>
+                {writingChecking
+                  ? (locale === 'kk' ? 'Тексеруде…' : 'Проверка…')
+                  : (locale === 'kk' ? 'AI тексеру' : 'AI-проверка')}
+              </Button>
+            </div>
+            {writingResult && (
+              <div className="mt-3 rounded-md bg-white p-3 text-xs text-gray-800">
+                <div className="font-semibold mb-1">
+                  {locale === 'kk' ? 'Баға:' : 'Оценка:'} {writingResult.score}/100
+                </div>
+                {writingResult.feedback && <p className="text-gray-700">{writingResult.feedback}</p>}
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       <div className="flex flex-wrap gap-1">

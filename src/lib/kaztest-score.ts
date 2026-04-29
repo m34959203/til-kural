@@ -5,7 +5,7 @@
  */
 
 export type Section = 'listening' | 'reading' | 'grammar' | 'vocabulary' | 'writing';
-export type KaztestLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1';
+export type KaztestLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 
 export const SECTION_WEIGHTS: Record<Section, number> = {
   listening: 20,
@@ -21,6 +21,7 @@ const LEVEL_NAMES_KK: Record<KaztestLevel, string> = {
   B1: 'Орта',
   B2: 'Ортадан жоғары',
   C1: 'Жоғары',
+  C2: 'Шебер',
 };
 
 const LEVEL_NAMES_RU: Record<KaztestLevel, string> = {
@@ -29,6 +30,7 @@ const LEVEL_NAMES_RU: Record<KaztestLevel, string> = {
   B1: 'Средний',
   B2: 'Выше среднего',
   C1: 'Продвинутый',
+  C2: 'Мастерский',
 };
 
 export interface SectionResult {
@@ -115,7 +117,10 @@ export function computeKaztestResult(
   };
 }
 
+// P0 audit: пороги без пересечений + C2.
+//   A1 30-44, A2 45-59, B1 60-74, B2 75-89, C1 90-94, C2 95-100
 function scoreToLevel(score: number): KaztestLevel | 'FAIL' {
+  if (score >= 95) return 'C2';
   if (score >= 90) return 'C1';
   if (score >= 75) return 'B2';
   if (score >= 60) return 'B1';
@@ -132,10 +137,12 @@ export const SECTION_LABELS: Record<Section, { kk: string; ru: string }> = {
   writing: { kk: 'Жазу', ru: 'Письмо' },
 };
 
+// Шкала с непересекающимися диапазонами (audit P0).
 export const LEVEL_THRESHOLDS = [
-  { min: 90, level: 'C1' as const, desc_kk: 'Жоғары — еркін сөйлеу', desc_ru: 'Продвинутый — свободное владение' },
-  { min: 75, level: 'B2' as const, desc_kk: 'Ортадан жоғары — күрделі мәтіндер', desc_ru: 'Выше среднего — сложные тексты' },
-  { min: 60, level: 'B1' as const, desc_kk: 'Орта — күнделікті қарым-қатынас', desc_ru: 'Средний — повседневное общение' },
-  { min: 45, level: 'A2' as const, desc_kk: 'Қарапайым — негізгі жағдайлар', desc_ru: 'Элементарный — базовые ситуации' },
-  { min: 30, level: 'A1' as const, desc_kk: 'Бастауыш — қарапайым сөздер', desc_ru: 'Начальный — простые слова' },
+  { min: 95, max: 100, level: 'C2' as const, desc_kk: 'Шебер — толық еркін меңгеру', desc_ru: 'Мастерский — полное свободное владение' },
+  { min: 90, max: 94, level: 'C1' as const, desc_kk: 'Жоғары — еркін сөйлеу', desc_ru: 'Продвинутый — свободное владение' },
+  { min: 75, max: 89, level: 'B2' as const, desc_kk: 'Ортадан жоғары — күрделі мәтіндер', desc_ru: 'Выше среднего — сложные тексты' },
+  { min: 60, max: 74, level: 'B1' as const, desc_kk: 'Орта — күнделікті қарым-қатынас', desc_ru: 'Средний — повседневное общение' },
+  { min: 45, max: 59, level: 'A2' as const, desc_kk: 'Қарапайым — негізгі жағдайлар', desc_ru: 'Элементарный — базовые ситуации' },
+  { min: 30, max: 44, level: 'A1' as const, desc_kk: 'Бастауыш — қарапайым сөздер', desc_ru: 'Начальный — простые слова' },
 ];
