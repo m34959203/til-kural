@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
@@ -10,8 +11,17 @@ interface Exercise {
   question: string;
   options: string[];
   correct: string;
+  /** rule_id из /basics — если задан, при ошибке покажем CTA «Подробнее о правиле». */
+  rule_id?: string | null;
   explanation: string;
 }
+
+const CEFR_DOWN: Record<string, string> = {
+  C2: 'C1', C1: 'B2', B2: 'B1', B1: 'A2', A2: 'A1', A1: 'A1',
+};
+const CEFR_UP: Record<string, string> = {
+  A1: 'A2', A2: 'B1', B1: 'B2', B2: 'C1', C1: 'C2', C2: 'C2',
+};
 
 interface WeakTopic {
   topic: string;
@@ -66,6 +76,13 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
   const [recommendedTopic, setRecommendedTopic] = useState<WeakTopic | null>(null);
   const [difficultyMode, setDifficultyMode] = useState<'basic' | 'standard' | 'advanced' | null>(null);
   const [lessonCompleted, setLessonCompleted] = useState(false);
+  // Адаптация: уровень текущей сессии (стартовый — из user-профиля или A1).
+  const [adaptiveLevel, setAdaptiveLevel] = useState<string>(() => user?.language_level || 'A1');
+  // Накапливаем ошибочные rule_id за сессию — для финального экрана и для
+  // следующего раунда «Повторить ошибки».
+  const [missedRuleIds, setMissedRuleIds] = useState<string[]>([]);
+  // Серия подряд правильных/неправильных ответов — для микро-CAT.
+  const [streak, setStreak] = useState<{ correct: number; wrong: number }>({ correct: 0, wrong: 0 });
 
   const fallbackTopics = [
     { id: 'grammar', label: locale === 'kk' ? 'Грамматика' : 'Грамматика' },
@@ -108,16 +125,23 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
     loadRecommendations();
   }, [loadRecommendations]);
 
-  const generateExercises = async () => {
+  const generateExercises = async (mode: 'fresh' | 'retry-mistakes' = 'fresh') => {
     setLoading(true);
     setExercises([]);
     setCurrentIdx(0);
     setScore(0);
     setSelected(null);
     setShowResult(false);
+    if (mode === 'fresh') {
+      setMissedRuleIds([]);
+      setStreak({ correct: 0, wrong: 0 });
+    }
 
-    const level = user?.language_level || 'B1';
-    const weakPoints = weakTopics.map((w) => w.topic).filter((t) => t !== topic);
+    // Адаптивный уровень. Дефолт A1 (раньше был B1 — ломал новичков).
+    const level = mode === 'retry-mistakes' ? CEFR_DOWN[adaptiveLevel] || 'A1' : adaptiveLevel;
+    const weakPoints = mode === 'retry-mistakes' && missedRuleIds.length > 0
+      ? missedRuleIds
+      : weakTopics.map((w) => w.topic).filter((t) => t !== topic);
     const stat = weakTopics.find((w) => w.topic === topic);
     const avgScore = stat && stat.attempts > 0 ? stat.avg_score : undefined;
 
@@ -161,8 +185,33 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
   const checkAnswer = (answer: string) => {
     setSelected(answer);
     setShowResult(true);
-    if (answer === exercises[currentIdx].correct) {
+    const ex = exercises[currentIdx];
+    const isCorrect = answer === ex.correct;
+    if (isCorrect) {
       setScore((prev) => prev + 1);
+      // Микро-CAT: 3 правильных подряд → следующий раунд на ступень выше.
+      setStreak((prev) => {
+        const next = { correct: prev.correct + 1, wrong: 0 };
+        if (next.correct >= 3) {
+          setAdaptiveLevel((lv) => CEFR_UP[lv] || lv);
+          return { correct: 0, wrong: 0 };
+        }
+        return next;
+      });
+    } else {
+      // Запоминаем правило, по которому ошиблись (rule_id из ответа AI).
+      if (ex.rule_id && !missedRuleIds.includes(ex.rule_id)) {
+        setMissedRuleIds((prev) => [...prev, ex.rule_id as string]);
+      }
+      // Микро-CAT: 2 неправильных подряд → следующий раунд на ступень ниже.
+      setStreak((prev) => {
+        const next = { correct: 0, wrong: prev.wrong + 1 };
+        if (next.wrong >= 2) {
+          setAdaptiveLevel((lv) => CEFR_DOWN[lv] || lv);
+          return { correct: 0, wrong: 0 };
+        }
+        return next;
+      });
     }
   };
 
@@ -275,7 +324,7 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
           </div>
         )}
 
-        <Button onClick={generateExercises} loading={loading}>
+        <Button onClick={() => generateExercises('fresh')} loading={loading}>
           {loading
             ? (locale === 'kk' ? 'AI жаттығулар дайындап жатыр…' : 'AI готовит задания…')
             : (locale === 'kk' ? 'Жаттығулар жасау' : 'Создать упражнения')}
@@ -287,22 +336,64 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
               : 'Это может занять 10–20 секунд.'}
           </p>
         )}
+        {/* Подсказка про адаптивный уровень */}
+        <p className="text-xs text-gray-500 mt-2">
+          {locale === 'kk'
+            ? `Ағымдағы деңгей: ${adaptiveLevel}. Дұрыс жауап → жоғарылатылады, қате → төмендетіледі.`
+            : `Текущий уровень: ${adaptiveLevel}. После 3 правильных подряд — повышается, после 2 ошибок подряд — понижается.`}
+        </p>
       </div>
     );
   }
 
   if (currentIdx >= exercises.length) {
+    const summaryRules = Array.from(new Set(missedRuleIds));
     return (
-      <Card className="text-center py-8">
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-          {locale === 'kk' ? 'Жаттығулар аяқталды!' : 'Упражнения завершены!'}
-        </h3>
-        <p className="text-4xl font-bold text-teal-700 mb-4">
-          {score}/{exercises.length}
-        </p>
-        <Button onClick={generateExercises}>
-          {locale === 'kk' ? 'Жаңа жаттығулар' : 'Новые упражнения'}
-        </Button>
+      <Card className="text-center py-8 space-y-4">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            {locale === 'kk' ? 'Жаттығулар аяқталды!' : 'Упражнения завершены!'}
+          </h3>
+          <p className="text-4xl font-bold text-teal-700 mb-2">
+            {score}/{exercises.length}
+          </p>
+          <p className="text-sm text-gray-500">
+            {locale === 'kk'
+              ? `Деңгей: ${adaptiveLevel}`
+              : `Уровень: ${adaptiveLevel}`}
+          </p>
+        </div>
+
+        {summaryRules.length > 0 && (
+          <div className="text-left max-w-md mx-auto rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <h4 className="text-sm font-semibold text-amber-900 mb-2">
+              {locale === 'kk' ? 'Қайталау керек ережелер' : 'Правила для повторения'}
+            </h4>
+            <ul className="text-sm text-amber-900 space-y-1">
+              {summaryRules.map((rid) => (
+                <li key={rid}>
+                  <Link
+                    href={`/${locale}/learn/basics#${rid}`}
+                    className="underline hover:text-amber-950"
+                  >
+                    📖 {locale === 'kk' ? `${rid} ережесі` : `Правило ${rid}`}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 justify-center">
+          {summaryRules.length > 0 && (
+            <Button variant="outline" onClick={() => generateExercises('retry-mistakes')}>
+              🔄 {locale === 'kk' ? 'Қателерді қайталау' : 'Повторить ошибки'}
+            </Button>
+          )}
+          <Button onClick={() => generateExercises('fresh')}>
+            {locale === 'kk' ? 'Жаңа жаттығулар' : 'Новые упражнения'}
+          </Button>
+        </div>
       </Card>
     );
   }
@@ -363,7 +454,17 @@ export default function AdaptiveExercise({ locale, lessonId, lessonTitle, target
         {showResult && (
           <div className="mt-4 bg-gray-50 rounded-lg p-3 text-sm text-gray-700">
             <span className="font-medium">{locale === 'kk' ? 'Түсіндірме: ' : 'Объяснение: '}</span>
-            {exercise.explanation}
+            <span className="whitespace-pre-line">{exercise.explanation}</span>
+            {exercise.rule_id && /^rule_\d+$/.test(exercise.rule_id) && (
+              <div className="mt-2">
+                <Link
+                  href={`/${locale}/learn/basics#${exercise.rule_id}`}
+                  className="text-xs text-teal-700 hover:text-teal-900 underline"
+                >
+                  📖 {locale === 'kk' ? 'Толық ереже' : 'Подробнее о правиле'} →
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </Card>
