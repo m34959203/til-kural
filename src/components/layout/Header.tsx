@@ -71,11 +71,11 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
       {/* ============================================= */}
       {/* TOP BAR — государственные ресурсы + язык        */}
       {/* ============================================= */}
-      <div className="bg-tk-night text-white/75 text-[12px] border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 h-9 flex items-center justify-between gap-4">
+      <div className="bg-tk-night text-white/75 text-xs border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 min-h-[44px] flex items-center justify-between gap-4">
           {/* Desktop: лейбл + ссылки с разделителями */}
           <div className="hidden lg:flex items-center gap-3 min-w-0">
-            <span className="inline-flex items-center gap-1.5 text-tk-gold/80 font-medium uppercase tracking-wider text-[10px] whitespace-nowrap">
+            <span className="inline-flex items-center gap-1.5 text-tk-gold/80 font-medium uppercase tracking-wider text-xs whitespace-nowrap">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2l-8 6v13h6v-7h4v7h6V8l-8-6z" />
               </svg>
@@ -90,7 +90,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 hover:text-tk-gold transition"
+                    className="inline-flex items-center gap-1 hover:text-tk-gold transition px-2 py-2 -my-2 min-h-[44px]"
                   >
                     {link.label}
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40" aria-hidden="true">
@@ -104,11 +104,11 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
 
           {/* Mobile/tablet: компактный дропдаун "Ресурстар" */}
           <details className="lg:hidden relative group">
-            <summary className="list-none inline-flex items-center gap-1.5 cursor-pointer select-none text-tk-gold/90 hover:text-tk-gold transition">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <summary className="list-none inline-flex items-center gap-1.5 cursor-pointer select-none text-tk-gold/90 hover:text-tk-gold transition px-2 py-2 -my-1 min-h-[40px]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2l-8 6v13h6v-7h4v7h6V8l-8-6z" />
               </svg>
-              <span className="font-medium text-[11px] uppercase tracking-wider">
+              <span className="font-medium text-xs uppercase tracking-wider">
                 {locale === 'kk' ? 'Ресурстар' : 'Ресурсы'}
               </span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-open:rotate-180 transition-transform" aria-hidden="true">
@@ -122,7 +122,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 px-4 py-2 hover:bg-white/5 hover:text-tk-gold transition"
+                  className="flex items-center justify-between gap-3 px-4 py-2.5 min-h-[44px] hover:bg-white/5 hover:text-tk-gold transition text-sm"
                 >
                   <span>{link.label}</span>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-40" aria-hidden="true">
@@ -137,7 +137,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
           <div className="inline-flex items-center bg-white/5 border border-white/10 rounded-full p-0.5 shrink-0" role="group" aria-label={locale === 'kk' ? 'Тіл таңдау' : 'Выбор языка'}>
             <Link
               href={kkHref}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider transition ${
+              className={`px-3 py-1.5 min-h-[32px] inline-flex items-center justify-center rounded-full text-xs font-bold tracking-wider transition ${
                 locale === 'kk' ? 'bg-tk-gold text-tk-night' : 'text-white/60 hover:text-white'
               }`}
               aria-current={locale === 'kk' ? 'true' : undefined}
@@ -146,7 +146,7 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
             </Link>
             <Link
               href={ruHref}
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider transition ${
+              className={`px-3 py-1.5 min-h-[32px] inline-flex items-center justify-center rounded-full text-xs font-bold tracking-wider transition ${
                 locale === 'ru' ? 'bg-tk-gold text-tk-night' : 'text-white/60 hover:text-white'
               }`}
               aria-current={locale === 'ru' ? 'true' : undefined}

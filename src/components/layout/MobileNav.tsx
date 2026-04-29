@@ -76,7 +76,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
       {/* Overlay */}
       <div
         className={cn(
-          'lg:hidden fixed inset-0 z-50 bg-tk-night/50 backdrop-blur-sm transition-opacity duration-300',
+          'lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         )}
         onClick={() => setOpen(false)}
@@ -104,7 +104,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
             </div>
             <div>
               <div className="text-[17px] font-extrabold leading-none text-tk-night">Тіл-құрал</div>
-              <div className="text-[10px] text-tk-muted mt-0.5 tracking-wide">
+              <div className="text-xs text-tk-muted mt-0.5 tracking-wide">
                 {locale === 'kk' ? 'Қазақ тілін оқыту орталығы' : 'Учебно-методический центр'}
               </div>
             </div>

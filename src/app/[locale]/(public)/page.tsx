@@ -249,14 +249,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </g>
         </svg>
 
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-16 lg:py-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 items-center relative">
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-12 lg:py-24 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-8 lg:gap-12 items-center relative">
           {/* LEFT */}
-          <div className="fade-in">
+          <div className="fade-in min-w-0">
             <div className="inline-flex items-center gap-2 bg-[#F5C518]/20 text-[#0F4C81] px-3 py-1.5 rounded-full text-xs font-bold tracking-wide">
               <span className="w-2 h-2 rounded-full bg-[#C2461A] animate-pulse" />
               {t.heroBadge}
             </div>
-            <h1 className="mt-6 text-[44px] sm:text-[56px] lg:text-[68px] font-extrabold leading-[1.02] text-[#0B1E3D] tracking-tight">
+            <h1 className="mt-6 text-[28px] xs:text-[32px] sm:text-[44px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] text-[#0B1E3D] tracking-tight break-words">
               {isKk ? (
                 <>
                   {t.heroTitle1}
@@ -291,7 +291,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <div className="flex flex-wrap gap-3 mt-8">
               <Link
                 href={`/${locale}/learn`}
-                className="group px-7 py-4 rounded-2xl bg-[#C2461A] text-white font-bold shadow-lg hover:shadow-xl hover:brightness-110 transition flex items-center gap-2"
+                className="group px-5 sm:px-7 py-3 sm:py-4 rounded-2xl bg-[#C2461A] text-white font-bold shadow-lg hover:shadow-xl hover:brightness-110 transition flex items-center gap-2 min-h-[44px]"
               >
                 {t.ctaStart}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="group-hover:translate-x-1 transition">
@@ -300,7 +300,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </Link>
               <Link
                 href={`/${locale}/test/level`}
-                className="px-7 py-4 rounded-2xl bg-white border-2 border-[#0F4C81] text-[#0F4C81] font-bold hover:bg-[#0F4C81] hover:text-white transition flex items-center gap-2"
+                className="px-5 sm:px-7 py-3 sm:py-4 rounded-2xl bg-white border-2 border-[#0F4C81] text-[#0F4C81] font-bold hover:bg-[#0F4C81] hover:text-white transition flex items-center gap-2 min-h-[44px]"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 12l2 2 4-4" />
@@ -334,11 +334,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </div>
 
           {/* RIGHT: AI-chat mock */}
-          <div className="relative fade-in delay-2">
+          <div className="relative fade-in delay-2 min-w-0">
             <div className="absolute -top-8 -right-4 w-32 h-32 rounded-full sun-rays opacity-60 blur-sm" />
             <div className="absolute -inset-6 rounded-[48px] bg-gradient-to-br from-[#0F4C81]/10 via-transparent to-[#F5C518]/15" />
 
-            <div className="relative bg-white rounded-[36px] shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] p-6 border border-[#F3ECD8]">
+            <div className="relative bg-white rounded-[36px] shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] p-4 sm:p-6 border border-[#F3ECD8]">
               <div className="flex items-center gap-3 pb-4 border-b border-[#F3ECD8]">
                 <div className="relative">
                   <div className="w-14 h-14 rounded-2xl gradient-blue flex items-center justify-center text-white font-extrabold text-xl shadow-md">
@@ -354,7 +354,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   </div>
                 </div>
                 <div className="ml-auto flex gap-2">
-                  <button className="w-9 h-9 rounded-xl bg-[#FAF6EC] hover:bg-[#F3ECD8] flex items-center justify-center" aria-label="Sound">
+                  <button className="w-11 h-11 rounded-xl bg-[#FAF6EC] hover:bg-[#F3ECD8] flex items-center justify-center" aria-label="Sound">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4C81" strokeWidth="2">
                       <path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07" />
                     </svg>
@@ -394,38 +394,38 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
 
               <div className="flex gap-2 pt-4 border-t border-[#F3ECD8]">
-                <button className="w-10 h-10 rounded-xl bg-[#F5C518]/20 text-[#E8A30C] flex items-center justify-center" aria-label="Mic">
+                <button className="w-11 h-11 rounded-xl bg-[#F5C518]/20 text-[#E8A30C] flex items-center justify-center shrink-0" aria-label="Mic">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2M12 19v4" />
                   </svg>
                 </button>
-                <div className="flex-1 bg-[#FAF6EC] rounded-xl px-4 flex items-center text-sm text-[#6B6A63]">
+                <div className="flex-1 min-w-0 bg-[#FAF6EC] rounded-xl px-4 min-h-[44px] flex items-center text-sm text-[#6B6A63] truncate">
                   {isKk ? 'Жауап жазыңыз…' : 'Напишите ответ…'}
                 </div>
-                <button className="w-10 h-10 rounded-xl gradient-blue text-white flex items-center justify-center shadow-md" aria-label="Send">
+                <button className="w-11 h-11 rounded-xl gradient-blue text-white flex items-center justify-center shadow-md shrink-0" aria-label="Send">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                   </svg>
                 </button>
               </div>
 
-              <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-thin pb-1">
-                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#1B6FB5]/10 text-[#0F4C81] text-xs font-semibold whitespace-nowrap">
+              <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-2 px-2 snap-x">
+                <button className="shrink-0 snap-start px-3 min-h-[40px] rounded-lg bg-[#1B6FB5]/10 text-[#0F4C81] text-sm font-semibold whitespace-nowrap">
                   🔊 {isKk ? 'Тыңдау' : 'Слушать'}
                 </button>
-                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                <button className="shrink-0 snap-start px-3 min-h-[40px] rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-sm font-semibold whitespace-nowrap">
                   🎤 {isKk ? 'Айту' : 'Говорить'}
                 </button>
-                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                <button className="shrink-0 snap-start px-3 min-h-[40px] rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-sm font-semibold whitespace-nowrap">
                   💡 {isKk ? 'Түсіндіру' : 'Объяснить'}
                 </button>
-                <button className="shrink-0 px-3 py-1.5 rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-xs font-semibold whitespace-nowrap">
+                <button className="shrink-0 snap-start px-3 min-h-[40px] rounded-lg bg-[#F3ECD8] text-[#2B2A26] text-sm font-semibold whitespace-nowrap">
                   📝 {isKk ? 'Мысал' : 'Пример'}
                 </button>
               </div>
             </div>
 
-            <div className="absolute -left-8 top-12 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden md:flex">
+            <div className="absolute -left-4 xl:-left-12 -top-4 xl:top-8 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden xl:flex">
               <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center text-white font-extrabold">+25</div>
               <div>
                 <div className="text-xs text-[#6B6A63]">{isKk ? 'Алдыңыз' : 'Получено'}</div>
@@ -433,7 +433,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
             </div>
 
-            <div className="absolute -right-4 bottom-16 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden md:flex">
+            <div className="absolute -right-2 xl:-right-8 -bottom-4 xl:bottom-8 bg-white rounded-2xl shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)] px-4 py-3 items-center gap-3 border border-[#F3ECD8] hidden xl:flex">
               <div className="text-2xl">🔥</div>
               <div>
                 <div className="text-xs text-[#6B6A63]">Streak</div>
@@ -560,7 +560,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
               <h3 className="mt-5 text-2xl font-extrabold text-[#0B1E3D]">{t.feat5Title}</h3>
               <p className="mt-2 text-[#6B6A63] text-sm leading-relaxed">{t.feat5Desc}</p>
-              <div className="mt-4 flex flex-wrap gap-1.5 text-[10px] font-semibold">
+              <div className="mt-4 flex flex-wrap gap-1.5 text-xs font-semibold">
                 <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Shop}</span>
                 <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Cafe}</span>
                 <span className="px-2 py-1 rounded bg-[#FAF6EC] text-[#2B2A26]">{t.feat5Road}</span>
