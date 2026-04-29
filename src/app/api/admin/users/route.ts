@@ -27,8 +27,42 @@ function sanitize(u: Record<string, unknown>, opts: { unmask: boolean }) {
 export async function GET(request: Request) {
   const auth = await requireAdminApi(request);
   if (auth instanceof Response) return auth;
+  const url = new URL(request.url);
+  const format = url.searchParams.get('format');
   try {
     const rows = await db.query('users', undefined, { orderBy: 'created_at', order: 'desc', limit: 500 });
+
+    // CSV-экспорт (audit P1): доступен только super-admin'ам, чтобы PII
+    // не утекал «на всякий случай».
+    if (format === 'csv') {
+      const isSuper = (process.env.SUPER_ADMIN_EMAILS || '')
+        .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+        .includes(auth.email.toLowerCase());
+      if (!isSuper) {
+        return apiError(403, 'CSV export reserved for super-admin (SUPER_ADMIN_EMAILS)');
+      }
+      const escape = (v: unknown) => {
+        const s = v == null ? '' : String(v);
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const cols = ['id','email','name','role','phone','language_level','xp_points','level','current_streak','longest_streak','created_at'];
+      const lines = [cols.join(',')];
+      for (const u of rows) {
+        lines.push(cols.map((c) => escape((u as Record<string, unknown>)[c])).join(','));
+      }
+      await recordAudit(request, auth, {
+        action: 'users.export_csv',
+        target_type: 'users',
+        metadata: { count: rows.length },
+      });
+      return new Response(lines.join('\n'), {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="users-${new Date().toISOString().slice(0, 10)}.csv"`,
+        },
+      });
+    }
+
     // Email не-self раскрываем только super-admin'ам (env SUPER_ADMIN_EMAILS).
     // Обычные admin/editor/moderator видят маску a***@til-kural.kz —
     // снижает риск утечки PII при компрометации одного admin-аккаунта.

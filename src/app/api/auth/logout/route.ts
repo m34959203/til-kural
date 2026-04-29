@@ -1,21 +1,33 @@
-// Очищаем httpOnly cookie tk-token. Клиенту стоит дополнительно вычистить
-// localStorage.token со своей стороны — сервер на это влиять не может (httpOnly != localStorage).
+// Очищаем cookie tk-token и tk-refresh + отзываем refresh-токен в БД (audit P1-sec).
+// localStorage.token больше не используется (см. login/register pages).
+
+import {
+  REFRESH_COOKIE_NAME,
+  buildClearRefreshCookie,
+  readCookie,
+  revokeRefresh,
+} from '@/lib/refresh-tokens';
 
 function buildClearCookie(): string {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  // Max-Age=0 + пустое значение — стандартный способ стереть cookie.
   return `tk-token=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0${secure}`;
 }
 
-export async function POST() {
+async function handleLogout(request: Request) {
+  const refresh = readCookie(request, REFRESH_COOKIE_NAME);
+  if (refresh) {
+    await revokeRefresh(refresh);
+  }
   const res = Response.json({ ok: true });
   res.headers.append('Set-Cookie', buildClearCookie());
+  res.headers.append('Set-Cookie', buildClearRefreshCookie());
   return res;
 }
 
-// GET-вариант удобен для <a href="/api/auth/logout"> как быстрый fallback.
-export async function GET() {
-  const res = Response.json({ ok: true });
-  res.headers.append('Set-Cookie', buildClearCookie());
-  return res;
+export async function POST(request: Request) {
+  return handleLogout(request);
+}
+
+export async function GET(request: Request) {
+  return handleLogout(request);
 }

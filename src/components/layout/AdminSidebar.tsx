@@ -17,6 +17,7 @@ import {
   ScrollText,
   BookMarked,
   Users,
+  ShieldCheck,
   Settings,
   Home,
   type LucideIcon,
@@ -84,6 +85,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       title_ru: 'Система',
       items: [
         { href: `/${locale}/admin/settings`, label_kk: 'Баптаулар', label_ru: 'Настройки сайта', Icon: Settings },
+        { href: `/${locale}/admin/audit`, label_kk: 'Аудит журналы', label_ru: 'Журнал аудита', Icon: ShieldCheck },
       ],
     },
   ];

@@ -1,12 +1,18 @@
 import { db } from '@/lib/db';
 import { hashPassword, signToken } from '@/lib/auth';
 import { validateRegistration } from '@/lib/validators';
+import {
+  generateRefreshToken,
+  storeRefreshToken,
+  buildRefreshCookie,
+} from '@/lib/refresh-tokens';
 
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+// SECURITY (P1-sec): синхронизировано с /api/auth/login.
+const ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1h
 
 function buildAuthCookie(token: string): string {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}${secure}`;
+  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${ACCESS_COOKIE_MAX_AGE}${secure}`;
 }
 
 export async function POST(request: Request) {
@@ -58,6 +64,15 @@ export async function POST(request: Request) {
     // Зеркалим поведение /login: ставим httpOnly cookie tk-token, чтобы middleware
     // не отбрасывал свежезарегистрированного admin/editor на /login.
     res.headers.append('Set-Cookie', buildAuthCookie(token));
+
+    // Refresh-токен (30d, отзываемый).
+    const { token: refreshToken, hash: refreshHash } = generateRefreshToken();
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+      || request.headers.get('x-real-ip') || null;
+    const ua = request.headers.get('user-agent') || null;
+    await storeRefreshToken(user.id, refreshHash, { ip, ua });
+    res.headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
+
     return res;
   } catch (error) {
     return Response.json({ error: 'Registration failed', details: String(error) }, { status: 500 });

@@ -1,15 +1,19 @@
 import { db } from '@/lib/db';
 import { verifyPassword, signToken } from '@/lib/auth';
 import { validateLogin } from '@/lib/validators';
+import {
+  generateRefreshToken,
+  storeRefreshToken,
+  buildRefreshCookie,
+} from '@/lib/refresh-tokens';
 
-// Срок жизни cookie совпадает с exp JWT (7 дней). Значение в секундах для Max-Age.
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+// SECURITY (audit P1-sec): access JWT короткий — 1 час (см. lib/auth.ts).
+// Долгоживущий refresh-токен — отдельный httpOnly cookie tk-refresh.
+const ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1h, синхронизировать с ACCESS_TOKEN_TTL в auth.ts
 
 function buildAuthCookie(token: string): string {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  // SameSite=Lax: защита от CSRF при сохранении top-level navigation.
-  // HttpOnly: недоступен JS (middleware читает на сервере, клиент использует localStorage-копию).
-  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}${secure}`;
+  return `tk-token=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${ACCESS_COOKIE_MAX_AGE}${secure}`;
 }
 
 export async function POST(request: Request) {
@@ -32,9 +36,13 @@ export async function POST(request: Request) {
 
     const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
-    // JSON-ответ сохраняем 1:1 с токеном + user — существующие клиенты не ломаем.
-    // Дополнительно ставим httpOnly cookie tk-token, чтобы middleware мог гейтить /admin
-    // без участия JS.
+    // Refresh-токен (30d) — отдельная запись в refresh_tokens с возможностью отзыва.
+    const { token: refreshToken, hash: refreshHash } = generateRefreshToken();
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+      || request.headers.get('x-real-ip') || null;
+    const ua = request.headers.get('user-agent') || null;
+    await storeRefreshToken(user.id, refreshHash, { ip, ua });
+
     const res = Response.json({
       token,
       user: {
@@ -51,6 +59,7 @@ export async function POST(request: Request) {
       },
     });
     res.headers.append('Set-Cookie', buildAuthCookie(token));
+    res.headers.append('Set-Cookie', buildRefreshCookie(refreshToken));
     return res;
   } catch (error) {
     return Response.json({ error: 'Login failed', details: String(error) }, { status: 500 });

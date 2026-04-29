@@ -35,14 +35,21 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function signToken(payload: UserPayload): string {
+// SECURITY (audit P1-sec): access JWT теперь короткоживущий — 1 час.
+// Долгоживущий refresh-token хранится отдельной строкой в refresh_tokens
+// и может быть отозван (см. /api/auth/refresh, lib/refresh-tokens.ts).
+const ACCESS_TOKEN_TTL = '1h';
+
+export function signToken(payload: UserPayload, expiresIn: string | number = ACCESS_TOKEN_TTL): string {
   const claims: JWTClaims = {
     id: payload.id,
     email: payload.email,
     role: payload.role,
     name: payload.name,
   };
-  return jwt.sign(claims, JWT_SECRET, { expiresIn: '7d' });
+  // jsonwebtoken типизирует expiresIn как SignOptions['expiresIn'] — оставляем
+  // строку '1h' / число секунд. Для обратной совместимости прокидываем как есть.
+  return jwt.sign(claims, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 }
 
 export function verifyToken(token: string): JWTClaims | null {
