@@ -8,6 +8,7 @@ import XPBar from '@/components/ui/XPBar';
 import StreakCounter from '@/components/ui/StreakCounter';
 import QuestTracker from '@/components/features/QuestTracker';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { LEVEL_THRESHOLDS, LEVEL_NAMES_KK, LEVEL_NAMES_RU } from '@/lib/gamification';
 
 interface Stats {
   xp_points: number;
@@ -130,6 +131,61 @@ export default function GamePage({ params }: { params: Promise<{ locale: string 
 
       {/* Active quests */}
       <QuestTracker locale={locale} />
+
+      {/* Открытая шкала уровней (audit P0) */}
+      <Card className="mt-8">
+        <h3 className="font-semibold text-gray-900 mb-3">
+          {locale === 'kk' ? 'Деңгейлер' : 'Шкала уровней'}
+        </h3>
+        <ol className="text-sm divide-y divide-gray-100">
+          {LEVEL_THRESHOLDS.map((threshold, idx) => {
+            const next = LEVEL_THRESHOLDS[idx + 1];
+            const range = next != null ? `${threshold} – ${next - 1} XP` : `${threshold}+ XP`;
+            const name = locale === 'kk' ? LEVEL_NAMES_KK[idx] : LEVEL_NAMES_RU[idx];
+            const userLevel = stats?.level ?? 1;
+            const isCurrent = idx + 1 === userLevel;
+            return (
+              <li
+                key={idx}
+                className={`py-1.5 flex items-center justify-between ${isCurrent ? 'font-semibold text-teal-700' : 'text-gray-700'}`}
+              >
+                <span>
+                  {locale === 'kk' ? 'Деңгей' : 'Уровень'} {idx + 1}: {name}
+                  {isCurrent && (
+                    <span className="ml-2 text-xs text-teal-600">
+                      ← {locale === 'kk' ? 'сіз осында' : 'вы здесь'}
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-gray-500">{range}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </Card>
+
+      {/* Правила streak (audit P1) */}
+      <Card className="mt-4 border-amber-100 bg-amber-50/60">
+        <h3 className="font-semibold text-amber-900 mb-2">
+          🔥 {locale === 'kk' ? 'Серия қалай есептеледі' : 'Как считается серия (streak)'}
+        </h3>
+        <p className="text-sm text-amber-900/90 mb-2">
+          {locale === 'kk'
+            ? 'Бір күн санау үшін кем дегенде осы әрекеттердің бірін орындау керек:'
+            : 'Чтобы день засчитался в серию, нужно сделать минимум одно из:'}
+        </p>
+        <ul className="text-sm text-amber-900/90 list-disc list-inside space-y-0.5">
+          <li>{locale === 'kk' ? '1+ жаттығу немесе сабақ' : '1+ упражнение или урок'}</li>
+          <li>{locale === 'kk' ? 'Тілдік диалог жүргізу (4+ реплика)' : 'Диалог-сессия (4+ реплики)'}</li>
+          <li>{locale === 'kk' ? 'Жазба тексеру немесе фото-тексеру' : 'Проверка письма или фото-проверка'}</li>
+          <li>{locale === 'kk' ? 'Тестен өту' : 'Прохождение теста'}</li>
+        </ul>
+        <p className="text-xs text-amber-900/70 mt-2">
+          {locale === 'kk'
+            ? 'Бір күн өткізіп алсаңыз, серия нөлге қайта түседі.'
+            : 'Если пропустите день — серия сбрасывается.'}
+        </p>
+      </Card>
     </div>
   );
 }

@@ -56,6 +56,7 @@ export default function QuestsPage({ params }: { params: Promise<{ locale: strin
               quest={quest}
               started={!!uq}
               progress={pct}
+              completedTasks={completed}
             />
           );
         })}
