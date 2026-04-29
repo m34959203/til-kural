@@ -1,9 +1,44 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { db } from '@/lib/db';
+import BannerCarousel, { type BannerItem } from '@/components/features/BannerCarousel';
+
+interface BannerRow extends BannerItem {
+  is_active?: boolean | null;
+  position?: string | null;
+  sort_order?: number | null;
+}
+
+async function loadHeroBanners(): Promise<BannerItem[]> {
+  try {
+    const rows = (await db.query('banners', undefined, {
+      orderBy: 'sort_order',
+      order: 'asc',
+      limit: 20,
+    })) as BannerRow[];
+    return rows
+      .filter((b) => b.is_active !== false && (b.position ?? 'hero') === 'hero' && typeof b.image_url === 'string' && b.image_url)
+      .map((b) => ({
+        id: String(b.id),
+        title: b.title ?? null,
+        image_url: b.image_url,
+        link_url: b.link_url ?? null,
+        subtitle_kk: b.subtitle_kk ?? null,
+        subtitle_ru: b.subtitle_ru ?? null,
+        position: b.position ?? null,
+        sort_order: typeof b.sort_order === 'number' ? b.sort_order : 0,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export const revalidate = 60;
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const isKk = locale === 'kk';
+  const banners = await loadHeroBanners();
 
   // ────────────────── TEXT LABELS ──────────────────
   const t = {
@@ -202,6 +237,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <div className="bg-[#FAF6EC] text-[#2B2A26]">
+      {/* CMS-баннеры (rev: 60s, position=hero, is_active, sort_order asc).
+          Не рендерится если активных баннеров 0. */}
+      {banners.length > 0 && <BannerCarousel banners={banners} locale={locale} />}
+
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="hero-pattern relative overflow-hidden">
         <Image
@@ -257,9 +296,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               {t.heroBadge}
             </div>
             <h1 className="mt-6 text-[28px] xs:text-[32px] sm:text-[44px] md:text-[56px] lg:text-[68px] font-extrabold leading-[1.05] text-[#0B1E3D] tracking-tight break-words">
+              {/* Между двумя строками вставляем пробел — для SEO, screen-readers
+                  и копирования (textContent склеивает <br/> без пробела → «Учитеказахский»). */}
               {isKk ? (
                 <>
                   {t.heroTitle1}
+                  {' '}
                   <br />
                   <span className="relative inline-block">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1B6FB5] to-[#0F4C81]">
@@ -274,6 +316,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               ) : (
                 <>
                   {t.heroTitle1}
+                  {' '}
                   <br />
                   <span className="relative inline-block">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1B6FB5] to-[#0F4C81]">
