@@ -1,6 +1,7 @@
 import EventCalendar, { type EventRow } from '@/components/features/EventCalendar';
 import { db } from '@/lib/db';
 import { buildMetadata, eventJsonLd } from '@/lib/seo';
+import { withEffectiveStatus } from '@/lib/event-status';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,16 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   let events: EventRow[] = [];
   try {
     const rows = await db.query('events', undefined, { orderBy: 'start_date', order: 'asc', limit: 100 });
-    events = rows as EventRow[];
+    // Не показываем drafts/scheduled публично; обогащаем effective_status.
+    const filtered = (rows as Record<string, unknown>[]).filter((r) => {
+      if (r.status === 'draft') return false;
+      const sched = r.scheduled_at;
+      if (!sched) return true;
+      try {
+        return new Date(sched as string).getTime() <= Date.now();
+      } catch { return true; }
+    });
+    events = withEffectiveStatus(filtered) as unknown as EventRow[];
   } catch {
     /* keep empty */
   }

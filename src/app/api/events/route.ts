@@ -6,6 +6,7 @@ import {
   paginationMeta,
 } from '@/lib/api';
 import { EventsSchema, validateBody } from '@/lib/validators';
+import { withEffectiveStatus } from '@/lib/event-status';
 
 const EVENTS_SEARCH_COLS = ['title_kk', 'title_ru', 'location'];
 
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
            ORDER BY start_date ASC`,
         params,
       );
-      return Response.json({ events: rows });
+      return Response.json({ events: withEffectiveStatus(rows as Record<string, unknown>[]) });
     }
 
     const filter: Record<string, unknown> = {};
@@ -58,12 +59,13 @@ export async function GET(request: Request) {
         })
       : rows;
 
+    const enriched = withEffectiveStatus(filtered as Record<string, unknown>[]);
     if (!paginated) {
-      return Response.json({ events: filtered });
+      return Response.json({ events: enriched });
     }
 
     const total = await db.countWhere('events', filterOrUndef, EVENTS_SEARCH_COLS, search);
-    return Response.json({ events: filtered, ...paginationMeta(total, page, limit) });
+    return Response.json({ events: enriched, ...paginationMeta(total, page, limit) });
   } catch (err) {
     return apiError(500, 'Failed to load events', String(err));
   }

@@ -27,11 +27,18 @@ export default async function AdminEventsPage({ params }: { params: Promise<{ lo
         label_ru: 'Тип',
         type: 'select',
         defaultValue: 'event',
+        // Согласованный с БД набор (audit /admin/events: были рассинхронизированы
+        // seed-значения seminar/festival/contest/camp с формой event/webinar/...).
+        // Теперь форма содержит все реальные значения + универсальное «event».
         options: [
           { value: 'event', label_kk: 'Іс-шара', label_ru: 'Мероприятие' },
+          { value: 'seminar', label_kk: 'Семинар', label_ru: 'Семинар' },
           { value: 'webinar', label_kk: 'Вебинар', label_ru: 'Вебинар' },
           { value: 'workshop', label_kk: 'Шеберхана', label_ru: 'Мастер-класс' },
           { value: 'conference', label_kk: 'Конференция', label_ru: 'Конференция' },
+          { value: 'festival', label_kk: 'Фестиваль', label_ru: 'Фестиваль' },
+          { value: 'contest', label_kk: 'Байқау', label_ru: 'Конкурс' },
+          { value: 'camp', label_kk: 'Лагерь', label_ru: 'Лагерь' },
         ],
       },
       {
@@ -58,6 +65,7 @@ export default async function AdminEventsPage({ params }: { params: Promise<{ lo
     ],
     columns: [
       { field: 'title_ru', label_kk: 'Атауы', label_ru: 'Название' },
+      { field: 'event_type', label_kk: 'Түрі', label_ru: 'Тип' },
       { field: 'start_date', label_kk: 'Басталу', label_ru: 'Начало', format: 'datetime' },
       { field: 'location', label_kk: 'Орны', label_ru: 'Место' },
       { field: 'status', label_kk: 'Күйі', label_ru: 'Статус', format: 'status' },
