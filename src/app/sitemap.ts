@@ -27,6 +27,7 @@ const STATIC_PATHS = [
   '/game/quests',
   '/game/leaderboard',
   '/game/achievements',
+  '/culture',
   ...CULTURE_SLUGS.map((s) => `/culture/${s}`),
 ];
 

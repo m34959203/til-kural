@@ -684,6 +684,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </Link>
             ))}
           </div>
+
+          <div className="mt-8 flex justify-center">
+            <Link
+              href={`/${locale}/culture`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#0F4C81]/15 text-[#0F4C81] text-sm font-semibold hover:bg-[#0F4C81] hover:text-white transition-colors shadow-sm"
+            >
+              {isKk ? 'Барлық тақырыптар' : 'Все темы'}
+              <span aria-hidden>→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
