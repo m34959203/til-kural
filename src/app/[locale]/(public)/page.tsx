@@ -528,12 +528,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               className="group card-hover bg-gradient-to-br from-[#F5C518] to-[#E8A30C] rounded-[28px] p-7 text-white relative overflow-hidden shadow-[0_8px_32px_-4px_rgba(245,197,24,0.4)]"
             >
               <div className="absolute -bottom-8 -right-8 w-40 h-40 rounded-full bg-white/10" />
+              {/* Декоративный орнамент. На mobile уменьшен и приглушён, чтобы не
+                  перекрывать описание; aria-hidden — он чисто визуальный. */}
               <Image
                 src="/outputs/img/badge.webp"
                 alt=""
+                aria-hidden="true"
                 width={144}
                 height={144}
-                className="absolute -bottom-6 -right-6 w-36 h-36 object-contain opacity-90 group-hover:rotate-6 group-hover:scale-105 transition duration-500 drop-shadow-2xl pointer-events-none"
+                className="absolute -bottom-4 -right-4 w-20 h-20 sm:-bottom-6 sm:-right-6 sm:w-28 sm:h-28 md:w-36 md:h-36 object-contain opacity-30 sm:opacity-60 md:opacity-90 group-hover:rotate-6 group-hover:scale-105 transition duration-500 drop-shadow-2xl pointer-events-none"
               />
               <div className="w-14 h-14 rounded-2xl bg-white/25 backdrop-blur flex items-center justify-center relative z-10">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -541,7 +544,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </svg>
               </div>
               <h3 className="mt-5 text-2xl font-extrabold relative z-10">{t.feat4Title}</h3>
-              <p className="mt-2 text-white/90 text-sm leading-relaxed relative z-10">{t.feat4Desc}</p>
+              <p className="mt-2 text-white/90 text-sm leading-relaxed relative z-10 pr-16 sm:pr-20 md:pr-28">{t.feat4Desc}</p>
               <div className="mt-6 flex items-center gap-1 relative z-10">
                 <span className="text-xl">🏆</span>
                 <span className="text-xl">⭐</span>
