@@ -14,16 +14,46 @@ interface DialogTrainerProps {
   locale: string;
 }
 
-const DIALOG_TOPICS = [
-  { id: 'greetings', label_kk: 'Танысу, амандасу', label_ru: 'Знакомство, приветствие' },
-  { id: 'shopping', label_kk: 'Дүкенде сатып алу', label_ru: 'Покупки в магазине' },
-  { id: 'restaurant', label_kk: 'Мейрамханада', label_ru: 'В ресторане' },
-  { id: 'directions', label_kk: 'Жол сұрау', label_ru: 'Спросить дорогу' },
-  { id: 'doctor', label_kk: 'Дәрігерде', label_ru: 'У врача' },
-  { id: 'work', label_kk: 'Жұмыс туралы', label_ru: 'О работе' },
-  { id: 'travel', label_kk: 'Саяхат', label_ru: 'Путешествие' },
-  { id: 'free', label_kk: 'Еркін тақырып', label_ru: 'Свободная тема' },
+interface DialogTopic {
+  id: string;
+  label_kk: string;
+  label_ru: string;
+  level: 'A1' | 'A2' | 'B1' | 'B2' | 'C1';
+}
+
+// Расширенный каталог тем (audit просил 20+, было 8). Сгруппированы по
+// CEFR-уровню — на UI рендерим с фильтром по доступному уровню.
+const DIALOG_TOPICS: DialogTopic[] = [
+  // A1 — базовый бытовой
+  { id: 'greetings', label_kk: 'Танысу, амандасу', label_ru: 'Знакомство, приветствие', level: 'A1' },
+  { id: 'family', label_kk: 'Менің отбасым', label_ru: 'Моя семья', level: 'A1' },
+  { id: 'home', label_kk: 'Менің үйім', label_ru: 'Мой дом / квартира', level: 'A1' },
+  { id: 'day', label_kk: 'Менің күнім', label_ru: 'Мой день / расписание', level: 'A1' },
+  { id: 'colors', label_kk: 'Түстер мен заттар', label_ru: 'Цвета / описание предмета', level: 'A1' },
+  // A2 — расширенный бытовой
+  { id: 'shopping', label_kk: 'Дүкенде сатып алу', label_ru: 'Покупки в магазине', level: 'A2' },
+  { id: 'restaurant', label_kk: 'Мейрамханада', label_ru: 'В ресторане', level: 'A2' },
+  { id: 'directions', label_kk: 'Жол сұрау', label_ru: 'Спросить дорогу', level: 'A2' },
+  { id: 'station', label_kk: 'Вокзал, әуежай', label_ru: 'На вокзале / в аэропорту', level: 'A2' },
+  { id: 'hotel', label_kk: 'Қонақ үй', label_ru: 'В отеле / ресепшен', level: 'A2' },
+  { id: 'time', label_kk: 'Уақыт, кездесу', label_ru: 'Время / встреча по часам', level: 'A2' },
+  { id: 'doctor', label_kk: 'Дәрігерде', label_ru: 'У врача', level: 'A2' },
+  // B1 — прикладной / профессиональный
+  { id: 'work', label_kk: 'Жұмыс туралы', label_ru: 'О работе', level: 'B1' },
+  { id: 'travel', label_kk: 'Саяхат', label_ru: 'Путешествие', level: 'B1' },
+  { id: 'interview', label_kk: 'Сұхбат', label_ru: 'Интервью на работу', level: 'B1' },
+  { id: 'bank', label_kk: 'Банкте', label_ru: 'В банке / открытие счёта', level: 'B1' },
+  { id: 'rent', label_kk: 'Пәтер жалдау', label_ru: 'Аренда квартиры', level: 'B1' },
+  { id: 'emergency', label_kk: 'Жедел жәрдем (101/102/103)', label_ru: 'Звонок в экстренные службы', level: 'B1' },
+  // B2 — продвинутый
+  { id: 'business', label_kk: 'Іскерлік келіссөз', label_ru: 'Деловые переговоры', level: 'B2' },
+  { id: 'presentation', label_kk: 'Презентация', label_ru: 'Презентация / выступление', level: 'B2' },
+  { id: 'complaint', label_kk: 'Шағым / қақтығыс', label_ru: 'Жалоба / решение конфликта', level: 'B2' },
+  // Свободная (любой уровень)
+  { id: 'free', label_kk: 'Еркін тақырып', label_ru: 'Свободная тема', level: 'A1' },
 ];
+
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -51,11 +81,26 @@ type WindowWithSpeech = Window & {
 
 export default function DialogTrainer({ locale }: DialogTrainerProps) {
   const isKk = locale === 'kk';
+  const apiLocale: 'kk' | 'ru' = isKk ? 'kk' : 'ru';
   const { user } = useCurrentUser();
-  const currentLevel = user?.language_level || 'B1';
+  // Дефолт A1 (раньше был B1 — ломал новичков; см. audit P0).
+  // Если user.language_level задан — берём его как стартовое значение.
+  const [level, setLevel] = useState<string>(() => user?.language_level || 'A1');
+  const [levelTouched, setLevelTouched] = useState(false);
+  const [levelMenuOpen, setLevelMenuOpen] = useState(false);
+  useEffect(() => {
+    if (!levelTouched && user?.language_level) setLevel(user.language_level);
+  }, [user?.language_level, levelTouched]);
+
   const [mode, setMode] = useState<DialogMode>('text');
   const [mentor, setMentor] = useState<MentorKey>(DEFAULT_MENTOR);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  // Краткая сводка после завершения сессии (показывается на экране выбора тем).
+  const [sessionSummary, setSessionSummary] = useState<{
+    turns: number;
+    topicLabel: string;
+    progress?: { xp_gained?: number; current_streak?: number; level?: number; achievements_unlocked?: string[] } | null;
+  } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -114,17 +159,28 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
   const startDialog = async (topicId: string) => {
     setSelectedTopic(topicId);
     setLoading(true);
+    const topicMeta = DIALOG_TOPICS.find((t) => t.id === topicId);
+    const topicLabel = topicMeta ? (isKk ? topicMeta.label_kk : topicMeta.label_ru) : topicId;
+    const startMessage = apiLocale === 'ru'
+      ? `Начни диалог. Тема: ${topicLabel}. Опиши ситуацию ОДНИМ-ДВУМЯ предложениями и задай первый вопрос ученику.`
+      : `Диалог бастаңыз. Тақырып: ${topicLabel}. Жағдайды бір-екі сөйлеммен сипаттап, бірінші сұрақты қойыңыз.`;
     try {
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
       const res = await fetch('/api/learn/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
-          message: `Диалог бастаңыз. Тақырып: ${topicId}. Сіз жағдайды сипаттап, бірінші сұрақты қойыңыз.`,
+          message: startMessage,
           history: [],
           mentor,
-          level: currentLevel,
+          level,
+          locale: apiLocale,
           mode: 'dialog',
-          topic: topicId,
+          topic: topicLabel,
         }),
       });
       const data = await res.json();
@@ -147,16 +203,24 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
     setLoading(true);
 
     try {
+      const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
+      const topicMeta = DIALOG_TOPICS.find((t) => t.id === selectedTopic);
+      const topicLabel = topicMeta ? (isKk ? topicMeta.label_kk : topicMeta.label_ru) : selectedTopic;
       const res = await fetch('/api/learn/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           message: text,
           history: messages,
           mentor,
-          level: currentLevel,
+          level,
+          locale: apiLocale,
           mode: 'dialog',
-          topic: selectedTopic,
+          topic: topicLabel,
         }),
       });
       const data = await res.json();
@@ -198,6 +262,34 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
 
   useEffect(() => () => { stopPlayback(); stopRecognition(); }, [stopPlayback]);
 
+  // Кликабельный CEFR-selector. Заменяет статичный LevelBadge.
+  const renderLevelSelector = () => (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setLevelMenuOpen((v) => !v)}
+        className="inline-flex items-center gap-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 px-2.5 py-1 text-xs font-medium hover:bg-teal-100"
+        title={isKk ? 'Деңгейді ауыстыру' : 'Сменить уровень'}
+      >
+        {isKk ? 'Деңгей:' : 'Уровень:'} {level}
+        <span aria-hidden>▾</span>
+      </button>
+      {levelMenuOpen && (
+        <div className="absolute right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[110px]">
+          {CEFR_LEVELS.map((lv) => (
+            <button
+              key={lv}
+              onClick={() => { setLevel(lv); setLevelTouched(true); setLevelMenuOpen(false); }}
+              className={`block w-full text-left px-3 py-1.5 text-sm hover:bg-teal-50 ${level === lv ? 'font-semibold text-teal-700' : 'text-gray-700'}`}
+            >
+              {lv}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   if (mode === 'live') {
     return (
       <div>
@@ -213,11 +305,11 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <LevelBadge locale={locale} level={currentLevel} />
+            {renderLevelSelector()}
             <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
           </div>
         </div>
-        <LiveVoiceDialog locale={locale} topic={selectedTopic} level={currentLevel} />
+        <LiveVoiceDialog locale={locale} topic={selectedTopic} level={level} />
       </div>
     );
   }
@@ -237,7 +329,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <LevelBadge locale={locale} level={currentLevel} />
+            {renderLevelSelector()}
             <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
           </div>
         </div>
@@ -274,20 +366,100 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           </div>
         </div>
 
+        {sessionSummary && (
+          <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl" aria-hidden>✓</span>
+              <div className="flex-1">
+                <div className="font-semibold text-emerald-900">
+                  {isKk
+                    ? `Сессия аяқталды — «${sessionSummary.topicLabel}»`
+                    : `Сессия завершена — «${sessionSummary.topicLabel}»`}
+                </div>
+                <div className="text-sm text-emerald-800 mt-1">
+                  {isKk
+                    ? `Сіздің реплика саны: ${sessionSummary.turns}.`
+                    : `Ваших реплик: ${sessionSummary.turns}.`}
+                  {sessionSummary.progress?.xp_gained && sessionSummary.progress.xp_gained > 0 ? (
+                    <span className="ml-2 font-semibold text-emerald-900">+{sessionSummary.progress.xp_gained} XP</span>
+                  ) : null}
+                  {sessionSummary.progress?.current_streak ? (
+                    <span className="ml-2">🔥 {sessionSummary.progress.current_streak}</span>
+                  ) : null}
+                  {sessionSummary.progress?.achievements_unlocked && sessionSummary.progress.achievements_unlocked.length > 0 ? (
+                    <span className="ml-2">🏆 {sessionSummary.progress.achievements_unlocked.length}</span>
+                  ) : null}
+                </div>
+                {sessionSummary.turns > 0 && sessionSummary.turns < 4 && (
+                  <p className="text-xs text-emerald-700 mt-2">
+                    {isKk
+                      ? 'Тағы ұзағырақ сөйлесіңіз — XP 4+ репликадан есептеледі.'
+                      : 'Поговорите чуть дольше — XP начисляется от 4 реплик.'}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => setSessionSummary(null)}
+                className="text-emerald-700 hover:text-emerald-900 text-sm"
+                aria-label={isKk ? 'Жабу' : 'Закрыть'}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="text-sm font-semibold text-gray-700 mb-2">
           {isKk ? 'Тақырып' : 'Тема'}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {DIALOG_TOPICS.map((topic) => (
-            <Card key={topic.id} hover className="cursor-pointer" padding="md">
-              <button onClick={() => startDialog(topic.id)} className="text-left w-full">
-                <h3 className="font-medium text-gray-900">
-                  {isKk ? topic.label_kk : topic.label_ru}
-                </h3>
-              </button>
-            </Card>
-          ))}
-        </div>
+        {(['A1', 'A2', 'B1', 'B2'] as const).map((lvl) => {
+          const topics = DIALOG_TOPICS.filter((t) => t.level === lvl);
+          if (topics.length === 0) return null;
+          return (
+            <div key={lvl} className="mb-4">
+              <div className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-1.5">
+                {lvl}
+                {' '}
+                <span className="text-gray-400 normal-case font-normal">
+                  · {topics.length} {isKk ? 'тақырып' : 'тем'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {topics.map((topic) => (
+                  <Card key={topic.id} hover className="cursor-pointer" padding="md">
+                    <button onClick={() => startDialog(topic.id)} className="text-left w-full">
+                      <h3 className="font-medium text-gray-900">
+                        {isKk ? topic.label_kk : topic.label_ru}
+                      </h3>
+                    </button>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {/* Свободная тема — отдельно, без уровня */}
+        {(() => {
+          const free = DIALOG_TOPICS.find((t) => t.id === 'free');
+          if (!free) return null;
+          return (
+            <div className="mb-4">
+              <div className="text-xs uppercase tracking-wider font-semibold text-gray-500 mb-1.5">
+                {isKk ? 'Кез келген деңгей' : 'Любой уровень'}
+              </div>
+              <Card hover className="cursor-pointer" padding="md">
+                <button onClick={() => startDialog(free.id)} className="text-left w-full">
+                  <h3 className="font-medium text-gray-900">
+                    💬 {isKk ? free.label_kk : free.label_ru}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {isKk ? 'AI өзіңіз қалаған кез келген тақырыпта сөйлеседі' : 'AI поговорит на любую тему по вашему выбору'}
+                  </p>
+                </button>
+              </Card>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -309,7 +481,7 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <LevelBadge locale={locale} level={currentLevel} />
+          {renderLevelSelector()}
           <ModeSwitch locale={locale} mode={mode} onChange={setMode} speechSupported={speechSupported} />
           <Button
             variant="ghost"
@@ -320,6 +492,8 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
               // Финализация: сообщаем серверу о завершении диалог-сессии,
               // чтобы начислить XP / streak / achievements за live-разговор.
               const userTurns = messages.filter((m) => m.role === 'user').length;
+              const topicMeta = DIALOG_TOPICS.find((t) => t.id === selectedTopic);
+              const topicLabel = topicMeta ? (isKk ? topicMeta.label_kk : topicMeta.label_ru) : (selectedTopic ?? '');
               if (userTurns > 0) {
                 const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
                 fetch('/api/dialog/finish', {
@@ -330,11 +504,22 @@ export default function DialogTrainer({ locale }: DialogTrainerProps) {
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                   },
                   body: JSON.stringify({
-                    topic: selectedTopic ?? null,
+                    topic: topicLabel,
                     turns: userTurns,
                     mentor: mentorProfile.key,
                   }),
-                }).catch(() => { /* не блокируем UX */ });
+                })
+                  .then((r) => (r.ok ? r.json() : null))
+                  .then((data) => {
+                    setSessionSummary({
+                      turns: userTurns,
+                      topicLabel,
+                      progress: data?.progress ?? null,
+                    });
+                  })
+                  .catch(() => {
+                    setSessionSummary({ turns: userTurns, topicLabel, progress: null });
+                  });
               }
               setSelectedTopic(null);
               setMessages([]);
@@ -455,10 +640,28 @@ function ModeSwitch({
   speechSupported: boolean;
 }) {
   const isKk = locale === 'kk';
-  const modes: { id: DialogMode; label_kk: string; label_ru: string; hint_kk?: string; hint_ru?: string }[] = [
-    { id: 'text', label_kk: '📝 Мәтін', label_ru: '📝 Текст' },
-    { id: 'voice-loop', label_kk: '🎙️ Дауыс (цикл)', label_ru: '🎙️ Голос (цикл)' },
-    { id: 'live', label_kk: '📡 Live', label_ru: '📡 Live' },
+  const modes: { id: DialogMode; label_kk: string; label_ru: string; hint_kk: string; hint_ru: string }[] = [
+    {
+      id: 'text',
+      label_kk: '📝 Мәтін',
+      label_ru: '📝 Текст',
+      hint_kk: 'Жауаптарды жазу — қарапайым чат',
+      hint_ru: 'Печатайте ответы в чат',
+    },
+    {
+      id: 'voice-loop',
+      label_kk: '🎙️ Дауыс (цикл)',
+      label_ru: '🎙️ Голос (цикл)',
+      hint_kk: 'Сіз сөйлейсіз — AI естиді және дауыспен жауап береді',
+      hint_ru: 'Скажите ответ — AI услышит и ответит голосом',
+    },
+    {
+      id: 'live',
+      label_kk: '📡 Live',
+      label_ru: '📡 Live',
+      hint_kk: 'Telefondegidey тірі диалог — нақты уақытта',
+      hint_ru: 'Живой разговор в реальном времени, как по телефону',
+    },
   ];
   return (
     <div>
@@ -467,6 +670,7 @@ function ModeSwitch({
           <button
             key={m.id}
             onClick={() => onChange(m.id)}
+            title={isKk ? m.hint_kk : m.hint_ru}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               mode === m.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
             }`}
