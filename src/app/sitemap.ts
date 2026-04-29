@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getBaseUrl } from '@/lib/seo';
 import { db } from '@/lib/db';
+import { CULTURE_SLUGS } from '@/data/culture-topics';
 
 const STATIC_PATHS = [
   '',
@@ -26,6 +27,7 @@ const STATIC_PATHS = [
   '/game/quests',
   '/game/leaderboard',
   '/game/achievements',
+  ...CULTURE_SLUGS.map((s) => `/culture/${s}`),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

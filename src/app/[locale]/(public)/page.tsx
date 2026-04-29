@@ -206,20 +206,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const cultureCards = [
     {
+      slug: 'yurt',
       img: '/outputs/img/yurt.webp',
       cat: isKk ? 'Тұрмыс' : 'Быт',
       title: isKk ? 'Киіз үй' : 'Юрта',
-      sub: isKk ? 'Шаңырақ, уық, кереге' : 'Шанырак, уык, кереге',
+      sub: isKk ? 'Шаңырақ, уық, кереге' : 'Шанырақ, ұық, кереге',
       grad: 'from-[#0F4C81] to-[#0B1E3D]',
     },
     {
+      slug: 'dombra',
       img: '/outputs/img/dombra.webp',
       cat: isKk ? 'Өнер' : 'Искусство',
       title: isKk ? 'Домбыра' : 'Домбра',
-      sub: isKk ? 'Күй, терме, жыр' : 'Кюй, терме, жыр',
+      sub: isKk ? 'Күй, терме, жыр' : 'Күй, терме, жыр',
       grad: 'from-[#C2461A] to-[#E8A30C]',
     },
     {
+      slug: 'nature',
       img: '/outputs/img/tulips.webp',
       cat: isKk ? 'Табиғат' : 'Природа',
       title: isKk ? 'Қызғалдақ' : 'Тюльпан',
@@ -227,6 +230,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       grad: 'from-[#F5C518] to-[#C2461A]',
     },
     {
+      slug: 'cities',
       img: '/outputs/img/astana.webp',
       cat: isKk ? 'Қала' : 'Город',
       title: isKk ? 'Астана' : 'Астана',
@@ -655,8 +659,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {cultureCards.map((c) => (
               <Link
-                key={c.title}
-                href={`/${locale}/learn`}
+                key={c.slug}
+                href={`/${locale}/culture/${c.slug}`}
+                aria-label={`${c.cat} — ${c.title}: ${c.sub}`}
                 className={`group card-hover relative aspect-square rounded-[24px] overflow-hidden bg-gradient-to-br ${c.grad} border border-white/10 shadow-[0_4px_24px_-4px_rgba(15,76,129,0.12)]`}
               >
                 <Image
@@ -667,9 +672,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   className="object-cover group-hover:scale-105 transition duration-700"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0B1E3D] via-[#0B1E3D]/60 to-transparent">
-                  <div className="text-[#F5C518] text-[10px] font-extrabold tracking-widest uppercase">{c.cat}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[#F5C518] text-xs font-extrabold tracking-widest uppercase">{c.cat}</div>
+                    <span className="text-white/70 text-xs group-hover:text-white group-hover:translate-x-0.5 transition" aria-hidden>
+                      →
+                    </span>
+                  </div>
                   <div className="text-white text-xl font-extrabold mt-1">{c.title}</div>
-                  <div className="text-white/70 text-xs mt-0.5">{c.sub}</div>
+                  <div className="text-white/80 text-xs mt-0.5">{c.sub}</div>
                 </div>
               </Link>
             ))}
