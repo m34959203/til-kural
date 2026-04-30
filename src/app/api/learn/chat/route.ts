@@ -1,6 +1,7 @@
 import { chatWithAI } from '@/lib/gemini';
 import { buildRAGContext, getTeacherSystemPrompt } from '@/lib/kazakh-rules';
 import { getUserFromRequest } from '@/lib/auth';
+import { aiQuotaErrorResponse } from '@/lib/api';
 
 const VALID_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
@@ -24,6 +25,8 @@ export async function POST(request: Request) {
     // Locale: явно из body, иначе считаем kk (старое поведение).
     const locale: 'kk' | 'ru' = localeInput === 'ru' ? 'ru' : 'kk';
 
+    const user = await getUserFromRequest(request);
+
     // Level resolution. Приоритеты:
     //   1. body.level (если валиден).
     //   2. user.language_level из БД (если авторизован).
@@ -31,11 +34,8 @@ export async function POST(request: Request) {
     let level = 'A1';
     if (typeof levelInput === 'string' && VALID_LEVELS.has(levelInput)) {
       level = levelInput;
-    } else {
-      const user = await getUserFromRequest(request);
-      if (user?.language_level && VALID_LEVELS.has(user.language_level)) {
-        level = user.language_level;
-      }
+    } else if (user?.language_level && VALID_LEVELS.has(user.language_level)) {
+      level = user.language_level;
     }
 
     const ragContext = buildRAGContext(message, level);
@@ -87,10 +87,13 @@ export async function POST(request: Request) {
         role: h.role,
         content: h.content,
       })),
+      { purpose: mode === 'dialog' ? 'chat-dialog' : 'chat', userId: user?.id ?? null },
     );
 
     return Response.json({ reply, level, locale });
   } catch (error) {
+    const quota = aiQuotaErrorResponse(error);
+    if (quota) return quota;
     return Response.json({ error: 'Chat failed', details: String(error) }, { status: 500 });
   }
 }

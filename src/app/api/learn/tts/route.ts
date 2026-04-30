@@ -1,5 +1,6 @@
 import { generateSpeech, getPronunciationGuide } from '@/lib/tts';
-import { apiError } from '@/lib/api';
+import { apiError, aiQuotaErrorResponse } from '@/lib/api';
+import { getUserFromRequest } from '@/lib/auth';
 
 const ALLOWED_VOICES = new Set([
   'Aoede', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr',
@@ -25,19 +26,24 @@ export async function POST(request: Request) {
       if (lastDot > 1200) clean = clean.slice(0, lastDot + 1);
     }
 
+    const user = await getUserFromRequest(request);
+    const userId = user?.id ?? null;
+
     if (mode === 'guide') {
-      const guide = await getPronunciationGuide(clean, locale);
+      const guide = await getPronunciationGuide(clean, locale, { userId });
       return Response.json({ guide });
     }
 
     const chosenVoice = typeof voice === 'string' && ALLOWED_VOICES.has(voice) ? voice : 'Aoede';
-    const audio = await generateSpeech(clean, chosenVoice);
+    const audio = await generateSpeech(clean, chosenVoice, { userId });
     if (!audio) {
-      const guide = await getPronunciationGuide(clean, locale);
+      const guide = await getPronunciationGuide(clean, locale, { userId });
       return Response.json({ audio: null, guide, fallback: 'browser-tts' });
     }
     return Response.json({ audio });
   } catch (err) {
+    const quota = aiQuotaErrorResponse(err);
+    if (quota) return quota;
     return apiError(500, 'TTS failed', String(err));
   }
 }

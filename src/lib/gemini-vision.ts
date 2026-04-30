@@ -121,10 +121,11 @@ ${RULE_SLUGS_HINT}
 export async function checkPhotoText(
   imageBase64: string,
   mimeType: string,
-  locale: 'kk' | 'ru' = 'kk'
+  locale: 'kk' | 'ru' = 'kk',
+  userId: string | null = null,
 ): Promise<PhotoCheckResult> {
   const prompt = buildPrompt(locale);
-  const response = await analyzeImage(imageBase64, mimeType, prompt);
+  const response = await analyzeImage(imageBase64, mimeType, prompt, { purpose: 'photo-check', userId });
 
   try {
     const cleaned = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

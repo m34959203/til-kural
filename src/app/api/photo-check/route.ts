@@ -2,6 +2,7 @@ import { checkPhotoText } from '@/lib/gemini-vision';
 import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { awardProgress } from '@/lib/award-progress';
+import { aiQuotaErrorResponse } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
@@ -22,11 +23,11 @@ export async function POST(request: Request) {
     const mimeType = match[1];
     const base64Data = match[2];
 
-    const result = await checkPhotoText(base64Data, mimeType, locale);
+    const user = await getUserFromRequest(request);
+    const result = await checkPhotoText(base64Data, mimeType, locale, user?.id ?? null);
 
     // Persist record (если user_id не резолвится — пропускаем, не падаем)
     let checkId: string | null = null;
-    const user = await getUserFromRequest(request);
     if (user) {
       try {
         const row = await db.insert('photo_checks', {
@@ -50,6 +51,8 @@ export async function POST(request: Request) {
 
     return Response.json({ result, id: checkId, locale });
   } catch (error) {
+    const quota = aiQuotaErrorResponse(error);
+    if (quota) return quota;
     return Response.json({ error: 'Photo check failed', details: String(error) }, { status: 500 });
   }
 }

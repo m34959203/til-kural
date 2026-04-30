@@ -65,6 +65,21 @@ export function apiError(status: number, message: string, details?: unknown) {
   return Response.json({ error: message, details }, { status });
 }
 
+/**
+ * Если в catch-блок прилетел QuotaExceededError — превращаем в 429 с Retry-After.
+ * Возвращает null если ошибка не квотная — вызывающий продолжает свой обработчик.
+ */
+export function aiQuotaErrorResponse(err: unknown): Response | null {
+  if (err && typeof err === 'object' && (err as { name?: string }).name === 'QuotaExceededError') {
+    const e = err as { message: string; scope: string; retryAfterSec: number };
+    return Response.json(
+      { error: 'AI quota exceeded', scope: e.scope, retry_after_sec: e.retryAfterSec, message: e.message },
+      { status: 429, headers: { 'Retry-After': String(e.retryAfterSec) } },
+    );
+  }
+  return null;
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Возвращает true для строк, похожих на UUID v1-v5. */

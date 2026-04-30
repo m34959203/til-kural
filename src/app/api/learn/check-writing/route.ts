@@ -2,6 +2,7 @@ import { checkWriting } from '@/lib/gemini';
 import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { awardProgress } from '@/lib/award-progress';
+import { aiQuotaErrorResponse } from '@/lib/api';
 
 const VALID_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 const VALID_GENRES = new Set(['free', 'letter', 'essay', 'application', 'sms', 'congrats']);
@@ -20,7 +21,8 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Text is required' }, { status: 400 });
     }
 
-    const raw = await checkWriting(text, level, { locale, genre });
+    const user = await getUserFromRequest(request);
+    const raw = await checkWriting(text, level, { locale, genre, userId: user?.id ?? null });
 
     let parsed: {
       score: number;
@@ -43,7 +45,6 @@ export async function POST(request: Request) {
     }
 
     let checkId: string | null = null;
-    const user = await getUserFromRequest(request);
     if (user) {
       try {
         const row = await db.insert('writing_checks', {
@@ -65,6 +66,8 @@ export async function POST(request: Request) {
 
     return Response.json({ result: parsed, id: checkId, level, locale, genre });
   } catch (error) {
+    const quota = aiQuotaErrorResponse(error);
+    if (quota) return quota;
     return Response.json({ error: 'Writing check failed', details: String(error) }, { status: 500 });
   }
 }

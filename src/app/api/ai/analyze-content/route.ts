@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { requireAdminApi, apiError } from '@/lib/api';
+import { requireAdminApi, apiError, aiQuotaErrorResponse } from '@/lib/api';
 import { AIAnalysisSchema, type AIAnalysis } from '@/lib/validators';
+import { assertQuota } from '@/lib/ai-quota';
+import { approxTokens, logGeneration } from '@/lib/ai-log';
+
+const ANALYZE_MODEL = 'gemini-2.5-flash';
 
 /**
  * POST /api/ai/analyze-content
@@ -139,11 +143,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const client = new GoogleGenerativeAI(apiKey);
-    const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    await assertQuota(ANALYZE_MODEL);
 
+    const client = new GoogleGenerativeAI(apiKey);
+    const model = client.getGenerativeModel({ model: ANALYZE_MODEL });
+
+    const userMessage = buildUserMessage(body);
+    const startedAt = Date.now();
     const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: buildUserMessage(body) }] }],
+      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
       systemInstruction: SYSTEM_PROMPT,
       // Просим модель отдавать JSON — строгий mode не всегда доступен для
       // gemini-2.5-flash, поэтому дублируем требование в системке.
@@ -151,6 +159,17 @@ export async function POST(request: Request) {
     });
 
     const raw = result.response.text();
+    const usage = (result.response as unknown as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
+    await logGeneration({
+      provider: 'gemini',
+      model: ANALYZE_MODEL,
+      purpose: 'analyze-content',
+      promptTokens: usage?.promptTokenCount ?? approxTokens(SYSTEM_PROMPT + userMessage),
+      completionTokens: usage?.candidatesTokenCount ?? approxTokens(raw),
+      durationMs: Date.now() - startedAt,
+      userId: auth.id,
+    });
+
     const cleaned = stripCodeFences(raw);
 
     let parsed: unknown;
@@ -169,6 +188,8 @@ export async function POST(request: Request) {
 
     return Response.json({ analysis: safe.data });
   } catch (err) {
+    const quota = aiQuotaErrorResponse(err);
+    if (quota) return quota;
     console.error('[analyze-content] gemini call failed', err);
     return apiError(500, 'AI analysis failed', String(err));
   }

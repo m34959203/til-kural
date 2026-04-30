@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { assertQuota } from './ai-quota';
+import { approxTokens, logGeneration } from './ai-log';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
+const TEXT_MODEL = 'gemini-2.5-flash';
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -11,17 +14,29 @@ function getClient(): GoogleGenerativeAI {
   return genAI;
 }
 
+interface CallContext {
+  /** Назначение вызова — пишется в ai_generations.purpose. */
+  purpose: string;
+  /** ID пользователя, если есть. */
+  userId?: string | null;
+}
+
+const DEFAULT_CTX: CallContext = { purpose: 'chat' };
+
 export async function chatWithAI(
   systemPrompt: string,
   userMessage: string,
-  history: { role: string; content: string }[] = []
+  history: { role: string; content: string }[] = [],
+  ctx: CallContext = DEFAULT_CTX,
 ): Promise<string> {
   if (!apiKey) {
     return simulateAIResponse(userMessage);
   }
 
+  await assertQuota(TEXT_MODEL);
+
   const client = getClient();
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = client.getGenerativeModel({ model: TEXT_MODEL });
 
   const contents = [
     ...history.map((h) => ({
@@ -31,26 +46,48 @@ export async function chatWithAI(
     { role: 'user', parts: [{ text: userMessage }] },
   ];
 
+  const startedAt = Date.now();
   const result = await model.generateContent({
     contents,
     systemInstruction: systemPrompt,
   });
+  const text = result.response.text();
+  const durationMs = Date.now() - startedAt;
 
-  return result.response.text();
+  // Gemini SDK иногда возвращает usageMetadata, иногда нет — fallback на approxTokens.
+  const usage = (result.response as unknown as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
+  const promptTokens = usage?.promptTokenCount ?? approxTokens(systemPrompt + userMessage + history.map((h) => h.content).join(''));
+  const completionTokens = usage?.candidatesTokenCount ?? approxTokens(text);
+
+  await logGeneration({
+    provider: 'gemini',
+    model: TEXT_MODEL,
+    purpose: ctx.purpose,
+    promptTokens,
+    completionTokens,
+    durationMs,
+    userId: ctx.userId ?? null,
+  });
+
+  return text;
 }
 
 export async function analyzeImage(
   imageBase64: string,
   mimeType: string,
-  prompt: string
+  prompt: string,
+  ctx: CallContext = { purpose: 'vision' },
 ): Promise<string> {
   if (!apiKey) {
     return simulatePhotoCheckResponse();
   }
 
-  const client = getClient();
-  const model = client.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  await assertQuota(TEXT_MODEL);
 
+  const client = getClient();
+  const model = client.getGenerativeModel({ model: TEXT_MODEL });
+
+  const startedAt = Date.now();
   const result = await model.generateContent([
     { text: prompt },
     {
@@ -60,8 +97,26 @@ export async function analyzeImage(
       },
     },
   ]);
+  const text = result.response.text();
+  const durationMs = Date.now() - startedAt;
 
-  return result.response.text();
+  const usage = (result.response as unknown as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
+  // Для vision-вызова реальный promptTokens включает картинку — usage надёжнее approx,
+  // если её нет — добавляем фиксированный «image footprint» 258 токенов (gemini-2.5-flash).
+  const promptTokens = usage?.promptTokenCount ?? (approxTokens(prompt) + 258);
+  const completionTokens = usage?.candidatesTokenCount ?? approxTokens(text);
+
+  await logGeneration({
+    provider: 'gemini',
+    model: TEXT_MODEL,
+    purpose: ctx.purpose,
+    promptTokens,
+    completionTokens,
+    durationMs,
+    userId: ctx.userId ?? null,
+  });
+
+  return text;
 }
 
 export interface ExerciseGenContext {
@@ -75,6 +130,8 @@ export interface ExerciseGenContext {
   targetGrammar?: string[];
   /** Локаль интерфейса — на каком языке давать пояснения. По умолчанию kk. */
   locale?: 'kk' | 'ru';
+  /** ID пользователя — для логирования. */
+  userId?: string | null;
 }
 
 export async function generateExercises(
@@ -184,7 +241,7 @@ ${formatNote}
     ? `Сделай 5 упражнений по теме «${ctx.lessonTitle || topic}» (категория: ${topic}, уровень ${level}, режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`
     : `${ctx.lessonTitle || topic} тақырыбынан ${level} деңгейіне сай 5 жаттығу жаса (категория: ${topic}, режим: ${difficultyTag}${scorePct !== null ? `, avg_score=${scorePct}%` : ''}).`;
 
-  return chatWithAI(systemPrompt, userMessage);
+  return chatWithAI(systemPrompt, userMessage, [], { purpose: 'exercises', userId: ctx.userId ?? null });
 }
 
 export interface WritingCheckOptions {
@@ -192,6 +249,8 @@ export interface WritingCheckOptions {
   locale?: 'kk' | 'ru';
   /** Жанр текста: free / letter / essay / application / sms / congrats. */
   genre?: string;
+  /** ID пользователя — для логирования. */
+  userId?: string | null;
 }
 
 export async function checkWriting(text: string, level: string, opts: WritingCheckOptions = {}): Promise<string> {
@@ -277,7 +336,7 @@ ${genreNote}
   "strengths": ["сильная сторона на русском", "..."],
   "improvements": ["что улучшить на русском", "..."]
 }`;
-    return chatWithAI(systemPrompt, `Проверь текст: """${text}"""`);
+    return chatWithAI(systemPrompt, `Проверь текст: """${text}"""`, [], { purpose: 'writing-check', userId: opts.userId ?? null });
   }
 
   // locale === 'kk'
@@ -315,7 +374,7 @@ JSON схемасы:
   "strengths": ["..."],
   "improvements": ["..."]
 }`;
-  return chatWithAI(systemPrompt, `Мәтінді тексер: """${text}"""`);
+  return chatWithAI(systemPrompt, `Мәтінді тексер: """${text}"""`, [], { purpose: 'writing-check', userId: opts.userId ?? null });
 }
 
 function simulateAIResponse(message: string): string {

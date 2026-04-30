@@ -1,7 +1,10 @@
 import { generateExercises } from '@/lib/gemini';
+import { getUserFromRequest } from '@/lib/auth';
+import { aiQuotaErrorResponse } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
+    const user = await getUserFromRequest(request);
     const body = await request.json();
     const topic: string = body?.topic ?? 'grammar';
     const level: string = body?.level ?? 'B1';
@@ -28,6 +31,7 @@ export async function POST(request: Request) {
       targetVocab,
       targetGrammar,
       locale,
+      userId: user?.id ?? null,
     });
 
     let difficulty: 'basic' | 'standard' | 'advanced' = 'standard';
@@ -73,6 +77,8 @@ export async function POST(request: Request) {
       });
     }
   } catch (error) {
+    const quota = aiQuotaErrorResponse(error);
+    if (quota) return quota;
     return Response.json({ error: 'Failed to generate exercises', details: String(error) }, { status: 500 });
   }
 }

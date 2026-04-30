@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Settings,
   Home,
+  Activity,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -85,6 +86,7 @@ export default function AdminSidebar({ locale }: AdminSidebarProps) {
       title_ru: 'Система',
       items: [
         { href: `/${locale}/admin/settings`, label_kk: 'Баптаулар', label_ru: 'Настройки сайта', Icon: Settings },
+        { href: `/${locale}/admin/ai-usage`, label_kk: 'AI квоталары', label_ru: 'Квоты AI', Icon: Activity },
         { href: `/${locale}/admin/audit`, label_kk: 'Аудит журналы', label_ru: 'Журнал аудита', Icon: ShieldCheck },
       ],
     },

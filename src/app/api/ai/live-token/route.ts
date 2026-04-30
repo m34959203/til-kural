@@ -1,7 +1,10 @@
 import { GoogleGenAI, Modality } from '@google/genai';
-import { apiError } from '@/lib/api';
+import { apiError, aiQuotaErrorResponse } from '@/lib/api';
 import { MENTORS, type MentorKey } from '@/lib/mentors';
 import { getTeacherSystemPrompt } from '@/lib/kazakh-rules';
+import { assertQuota } from '@/lib/ai-quota';
+import { logGeneration, approxTokens } from '@/lib/ai-log';
+import { getUserFromRequest } from '@/lib/auth';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 
@@ -12,6 +15,10 @@ export async function POST(request: Request) {
   if (!apiKey) return apiError(500, 'GEMINI_API_KEY not set');
 
   try {
+    // Live API — самый дорогой по квоте Gemini-сервис: одна сессия может тратить
+    // десятки минут аудио. Гард строго до выпуска ephemeral-токена.
+    await assertQuota(MODEL);
+    const user = await getUserFromRequest(request);
     const body = await request.json().catch(() => ({}));
     const mentorKey = (body.mentor as MentorKey) in MENTORS ? (body.mentor as MentorKey) : 'abai';
     const level: string = typeof body.level === 'string' ? body.level : 'B1';
@@ -58,6 +65,19 @@ ${topic ? `4. Тақырыбы: ${topic}.` : ''}`;
       },
     });
 
+    // Логируем сам факт выдачи токена. Реальные токены сессии (аудио in/out)
+    // мы из бэкенда не видим, поэтому ставим оценку для system-prompt; это
+    // даёт верхнюю оценку RPD/RPM (одна сессия = одна запись).
+    await logGeneration({
+      provider: 'gemini',
+      model: MODEL,
+      purpose: 'live-token',
+      promptTokens: approxTokens(systemPrompt),
+      completionTokens: 0,
+      durationMs: 0,
+      userId: user?.id ?? null,
+    });
+
     return Response.json({
       token: token.name,
       model: MODEL,
@@ -72,6 +92,8 @@ ${topic ? `4. Тақырыбы: ${topic}.` : ''}`;
       },
     });
   } catch (err) {
+    const quota = aiQuotaErrorResponse(err);
+    if (quota) return quota;
     console.error('[live-token] failed', err);
     return apiError(500, 'Failed to create live token', String(err));
   }
