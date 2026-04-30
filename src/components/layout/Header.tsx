@@ -204,20 +204,20 @@ export default function Header({ locale, messages, menuItems }: HeaderProps) {
             />
             <NavDropdown
               label={locale === 'kk' ? 'Орталық' : 'О центре'}
-              active={pathname.startsWith(`/${locale}/about`) || pathname.startsWith(`/${locale}/events`) || pathname.startsWith(`/${locale}/rules`) || pathname.startsWith(`/${locale}/resources`)}
+              active={pathname.startsWith(`/${locale}/about`) || pathname.startsWith(`/${locale}/contacts`) || pathname.startsWith(`/${locale}/rules`) || pathname.startsWith(`/${locale}/resources`)}
               items={[
                 { href: `/${locale}/about`, label_kk: 'Біз туралы', label_ru: 'О нас', desc_kk: 'Тарих, бөлімдер, қызметкерлер', desc_ru: 'История, отделы, сотрудники', icon: '🏛' },
-                { href: `/${locale}/events`, label_kk: 'Іс-шаралар', label_ru: 'События', desc_kk: 'Күнтізбе және жаңалықтар', desc_ru: 'Календарь и анонсы', icon: '📅' },
+                { href: `/${locale}/contacts`, label_kk: 'Байланыс', label_ru: 'Контакты', desc_kk: 'Мекен-жай, телефон, карта', desc_ru: 'Адрес, телефон, карта', icon: '📞' },
                 { href: `/${locale}/rules`, label_kk: 'Ережелер', label_ru: 'Правила', desc_kk: 'Нормативтік құжаттар', desc_ru: 'Нормативные документы', icon: '📜' },
                 { href: `/${locale}/resources`, label_kk: 'Ресурстар', label_ru: 'Ресурсы', desc_kk: 'Пайдалы сілтемелер', desc_ru: 'Полезные ссылки', icon: '🔗' },
               ]}
               locale={locale}
             />
+            <NavLink href={`/${locale}/events`} active={pathname.startsWith(`/${locale}/events`)}>
+              {locale === 'kk' ? 'Іс-шаралар' : 'Мероприятия'}
+            </NavLink>
             <NavLink href={`/${locale}/news`} active={pathname.startsWith(`/${locale}/news`)}>
               {locale === 'kk' ? 'Жаңалықтар' : 'Новости'}
-            </NavLink>
-            <NavLink href={`/${locale}/contacts`} active={pathname.startsWith(`/${locale}/contacts`)}>
-              {locale === 'kk' ? 'Байланыс' : 'Контакты'}
             </NavLink>
           </nav>
 

@@ -133,7 +133,7 @@ export default function AdminProfile({ locale, user }: AdminProfileProps) {
         {metricBadge(totals?.test_sessions, isKk ? 'Сессиялар' : 'Сессии', 'bg-indigo-50 text-indigo-900 border-indigo-100')}
         {metricBadge(totals?.certificates, isKk ? 'Сертификат' : 'Сертификаты', 'bg-emerald-50 text-emerald-900 border-emerald-100')}
         {metricBadge(totals?.news, isKk ? 'Жаңалықтар' : 'Новости', 'bg-sky-50 text-sky-900 border-sky-100')}
-        {metricBadge(totals?.events, isKk ? 'Іс-шаралар' : 'События', 'bg-orange-50 text-orange-900 border-orange-100')}
+        {metricBadge(totals?.events, isKk ? 'Іс-шаралар' : 'Мероприятия', 'bg-orange-50 text-orange-900 border-orange-100')}
         {metricBadge(totals?.photo_checks, isKk ? 'Фото' : 'Фото', 'bg-rose-50 text-rose-900 border-rose-100')}
       </div>
 

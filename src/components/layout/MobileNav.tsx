@@ -57,6 +57,7 @@ export default function MobileNav({ locale }: MobileNavProps) {
     { href: `/test`, label: locale === 'kk' ? 'Тест' : 'Тест' },
     { href: `/photo-check`, label: locale === 'kk' ? 'Фото-тексеру' : 'Фото-проверка' },
     { href: `/game`, label: locale === 'kk' ? 'Ойын' : 'Игра' },
+    { href: `/events`, label: locale === 'kk' ? 'Іс-шаралар' : 'Мероприятия' },
     { href: `/news`, label: locale === 'kk' ? 'Жаңалықтар' : 'Новости' },
     { href: `/resources`, label: locale === 'kk' ? 'Ресурстар' : 'Ресурсы' },
   ].map((i) => ({ href: `/${locale}${i.href}`, label: i.label }));
