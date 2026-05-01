@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * Kazakh TTS via Gemini (gemini-3.1-flash-tts-preview — supports 70+ langs incl. kk-KZ).
  * Google Cloud TTS has no kk-KZ voice, so Gemini is the right pick here.
  */
 
-import { assertQuota } from './ai-quota';
+import { createHash } from 'node:crypto';
+import { assertQuota, assertUserQuota } from './ai-quota';
 import { approxTokens, logGeneration } from './ai-log';
+import { db } from './db';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 const TTS_MODEL = process.env.GEMINI_TTS_MODEL || 'gemini-3.1-flash-tts-preview';
@@ -21,9 +21,74 @@ export interface TTSResult {
 
 interface CallContext {
   userId?: string | null;
+  /**
+   * userKey для per-user-квоты. Если задан — assertUserQuota вызывается ТОЛЬКО
+   * при cache-miss, чтобы кеш-хиты не «жрали» дневной лимит юзера.
+   */
+  userKey?: string;
 }
 
-const cache = new Map<string, TTSResult>();
+// In-memory hot-cache (mirror of persistent layer для уменьшения round-trip к БД).
+const memCache = new Map<string, TTSResult>();
+const MEM_CACHE_MAX = 200;
+
+function ttsCacheKey(model: string, voice: string, text: string): string {
+  return createHash('sha256').update(`${model}::${voice}::${text}`).digest('hex');
+}
+
+async function lookupTtsCache(key: string): Promise<TTSResult | null> {
+  const hit = memCache.get(key);
+  if (hit) return hit;
+  try {
+    if (db.isPostgres) {
+      const rows = await db.raw<{ audio_base64: string; mime_type: string }>(
+        `UPDATE tts_cache SET hits = hits + 1, last_hit_at = NOW()
+         WHERE cache_key = $1
+         RETURNING audio_base64, mime_type`,
+        [key],
+      );
+      if (rows[0]) {
+        const result = { audioBase64: rows[0].audio_base64, mimeType: rows[0].mime_type };
+        memCache.set(key, result);
+        return result;
+      }
+    } else {
+      const rows = await db.query('tts_cache', { cache_key: key });
+      const row = rows[0] as { audio_base64?: string; mime_type?: string } | undefined;
+      if (row?.audio_base64) {
+        const result = { audioBase64: row.audio_base64, mimeType: row.mime_type || 'audio/wav' };
+        memCache.set(key, result);
+        return result;
+      }
+    }
+  } catch (err) {
+    console.warn('[tts] cache lookup failed:', err);
+  }
+  return null;
+}
+
+async function storeTtsCache(
+  key: string, model: string, voice: string, text: string, result: TTSResult,
+): Promise<void> {
+  if (memCache.size >= MEM_CACHE_MAX) memCache.clear();
+  memCache.set(key, result);
+  try {
+    await db.insert('tts_cache', {
+      cache_key: key,
+      model,
+      voice,
+      text_preview: text.slice(0, 160),
+      audio_base64: result.audioBase64,
+      mime_type: result.mimeType,
+    });
+  } catch (err) {
+    // Уникальный конфликт (race condition при параллельном генерировании одной фразы)
+    // и недоступность БД — некритично; in-memory кеш уже отработал.
+    if (!String(err).includes('duplicate key')) {
+      console.warn('[tts] cache insert failed:', err);
+    }
+  }
+}
 
 // Minimal 16-bit PCM → WAV wrapper
 function pcmToWav(pcm: Buffer, sampleRate = 24000, channels = 1, bitsPerSample = 16): Buffer {
@@ -55,10 +120,14 @@ function parseSampleRate(mime: string, fallback = 24000) {
 
 export async function generateSpeech(text: string, voice = 'Aoede', ctx: CallContext = {}): Promise<TTSResult | null> {
   if (!apiKey || !text?.trim()) return null;
-  const key = `${voice}::${text}`;
-  if (cache.has(key)) return cache.get(key)!;
+  const key = ttsCacheKey(TTS_MODEL, voice, text);
 
-  // Cache hit не считаем — реального вызова нет. Гард только перед сетевым запросом.
+  // 1) Persistent + memory cache — нет сетевого вызова, нет квоты, нет лога.
+  const cached = await lookupTtsCache(key);
+  if (cached) return cached;
+
+  // 2) Только при cache miss — гард квоты (per-user → global) и реальный вызов Gemini.
+  if (ctx.userKey) await assertUserQuota(ctx.userKey);
   await assertQuota(TTS_MODEL);
   const startedAt = Date.now();
 
@@ -90,8 +159,7 @@ export async function generateSpeech(text: string, voice = 'Aoede', ctx: CallCon
     // Gemini returns raw PCM — wrap as WAV for browser playback
     const wav = pcmToWav(pcm, parseSampleRate(mime));
     const result: TTSResult = { audioBase64: wav.toString('base64'), mimeType: 'audio/wav' };
-    if (cache.size > 200) cache.clear();
-    cache.set(key, result);
+    await storeTtsCache(key, TTS_MODEL, voice, text, result);
 
     // TTS-биллинг считается по входным символам и длительности аудио. Используем
     // approxTokens(text) для prompt и длину PCM как proxy для completion (примерно
@@ -117,6 +185,7 @@ export async function generateSpeech(text: string, voice = 'Aoede', ctx: CallCon
 export async function getPronunciationGuide(text: string, locale: 'kk' | 'ru' = 'kk', ctx: CallContext = {}): Promise<string> {
   if (!apiKey) return `[${text}] — Дұрыс айтылуы: әр буынды анық айтыңыз.`;
   try {
+    if (ctx.userKey) await assertUserQuota(ctx.userKey);
     await assertQuota(PRONUNCIATION_MODEL);
     const prompt = locale === 'ru'
       ? `Ты — преподаватель казахской фонетики. Объясни произношение фразы "${text}" для русскоязычного ученика, СТРОГО НА РУССКОМ.

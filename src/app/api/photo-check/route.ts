@@ -3,6 +3,7 @@ import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { awardProgress } from '@/lib/award-progress';
 import { aiQuotaErrorResponse } from '@/lib/api';
+import { assertUserQuota, userKeyFromRequest } from '@/lib/ai-quota';
 
 export async function POST(request: Request) {
   try {
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
     const base64Data = match[2];
 
     const user = await getUserFromRequest(request);
+    await assertUserQuota(userKeyFromRequest(request, user?.id ?? null));
     const result = await checkPhotoText(base64Data, mimeType, locale, user?.id ?? null);
 
     // Persist record (если user_id не резолвится — пропускаем, не падаем)

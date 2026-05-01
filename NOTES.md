@@ -118,6 +118,24 @@ Middleware применяет token-bucket по IP:
 
 Для multi-instance — заменить на Redis (`src/lib/rate-limit.ts`).
 
+## AI-квоты (3 уровня защиты от перерасхода)
+
+**1. Глобальная** (`assertQuota` в `src/lib/ai-quota.ts`):
+RPM/RPD/TPM по моделям × `SAFETY_RATIO=0.85` + USD-cap `$0.50/день` / `$4.50/период` × 0.9.
+
+**2. Per-user / per-IP** (`assertUserQuota`, env-настройки):
+- Авторизованный: `AI_USER_RPD=40`, `AI_USER_RPM=5`, `AI_USER_USD_DAILY=$0.05`
+- Аноним по IP: `AI_ANON_RPD=12`, `AI_ANON_RPM=3` (in-memory bucket)
+
+Подключено в: `/api/learn/{chat,exercises,check-writing,tts}`, `/api/photo-check`, `/api/ai/live-token`.
+
+**3. Кеш и оптимизация:**
+- `tts_cache` (sql/012) — sha256(model+voice+text) → готовый WAV. Cache-hit не жжёт квоту.
+- `thinkingBudget=0` для chat / vision / analyze-content (структурированный JSON, reasoning не нужен).
+- `aiQuotaErrorResponse` — `QuotaExceededError` → 429 + `Retry-After`, scope: `rpm|rpd|tpm|usd_*|user_*|anon_*`.
+
+Дашборд: `/admin/ai-usage` (квоты по моделям, спенд 24ч/7д/месяц).
+
 ## SEO
 
 - `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/manifest.ts` — нативные Next.js.

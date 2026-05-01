@@ -155,7 +155,8 @@ export async function POST(request: Request) {
       systemInstruction: SYSTEM_PROMPT,
       // Просим модель отдавать JSON — строгий mode не всегда доступен для
       // gemini-2.5-flash, поэтому дублируем требование в системке.
-      generationConfig: { responseMimeType: 'application/json' },
+      // thinkingBudget=0 — структурированный JSON-вывод не нужен в reasoning.
+      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } as never,
     });
 
     const raw = result.response.text();

@@ -36,7 +36,13 @@ export async function chatWithAI(
   await assertQuota(TEXT_MODEL);
 
   const client = getClient();
-  const model = client.getGenerativeModel({ model: TEXT_MODEL });
+  const model = client.getGenerativeModel({
+    model: TEXT_MODEL,
+    // Отключаем reasoning — для chat/dialog/exercises/writing-check внутреннее
+    // «размышление» не улучшает качество, но удваивает стоимость и latency.
+    // Если когда-то потребуется — поднять до 1024+ только для конкретного purpose.
+    generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never,
+  });
 
   const contents = [
     ...history.map((h) => ({
@@ -85,7 +91,12 @@ export async function analyzeImage(
   await assertQuota(TEXT_MODEL);
 
   const client = getClient();
-  const model = client.getGenerativeModel({ model: TEXT_MODEL });
+  const model = client.getGenerativeModel({
+    model: TEXT_MODEL,
+    // OCR-задача структурированная (JSON-схема в промпте), reasoning-токены
+    // не нужны — отключаем чтобы не платить за thinking.
+    generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never,
+  });
 
   const startedAt = Date.now();
   const result = await model.generateContent([

@@ -2,6 +2,7 @@ import { chatWithAI } from '@/lib/gemini';
 import { buildRAGContext, getTeacherSystemPrompt } from '@/lib/kazakh-rules';
 import { getUserFromRequest } from '@/lib/auth';
 import { aiQuotaErrorResponse } from '@/lib/api';
+import { assertUserQuota, userKeyFromRequest } from '@/lib/ai-quota';
 
 const VALID_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
@@ -79,6 +80,8 @@ export async function POST(request: Request) {
 7. JSON-ға, code-блокқа ораған, тек қарапайым мәтін.`;
       systemPrompt += `\n\n${dialogRules}`;
     }
+
+    await assertUserQuota(userKeyFromRequest(request, user?.id ?? null));
 
     const reply = await chatWithAI(
       systemPrompt,

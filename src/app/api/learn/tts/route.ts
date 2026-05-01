@@ -1,6 +1,7 @@
 import { generateSpeech, getPronunciationGuide } from '@/lib/tts';
 import { apiError, aiQuotaErrorResponse } from '@/lib/api';
 import { getUserFromRequest } from '@/lib/auth';
+import { userKeyFromRequest } from '@/lib/ai-quota';
 
 const ALLOWED_VOICES = new Set([
   'Aoede', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Zephyr',
@@ -28,14 +29,17 @@ export async function POST(request: Request) {
 
     const user = await getUserFromRequest(request);
     const userId = user?.id ?? null;
+    // userKey пробрасываем вглубь — assertUserQuota там сработает только при
+    // cache-miss (TTS) или всегда (guide), не сжигая лимит на повторных хитах.
+    const userKey = userKeyFromRequest(request, userId);
 
     if (mode === 'guide') {
-      const guide = await getPronunciationGuide(clean, locale, { userId });
+      const guide = await getPronunciationGuide(clean, locale, { userId, userKey });
       return Response.json({ guide });
     }
 
     const chosenVoice = typeof voice === 'string' && ALLOWED_VOICES.has(voice) ? voice : 'Aoede';
-    const audio = await generateSpeech(clean, chosenVoice, { userId });
+    const audio = await generateSpeech(clean, chosenVoice, { userId, userKey });
     if (!audio) {
       const guide = await getPronunciationGuide(clean, locale, { userId });
       return Response.json({ audio: null, guide, fallback: 'browser-tts' });

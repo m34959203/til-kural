@@ -60,12 +60,33 @@ const USD_CAP_TOTAL = Number(process.env.AI_USD_CAP_TOTAL ?? '4.50');
 const USD_PERIOD_START = process.env.AI_USD_CAP_PERIOD_START ?? '2026-04-30';
 const USD_SAFETY_RATIO = 0.9;
 
+/**
+ * Per-user лимиты — защищают глобальный дневной лимит от выжирания одним
+ * пользователем (или одним абюзером по IP). Считаются в дополнение к глобальным.
+ *
+ *   AI_USER_RPD       — макс. вызовов в день на одного авторизованного юзера
+ *   AI_USER_RPM       — макс. вызовов в минуту на одного юзера (burst)
+ *   AI_USER_USD_DAILY — макс. $/день на одного юзера
+ *   AI_ANON_RPD       — макс. вызовов в день на один IP (анонимные)
+ *   AI_ANON_RPM       — макс. вызовов в минуту на IP (anon burst)
+ */
+const USER_RPD = Number(process.env.AI_USER_RPD ?? '40');
+const USER_RPM = Number(process.env.AI_USER_RPM ?? '5');
+const USER_USD_DAILY = Number(process.env.AI_USER_USD_DAILY ?? '0.05');
+const ANON_RPD = Number(process.env.AI_ANON_RPD ?? '12');
+const ANON_RPM = Number(process.env.AI_ANON_RPM ?? '3');
+
+export type QuotaScope =
+  | 'rpm' | 'rpd' | 'tpm' | 'usd_daily' | 'usd_total'
+  | 'user_rpm' | 'user_rpd' | 'user_usd_daily'
+  | 'anon_rpm' | 'anon_rpd';
+
 export class QuotaExceededError extends Error {
-  readonly scope: 'rpm' | 'rpd' | 'tpm' | 'usd_daily' | 'usd_total';
+  readonly scope: QuotaScope;
   readonly retryAfterSec: number;
   constructor(
     message: string,
-    scope: 'rpm' | 'rpd' | 'tpm' | 'usd_daily' | 'usd_total',
+    scope: QuotaScope,
     retryAfterSec: number,
   ) {
     super(message);
@@ -238,6 +259,137 @@ export async function assertQuota(model: string): Promise<void> {
 
   // USD-cap — последняя линия. Накопительный, не зависит от модели.
   await assertUsdBudget();
+}
+
+/**
+ * Per-user pre-flight. Защищает глобальный дневной лимит от единичного абюзера.
+ *
+ * Для авторизованных юзеров (UUID) считаем по ai_generations.user_id за 24ч/60с.
+ * Для анонимных (ip:1.2.3.4) — in-memory bucket (не пишем в БД с user_id, чтобы
+ * не плодить мусор; и FK на users всё равно не позволит).
+ *
+ * Вызывать ПЕРЕД assertQuota() в каждом AI-эндпоинте.
+ */
+export async function assertUserQuota(userKey: string): Promise<void> {
+  if (!userKey) return;
+  const isAnon = userKey.startsWith('ip:');
+  const now = Date.now();
+
+  if (isAnon) {
+    const counter = anonCounters.get(userKey) || { day: { count: 0, resetAt: now + 86_400_000 }, min: [] };
+    // Daily reset
+    if (now >= counter.day.resetAt) {
+      counter.day = { count: 0, resetAt: now + 86_400_000 };
+    }
+    // RPM window
+    counter.min = counter.min.filter((t) => t > now - 60_000);
+
+    if (counter.min.length >= ANON_RPM) {
+      throw new QuotaExceededError(
+        `Anon RPM cap (${counter.min.length}/${ANON_RPM}). Зарегистрируйтесь чтобы получить больше квоты.`,
+        'anon_rpm',
+        60,
+      );
+    }
+    if (counter.day.count >= ANON_RPD) {
+      const retry = Math.max(60, Math.floor((counter.day.resetAt - now) / 1000));
+      throw new QuotaExceededError(
+        `Anon дневной лимит (${counter.day.count}/${ANON_RPD}). Зарегистрируйтесь для расширенной квоты.`,
+        'anon_rpd',
+        retry,
+      );
+    }
+    counter.min.push(now);
+    counter.day.count += 1;
+    anonCounters.set(userKey, counter);
+    return;
+  }
+
+  // Authenticated user — query DB.
+  const oneMinAgo = new Date(now - 60_000);
+  const oneDayAgo = new Date(now - 24 * 3600_000);
+
+  const sumWhereUser = async (since: Date): Promise<{ count: number; usd: number }> => {
+    if (db.isPostgres) {
+      const rows = await db.raw<{ cnt: number | string; usd: number | string }>(
+        `SELECT COUNT(*)::int AS cnt, COALESCE(SUM(cost_usd), 0)::float8 AS usd
+         FROM ai_generations WHERE user_id = $1 AND created_at >= $2`,
+        [userKey, since],
+      );
+      const r = rows[0] || { cnt: 0, usd: 0 };
+      return { count: Number(r.cnt) || 0, usd: Number(r.usd) || 0 };
+    }
+    const rows = await db.query('ai_generations');
+    const sinceMs = since.getTime();
+    let count = 0, usd = 0;
+    for (const r of rows as { user_id?: string; created_at: string | Date; cost_usd?: number }[]) {
+      if (r.user_id !== userKey) continue;
+      if (new Date(r.created_at).getTime() < sinceMs) continue;
+      count += 1;
+      usd += Number(r.cost_usd) || 0;
+    }
+    return { count, usd };
+  };
+
+  const [day, minute] = await Promise.all([
+    sumWhereUser(oneDayAgo),
+    sumWhereUser(oneMinAgo),
+  ]);
+
+  if (minute.count >= USER_RPM) {
+    throw new QuotaExceededError(
+      `Ваш лимит запросов в минуту (${minute.count}/${USER_RPM}). Подождите 1 минуту.`,
+      'user_rpm',
+      60,
+    );
+  }
+  if (day.count >= USER_RPD) {
+    throw new QuotaExceededError(
+      `Ваш дневной лимит AI-запросов (${day.count}/${USER_RPD}). Сброс через 24 часа.`,
+      'user_rpd',
+      86_400,
+    );
+  }
+  if (day.usd >= USER_USD_DAILY) {
+    throw new QuotaExceededError(
+      `Ваш дневной USD-лимит ($${day.usd.toFixed(4)}/$${USER_USD_DAILY}). Сброс через 24 часа.`,
+      'user_usd_daily',
+      86_400,
+    );
+  }
+}
+
+/**
+ * In-memory счётчики для анонимных пользователей. Сбрасываются раз в сутки
+ * по времени resetAt; min — окно последних 60с.
+ */
+interface AnonCounter {
+  day: { count: number; resetAt: number };
+  min: number[];
+}
+const anonCounters = new Map<string, AnonCounter>();
+
+if (typeof setInterval !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [k, c] of anonCounters) {
+      // GC: удаляем счётчики, у которых день закончился >2ч назад и нет активности.
+      if (c.day.resetAt < now - 2 * 3600_000 && c.min.length === 0) {
+        anonCounters.delete(k);
+      }
+    }
+  }, 30 * 60_000).unref?.();
+}
+
+/**
+ * Вытаскивает userKey из request. Авторизованные → UUID; анон → "ip:1.2.3.4".
+ * Используется в AI-эндпоинтах перед assertUserQuota.
+ */
+export function userKeyFromRequest(request: Request, userId: string | null | undefined): string {
+  if (userId) return userId;
+  const fwd = request.headers.get('x-forwarded-for') || '';
+  const ip = fwd.split(',')[0].trim() || request.headers.get('x-real-ip') || 'anon';
+  return `ip:${ip}`;
 }
 
 export type QuotaStatus = 'ok' | 'warn' | 'crit';

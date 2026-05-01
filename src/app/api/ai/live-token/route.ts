@@ -2,7 +2,7 @@ import { GoogleGenAI, Modality } from '@google/genai';
 import { apiError, aiQuotaErrorResponse } from '@/lib/api';
 import { MENTORS, type MentorKey } from '@/lib/mentors';
 import { getTeacherSystemPrompt } from '@/lib/kazakh-rules';
-import { assertQuota } from '@/lib/ai-quota';
+import { assertQuota, assertUserQuota, userKeyFromRequest } from '@/lib/ai-quota';
 import { logGeneration, approxTokens } from '@/lib/ai-log';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -17,8 +17,9 @@ export async function POST(request: Request) {
   try {
     // Live API — самый дорогой по квоте Gemini-сервис: одна сессия может тратить
     // десятки минут аудио. Гард строго до выпуска ephemeral-токена.
-    await assertQuota(MODEL);
     const user = await getUserFromRequest(request);
+    await assertUserQuota(userKeyFromRequest(request, user?.id ?? null));
+    await assertQuota(MODEL);
     const body = await request.json().catch(() => ({}));
     const mentorKey = (body.mentor as MentorKey) in MENTORS ? (body.mentor as MentorKey) : 'abai';
     const level: string = typeof body.level === 'string' ? body.level : 'B1';

@@ -3,6 +3,7 @@ import { getUserFromRequest } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { awardProgress } from '@/lib/award-progress';
 import { aiQuotaErrorResponse } from '@/lib/api';
+import { assertUserQuota, userKeyFromRequest } from '@/lib/ai-quota';
 
 const VALID_LEVELS = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 const VALID_GENRES = new Set(['free', 'letter', 'essay', 'application', 'sms', 'congrats']);
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
     }
 
     const user = await getUserFromRequest(request);
+    await assertUserQuota(userKeyFromRequest(request, user?.id ?? null));
     const raw = await checkWriting(text, level, { locale, genre, userId: user?.id ?? null });
 
     let parsed: {

@@ -1,6 +1,7 @@
 import { generateExercises } from '@/lib/gemini';
 import { getUserFromRequest } from '@/lib/auth';
 import { aiQuotaErrorResponse } from '@/lib/api';
+import { assertUserQuota, userKeyFromRequest } from '@/lib/ai-quota';
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
       typeof rawScore === 'number' && !Number.isNaN(rawScore)
         ? Math.max(0, Math.min(100, rawScore))
         : undefined;
+
+    await assertUserQuota(userKeyFromRequest(request, user?.id ?? null));
 
     const result = await generateExercises(topic, level, weakPoints, avgScore, {
       lessonTitle,
