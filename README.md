@@ -1,185 +1,196 @@
 # Тіл-құрал
 
-**Двуязычный сайт учебно-методического центра «Тіл-құрал» (г. Сатпаев, Казахстан)** с AI-инструментами для изучения казахского языка.
+[![CI](https://img.shields.io/github/actions/workflow/status/m34959203/til-kural/ci.yml?branch=master)](https://github.com/m34959203/til-kural/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Stack](https://img.shields.io/badge/stack-Next.js%2016%20·%20Postgres%20·%20Groq-black)]()
+[![AI](https://img.shields.io/badge/AI-Groq%20%2B%20Gemini%20fallback%20·%20бесплатно-success)]()
+[![Coverage](https://img.shields.io/badge/ТЗ-24%2F24%20·%20100%25-brightgreen)](docs/TZ_CHECKLIST.md)
 
-> КГУ «Учебно-методический центр «Тіл-құрал» · БИН 241240033540 · Ұлытау обл., г. Сатпаев, пр. Академика Каныша Сатпаева, 111 · [Goszakup карточка](https://www.goszakup.gov.kz/ru/registry/show_supplier/745311)
+> AI-платформа для изучения казахского языка: A1→C2 CAT-тест, диалоги с
+> наставниками (Абай / Байтұрсынұлы / Әуезов), фото-проверка рукописи,
+> КАЗТЕСТ, геймификация. Двуязычная (kk/ru), с админкой и отложенной
+> публикацией в Telegram.
 
-## Покрытие ТЗ
+## Проблема
 
-**100% (24/24 функциональных пункта).** Живой чек-лист: [docs/TZ_CHECKLIST.md](./docs/TZ_CHECKLIST.md).
+В Казахстане казахский — государственный язык, но порог входа для русскоязычных взрослых высокий: учебники не адаптированы под уровень, тесты КАЗТЕСТ доступны только в платных центрах, нет инструмента, который проверяет рукописное письмо и объясняет ошибку через грамматическое правило. Учитель-наставник нужен 1-на-1, но это редкий и дорогой ресурс — особенно за пределами Алматы и Астаны.
 
-## Ключевой функционал
+## Решение
 
-### 🎓 Обучение
-- **Адаптивный CAT-тест** уровня A1–C2 (branching по сложности, C2 достижим)
-- **Диалоговый тренажёр** с 3 наставниками (Абай / Байтұрсынұлы / Әуезов) в 3 режимах:
-  - Текст-чат · Голос (ASR + TTS) · **Live** — WebSocket через Gemini native-audio
-- **21 урок** A1–B2 с привязкой к правилам грамматики и наставникам (mentor_track)
-- **КАЗТЕСТ** — 30 мин, 100 баллов, 5 секций (L/R/G/V/W)
-- **Тесты по темам** + результаты с детальной аналитикой
-- **Фото-проверка** рукописи через Gemini Vision: OCR → грамматика → объяснения правил → тренд грамотности
+Цифровая платформа УМЦ «Тіл-құрал» (г. Сатпаев), которая делает всё то же, что делает живой методист, только в браузере и бесплатно для ученика:
 
-### 🎮 Геймификация
-- 6 квестов с прогрессом · XP · 11 уровней «Бастаушы → Дана» · разблокировка контента по уровню
-- Streak 7/30/100 дней + Push (VAPID) + email-fallback
-- 13 именных бейджей · живой лидерборд · шеринг в соцсети (Web Share + OG-image)
-- Адаптивная сложность упражнений (weakness_score + recommend/next)
+- **AI-наставник** в стиле Абая / Байтұрсынұлы / Әуезова — отвечает на казахском с переводом, адаптирует регистр под уровень ученика
+- **Адаптивный CAT-тест A1→C2** (branching по сложности, C2-сертификат достижим)
+- **Диалоговый тренажёр** в трёх режимах: чат / голос (ASR + TTS) / **Live** через Gemini native-audio (WebSocket, speech-to-speech)
+- **Фото-проверка рукописи** через Gemini Vision: OCR → анализ ошибок → объяснение правила → тренд грамотности
+- **Геймификация** — XP/уровни/streak/квесты/лидерборд, разблокировка контента по CEFR-уровню
+- **Админ-панель** для методиста: редактор статей (TipTap + AI-suggestions), отложенная публикация, авто-пост в Telegram
 
-### ⚙️ Админ-панель (14 разделов, lucide-иконки)
-- **Обзор:** Дашборд (+ Top-N), Аналитика (time-series 7/30/90 дней)
-- **Контент:** Уроки, Тесты, Грамматика, **Редактор статей (TipTap + KK/RU + AI-анализ)**, Новости, События, Баннеры, Медиатека (drag-drop), Отделы, Сотрудники, Правила-документы, История
-- **Сообщество:** Пользователи (создание, сброс пароля, роли)
-- **Система:** Настройки сайта
-- Общие фичи: Zod-валидация, Markdown-preview, серверная пагинация+поиск, запланированная публикация (cron)
+## Why этот стек
 
-### 🔐 Auth
-- JWT + httpOnly cookie `tk-token` · middleware-гейт на `/admin/*`
-- Роли: `user` / `editor` / `moderator` / `admin`
-- `/login`, `/register`, сброс пароля через админку
-- Условное меню в шапке: гость («Войти»+«Начать обучение») / юзер («Личный кабинет»+«Начать обучение») / админ («Личный кабинет»+«Админ-панель»)
+| Решение | Почему |
+|---|---|
+| **Next.js 16 (App Router, Turbopack)** | Server Components резко режут JS-bundle на public-страницах; edge-middleware на WebCrypto делает auth-gate без cold-start |
+| **Groq как primary LLM** | Free-tier 14 400 RPD, 300 tok/s, json_schema поддерживается → счёт за чат/упражнения остаётся **$0**; при rate-limit auto-failover на Gemini |
+| **Gemini 3.1 Flash TTS preview** | Единственная модель, которая поддерживает kk-KZ нативно (Edge TTS даёт казахский голос, но точность ниже для уроков языка) |
+| **Postgres 16 + in-memory fallback** | На dev-машине поднимается без Docker за 0 секунд; на проде — реальные транзакции и индексы |
+| **Zod 4 на клиенте и сервере** | Один источник схем для CRUD-форм и API-валидации — нельзя послать невалидные данные мимо UI |
 
-### 🎨 Редактор статей (TipTap + AI)
-- WYSIWYG: B/I/U/H1-H3/lists/quote/code/link/image/align/undo
-- Табы **KK/RU** для title/excerpt/content, общие поля (slug, cover, status, scheduled_at)
-- **AI-анализ** через Gemini: score 0–100, suggestions (low/medium/high), strengths, «Применить улучшение» для заголовка/excerpt
-- **Autosave** в localStorage каждые 30 секунд
+Подробнее: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
----
+## Demo
+
+- **Live:** через cloudflared — актуальный URL в `NEXT_PUBLIC_APP_URL` (`.env.local`); production-домен ещё не зарегистрирован
+- **Скриншоты:** ниже (полный набор в [`assets/`](assets/))
+
+| Главная (kk, AI-наставник) | Каталог уроков с MentorTrack |
+|---|---|
+| ![home](assets/screenshot-home.png) | ![lessons](assets/screenshot-lessons.png) |
+
+| Диалог (3 режима: Текст / Голос / 📡 Live) | Фото-проверка рукописи |
+|---|---|
+| ![dialog](assets/screenshot-dialog.png) | ![photo-check](assets/screenshot-photo-check.png) |
+
+| КАЗТЕСТ практик (5 секций, 30 мин) | Геймификация (XP/streak/leaderboard) |
+|---|---|
+| ![kaztest](assets/screenshot-kaztest.png) | ![game](assets/screenshot-game.png) |
+
+| Админ-дашборд (Top-N + Аналитика) | TipTap-редактор статей с AI |
+|---|---|
+| ![admin-dashboard](assets/screenshot-admin-dashboard.png) | ![admin-editor](assets/screenshot-admin-editor.png) |
+
+## Архитектура
+
+```
+┌─────────────────┐     ┌──────────────────────────────────────┐
+│   Browser       │────▶│  Next.js 16 App (port 3015 prod /    │
+│  (KK / RU)      │     │  3017 dev через Turbopack)           │
+└─────────────────┘     └────┬─────────────────────────────────┘
+                             │
+        ┌────────────────────┼─────────────────────────────────┐
+        │                    │                                 │
+        ▼                    ▼                                 ▼
+┌──────────────┐    ┌────────────────┐               ┌────────────────────┐
+│  Postgres 16 │    │  Groq Cloud    │               │  Gemini API        │
+│  (5442)      │    │  (chat / JSON) │               │  (Vision + TTS kk) │
+│              │    │  primary       │               │  + LLM fallback    │
+└──────────────┘    └────────────────┘               └────────────────────┘
+                             │                                 │
+                             ▼                                 ▼
+                    ┌────────────────────┐         ┌────────────────────┐
+                    │  Telegram Bot API  │         │  Web Push (VAPID)  │
+                    │  (auto-post news/  │         │  + email fallback  │
+                    │   events)          │         │  для streak        │
+                    └────────────────────┘         └────────────────────┘
+```
+
+3 ключевых решения:
+
+1. **Edge-middleware** (`src/middleware.ts`) — i18n routing + admin-gate (HS256 через WebCrypto) + security headers. Без Node.js runtime, отдаётся за миллисекунды.
+2. **AI dispatcher** (`src/lib/gemini.ts`) — `chatWithAI()` маршрутизирует на Groq (если ключ есть и `LLM_PROVIDER=groq`), при `AIRateLimitError` уходит на Gemini. Vision (`analyzeImage`) и TTS остаются на Gemini.
+3. **Auto-post** (`src/lib/auto-post.ts`) — fire-and-forget Telegram-публикация при переходе `news.status='published'` или `events.status='upcoming'`, двуязычный режим (kk + ru как два сообщения).
+
+Подробнее: [NOTES.md](NOTES.md) — живой журнал решений, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — детали слоёв.
+
+## Quick Start
+
+### Минимально (in-memory fallback, без Postgres)
+
+```bash
+git clone https://github.com/m34959203/til-kural.git
+cd til-kural
+cp .env.example .env.local
+# Заполнить минимум:
+#   JWT_SECRET=$(openssl rand -hex 48)
+#   GROQ_API_KEY=gsk_...   ← console.groq.com/keys (бесплатно)
+#   LLM_PROVIDER=groq
+npm install
+npm run dev
+# открыть http://localhost:3000/kk
+```
+
+Без AI-ключей приложение поднимется в demo-режиме (заглушки).
+
+### С Postgres в Docker
+
+```bash
+docker compose up -d db                                # Postgres 16 на :5442
+for f in sql/00*.sql; do
+  docker exec -i til-kural-db-1 psql -U tilkural < "$f"
+done
+DATABASE_URL=postgresql://tilkural:tilkural_secret@localhost:5442/tilkural \
+  TIL_ADMIN_EMAIL=admin@til-kural.kz \
+  TIL_ADMIN_PASSWORD='ChangeMe2026!' \
+  node scripts/seed-postgres.mjs                       # сиды контента + admin
+npm run build && bash scripts/deploy-local.sh          # production standalone на :3015
+```
+
+Cron для отложенной публикации:
+
+```cron
+* * * * * curl -fsS -X POST https://til-kural.kz/api/cron/publish-scheduled \
+  -H "Authorization: Bearer $CRON_SECRET" >/dev/null
+```
+
+Подробная инструкция и production-чеклист: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Стек
 
 | Слой | Технология |
 |---|---|
-| Frontend | Next.js 16.2 (App Router, Turbopack), React 19, TypeScript 5, Tailwind 4 |
-| Backend | Route Handlers + Middleware (Edge HS256-verify через WebCrypto) |
-| БД | PostgreSQL 16 через `pg` (fallback in-memory при отсутствии `DATABASE_URL`) |
-| AI | Gemini 2.5 Flash (text + Vision), 3.1 Flash TTS (kk-KZ), 2.5 Flash Native Audio (Live) |
-| Auth | bcryptjs + jsonwebtoken |
-| Validation | Zod 4 (client + server через общий `SCHEMAS[apiPath]`) |
-| Editor | TipTap 2 + StarterKit + Image/Link/Placeholder/TextAlign/Underline + resizable-image/video |
-| PDF | jsPDF + Noto Sans TTF (regular + bold) для кириллицы |
-| Icons | lucide-react |
-| Push | Web Push (VAPID) + email fallback (nodemailer) |
-| Charts | SVG без библиотек (TimeSeries, Literacy trend, TopN horizontal bars) |
+| **Frontend / Backend** | Next.js 16.2 (App Router, Turbopack), React 19, TypeScript 5, Tailwind 4 |
+| **БД** | PostgreSQL 16 через `pg` (с in-memory fallback в dev) |
+| **AI (chat / JSON)** | Groq (`llama-3.3-70b-versatile`, `openai/gpt-oss-120b`) с auto-failover на Gemini |
+| **AI (Vision)** | Gemini 2.5 Flash Vision — фото-проверка рукописи |
+| **AI (TTS / Live)** | Gemini 3.1 Flash TTS preview (kk-KZ), 2.5 Flash Native Audio (Live WebSocket) |
+| **Auth** | bcryptjs + JWT HS256 (httpOnly cookie `tk-token`) + Edge-middleware admin-gate |
+| **Editor** | TipTap 3 + StarterKit + Image/Link/TextAlign + AI-suggestions через Gemini |
+| **Push** | Web Push (VAPID) + email fallback (nodemailer) |
+| **PDF** | jsPDF + Noto Sans TTF (кириллица + KZ-специфика) |
+| **Social** | Telegram Bot API (auto-post при публикации, двуязычно) |
+| **Хостинг** | Hoster.kz (Plesk), cloudflared tunnel в dev |
 
-## AI-модели и голоса наставников
+## Roadmap
 
-| Модель | Использование |
+- [x] **Релиз 1** (Q2 2026) — 24/24 пунктов ТЗ закрыты, AI-стек на Groq, Telegram автопост, security-аудит P0/P1 закрыт
+- [ ] **Q3 2026** — Контент уроков L3–L21, аудио-банк listening для КАЗТЕСТ, Reading-секция на казахском, daily missions + streak freeze
+- [ ] **Q4 2026** — IRT-3PL CAT-движок, Sentry + cost-monitoring, Playwright E2E, Instagram автопост
+- [ ] **2027** — Production-домен `til-kural.kz`, открытое REST API, mobile-app
+
+Подробнее: [docs/PENDING_AUDIT_TASKS.md](docs/PENDING_AUDIT_TASKS.md).
+
+## Документация
+
+| | |
 |---|---|
-| `gemini-2.5-flash` | Чат, анализ ошибок, объяснение правил, AI-анализ статей |
-| `gemini-2.5-flash` Vision | Фото-проверка рукописи (OCR + grammar) |
-| `gemini-3.1-flash-tts-preview` | Казахский TTS — **единственная модель с поддержкой kk-KZ** |
-| `gemini-2.5-flash-native-audio-preview-12-2025` | Live-режим (WebSocket, speech-to-speech) |
+| [NOTES.md](NOTES.md) | Живой журнал решений (AI-провайдеры, автопостинг, история волн разработки) |
+| [docs/TZ_CHECKLIST.md](docs/TZ_CHECKLIST.md) | 24 функциональных пункта ТЗ — статус каждого |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Устройство слоёв, edge-middleware, AI dispatcher |
+| [docs/API.md](docs/API.md) | REST-эндпоинты |
+| [docs/DATABASE.md](docs/DATABASE.md) | Таблицы, миграции |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Env, прод-чеклист, cron-задачи |
+| [docs/GAMIFICATION.md](docs/GAMIFICATION.md) | XP / уровни / квесты / стрики / ачивки |
+| [docs/CONTENT_AUDIT_2026-04-28.md](docs/CONTENT_AUDIT_2026-04-28.md) | Аудит грамматики/уроков/тестов |
+| [docs/PROJECT_AUDIT_2026-04-28.md](docs/PROJECT_AUDIT_2026-04-28.md) | Технический аудит (83 находки) |
+| [docs/PENDING_AUDIT_TASKS.md](docs/PENDING_AUDIT_TASKS.md) | Незакрытые задачи (контент + крупные техподсистемы) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Setup, структура, стиль, коммиты |
+| [CLAUDE.md](CLAUDE.md) | Краткая справка для AI-ассистентов |
 
-| Наставник | Стиль | Голос TTS |
+## Команда
+
+| | | |
 |---|---|---|
-| Абай Құнанбайұлы | Философский, афоризмы | `Charon` |
-| Ахмет Байтұрсынұлы | Точный, педагогический | `Kore` |
-| Мұхтар Әуезов | Тёплый, образный | `Fenrir` |
+| ![avatar](https://github.com/m34959203.png?size=80) | **Дмитрий М.** | Solo founder · TechnoKod AI · [@m34959203](https://github.com/m34959203) |
 
----
+## Контакты
 
-## Быстрый старт
-
-### С Postgres в Docker
-
-```bash
-git clone https://github.com/m34959203/til-kural.git
-cd til-kural
-npm install
-
-# Postgres
-docker compose up -d db
-# Миграции (однократно, если БД пуста — 001 применится из entrypoint-initdb.d)
-for f in sql/002_*.sql sql/003_*.sql sql/004_*.sql sql/005_*.sql sql/006_*.sql sql/007_*.sql; do
-  docker exec -i til-kural-db-1 psql -U tilkural < "$f"
-done
-
-# .env.local
-cat > .env.local <<EOF
-DATABASE_URL=postgresql://tilkural:tilkural_secret@localhost:5442/tilkural
-JWT_SECRET=change-me
-GEMINI_API_KEY=your-gemini-key
-NEXT_PUBLIC_APP_URL=http://localhost:3015
-NEXT_PUBLIC_DEFAULT_LOCALE=kk
-CRON_SECRET=change-me
-# DEV only (не включать в prod):
-DEV_ADMIN_BYPASS=1
-EOF
-
-# Сиды контента + первый admin
-DATABASE_URL=postgresql://tilkural:tilkural_secret@localhost:5442/tilkural \
-  TIL_ADMIN_EMAIL=admin@til-kural.kz \
-  TIL_ADMIN_PASSWORD='ChangeMe2026!' \
-  node scripts/seed-postgres.mjs
-
-# Dev
-npm run dev
-# ИЛИ production standalone
-npm run build && bash scripts/deploy-local.sh
-```
-
-Открыть `http://localhost:3015/ru` (или `:3000` в dev-режиме).
-
-### Cron для запланированной публикации
-
-```bash
-* * * * * curl -X POST https://til-kural.kz/api/cron/publish-scheduled \
-  -H "Authorization: Bearer $CRON_SECRET"
-```
-
----
-
-## Структура
-
-```
-src/
-  app/
-    [locale]/
-      (public)/          # публичные страницы (kk/ru)
-      (admin)/admin/     # 14 админ-разделов
-    api/                 # REST API (auth, admin/*, ai/*, cron/*, learn/*, test/*, game/*, ...)
-  components/
-    admin/               # EntityCrudTable, RichTextEditor, BilingualArticleForm,
-                         # AISuggestionsPanel, AnalyticsDashboard, UserManagement, ...
-    features/            # DialogTrainer, LiveVoiceDialog, PhotoChecker, KaztestPractice,
-                         # LevelTest, CertificateView, MentorTrack, ...
-    layout/              # Header, Footer, MobileNav, AdminSidebar, UserMenu
-    ui/                  # Button, Card, Input, LevelBadge, Progress
-  data/                  # lessons-meta.ts, test-questions-bank.json,
-                         # kazakh-grammar-rules.json, quest-templates.json, seeds/*
-  lib/                   # db, auth, api, seo, validators, mentors, gamification,
-                         # adaptive-recommender, cat-engine, tts, gemini,
-                         # pdf-certificate, audio/pcm, level-gate, ...
-  hooks/                 # useCurrentUser, useAutosave
-sql/                     # 001..007 — миграции
-docs/                    # ARCHITECTURE, API, DATABASE, DEPLOYMENT, TZ_CHECKLIST, audit
-scripts/
-  deploy-local.sh        # build + симлинки + restart на :3015
-  seed-postgres.mjs      # сиды + первый admin
-  create-admin.mjs       # standalone admin-юзер
-  prep-pdf-fonts.sh      # Noto Sans TTF через jsdelivr
-```
-
----
-
-## Итерации разработки
-
-Проект прошёл 6 волн параллельной разработки через sub-agents:
-
-1. **Волна 1** (5 агентов) — базовый AI-функционал, Live-диалог, профиль
-2. **Волна 2** (5 агентов) — интеграции, UI polish, auth infrastructure
-3. **Волна 3** (4 агента) — фиксы из ручного аудита: CMS↔public, фото/видео, JSON-LD, baseUrl, PDF кириллица, /learn/exercises
-4. **Волна 4** (5 агентов) — Content migration → БД, Grammar CRUD, Admin auth+cookie, Media+Analytics, EntityCrudTable UX
-5. **Волна 5** (3 агента) — миграции из smart-library-cbs: Top-N, server-side pagination, scheduled publishing
-6. **Волна 6** (3 агента) — миграции из AIMAK: TipTap RichTextEditor, BilingualArticleForm, AI suggestions + useAutosave
-
-Детали в [docs/TZ_CHECKLIST.md](./docs/TZ_CHECKLIST.md) и [NOTES.md](./NOTES.md).
-
----
+- Заказчик: КГУ «Учебно-методический центр «Тіл-құрал» (г. Сатпаев, БИН 241240033540)
+- Goszakup: [карточка поставщика](https://www.goszakup.gov.kz/ru/registry/show_supplier/745311)
+- Адрес: Ұлытау обл., г. Сатпаев, пр. Академика Каныша Сатпаева, 111
+- Поддержка: см. [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Лицензия
 
-Собственность КГУ «УМЦ «Тіл-құрал» (г. Сатпаев).
+[MIT](LICENSE) © 2026 КГУ «УМЦ «Тіл-құрал».
 
-Open-source зависимости: MIT / OFL (Noto Sans) / Apache 2.0 — см. `package.json`.
+Open-source зависимости: MIT / OFL (Noto Sans) / Apache 2.0 — см. [`package.json`](package.json).
