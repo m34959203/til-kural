@@ -1,9 +1,23 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { assertQuota } from './ai-quota';
 import { approxTokens, logGeneration } from './ai-log';
+import { groqChat, GROQ_MODELS, AIRateLimitError } from './llm/groq';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
+const groqKey = process.env.GROQ_API_KEY || '';
+const provider = (process.env.LLM_PROVIDER || '').toLowerCase();
 const TEXT_MODEL = 'gemini-2.5-flash';
+
+function useGroqFirst(): boolean {
+  if (!groqKey) return false;
+  if (provider === 'groq') return true;
+  // auto: если Gemini-ключа нет, но Groq есть — Groq.
+  return provider === 'auto' && !apiKey;
+}
+
+function hasGeminiFallback(): boolean {
+  return !!apiKey;
+}
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -19,28 +33,65 @@ interface CallContext {
   purpose: string;
   /** ID пользователя, если есть. */
   userId?: string | null;
+  /** Подсказка диспетчеру: ответ должен быть строгим JSON. Включает json_object на Groq. */
+  expectJson?: boolean;
 }
 
 const DEFAULT_CTX: CallContext = { purpose: 'chat' };
 
-export async function chatWithAI(
+async function chatViaGroq(
   systemPrompt: string,
   userMessage: string,
-  history: { role: string; content: string }[] = [],
-  ctx: CallContext = DEFAULT_CTX,
+  history: { role: string; content: string }[],
+  ctx: CallContext,
 ): Promise<string> {
-  if (!apiKey) {
-    return simulateAIResponse(userMessage);
-  }
+  const messages = [
+    { role: 'system' as const, content: systemPrompt },
+    ...history.map((h) => ({
+      role: (h.role === 'assistant' || h.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
+      content: h.content,
+    })),
+    { role: 'user' as const, content: userMessage },
+  ];
+  const startedAt = Date.now();
+  const model = ctx.expectJson ? GROQ_MODELS.json : GROQ_MODELS.text;
+  const r = await groqChat({
+    messages,
+    model,
+    temperature: 0.7,
+    maxTokens: 2048,
+    // Llama-3.3 поддерживает только json_object; gpt-oss-120b — оба. Используем
+    // json_object как минимально-надёжный режим: гарантирует валидный JSON-объект.
+    // Для строгой схемы caller должен явно дёргать groqChat с json_schema.
+    responseFormat: ctx.expectJson ? { type: 'json_object' } : undefined,
+  });
+  const durationMs = Date.now() - startedAt;
+  const promptTokens = r.usage?.prompt_tokens ?? approxTokens(systemPrompt + userMessage + history.map((h) => h.content).join(''));
+  const completionTokens = r.usage?.completion_tokens ?? approxTokens(r.content);
+  await logGeneration({
+    provider: 'groq',
+    model,
+    purpose: ctx.purpose,
+    promptTokens,
+    completionTokens,
+    durationMs,
+    userId: ctx.userId ?? null,
+  });
+  return r.content || '';
+}
 
+async function chatViaGemini(
+  systemPrompt: string,
+  userMessage: string,
+  history: { role: string; content: string }[],
+  ctx: CallContext,
+): Promise<string> {
   await assertQuota(TEXT_MODEL);
-
   const client = getClient();
   const model = client.getGenerativeModel({
     model: TEXT_MODEL,
     // Отключаем reasoning — для chat/dialog/exercises/writing-check внутреннее
     // «размышление» не улучшает качество, но удваивает стоимость и latency.
-    // Если когда-то потребуется — поднять до 1024+ только для конкретного purpose.
     generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never,
   });
 
@@ -60,7 +111,6 @@ export async function chatWithAI(
   const text = result.response.text();
   const durationMs = Date.now() - startedAt;
 
-  // Gemini SDK иногда возвращает usageMetadata, иногда нет — fallback на approxTokens.
   const usage = (result.response as unknown as { usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number } }).usageMetadata;
   const promptTokens = usage?.promptTokenCount ?? approxTokens(systemPrompt + userMessage + history.map((h) => h.content).join(''));
   const completionTokens = usage?.candidatesTokenCount ?? approxTokens(text);
@@ -76,6 +126,31 @@ export async function chatWithAI(
   });
 
   return text;
+}
+
+export async function chatWithAI(
+  systemPrompt: string,
+  userMessage: string,
+  history: { role: string; content: string }[] = [],
+  ctx: CallContext = DEFAULT_CTX,
+): Promise<string> {
+  if (!apiKey && !groqKey) {
+    return simulateAIResponse(userMessage);
+  }
+
+  if (useGroqFirst()) {
+    try {
+      return await chatViaGroq(systemPrompt, userMessage, history, ctx);
+    } catch (e) {
+      if (e instanceof AIRateLimitError && hasGeminiFallback()) {
+        console.warn('[ai-dispatch] Groq rate-limit → failover to Gemini', { scope: e.scope, retryAfter: e.retryAfter });
+        return chatViaGemini(systemPrompt, userMessage, history, ctx);
+      }
+      throw e;
+    }
+  }
+
+  return chatViaGemini(systemPrompt, userMessage, history, ctx);
 }
 
 export async function analyzeImage(

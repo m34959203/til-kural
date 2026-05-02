@@ -7,6 +7,7 @@ import {
   paginationMeta,
 } from '@/lib/api';
 import { NewsSchema, validateBody } from '@/lib/validators';
+import { autoPostNews } from '@/lib/auto-post';
 
 const NEWS_SEARCH_COLS = ['title_kk', 'title_ru', 'slug'];
 
@@ -110,6 +111,9 @@ export async function POST(request: Request) {
       scheduled_at: scheduledAt,
       updated_at: now,
     });
+    if (status === 'published' && row) {
+      autoPostNews(row as Parameters<typeof autoPostNews>[0]);
+    }
     return Response.json({ news: row }, { status: 201 });
   } catch (err) {
     return apiError(500, 'Failed to create news', String(err));

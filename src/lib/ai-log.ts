@@ -6,7 +6,7 @@
 import { db } from './db';
 
 export interface LogParams {
-  provider: 'gemini' | 'openrouter' | 'claude';
+  provider: 'gemini' | 'groq' | 'openrouter' | 'claude';
   model: string;
   purpose: string;
   promptTokens?: number;
@@ -45,6 +45,10 @@ const PRICING_PAID: Record<string, {
   'gemini-2.5-flash-native-audio-preview-12-2025': {
     input: 0.50, output: 0, audioOutput: true, audioOutputPerSec: 0.005,
   },
+  // Groq (free-tier по умолчанию: $0; справочные цены on-demand с docs.groq.com).
+  // Если позже включат биллинг — getSpendSnapshot сразу покажет реальные расходы.
+  'llama-3.3-70b-versatile': { input: 0.59, output: 0.79 },
+  'openai/gpt-oss-120b': { input: 0.15, output: 0.75 },
 };
 
 /**

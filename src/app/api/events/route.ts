@@ -7,6 +7,7 @@ import {
 } from '@/lib/api';
 import { EventsSchema, validateBody } from '@/lib/validators';
 import { withEffectiveStatus } from '@/lib/event-status';
+import { autoPostEvent } from '@/lib/auto-post';
 
 const EVENTS_SEARCH_COLS = ['title_kk', 'title_ru', 'location'];
 
@@ -106,6 +107,11 @@ export async function POST(request: Request) {
       status,
       scheduled_at: scheduledAt,
     });
+    // Для events «опубликовано» = status='upcoming' (либо ongoing, если start_date≤today,
+    // но это переведёт withEffectiveStatus). Постим только при первичной публикации.
+    if ((status === 'upcoming' || status === 'ongoing') && row) {
+      autoPostEvent(row as Parameters<typeof autoPostEvent>[0]);
+    }
     return Response.json({ event: row }, { status: 201 });
   } catch (err) {
     return apiError(500, 'Failed to create event', String(err));

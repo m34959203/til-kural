@@ -181,8 +181,50 @@ Sampling `buildQuestions()` берёт стратифицированно: 4L/4R
 - Банк: в `src/data/test-questions-bank.json` минимум по 8 level-вопросов на каждый уровень A1/A2/B1/B2/C1/C2.
 - UI: `src/components/features/LevelTest.tsx` — динамическое дерево, индикатор «текущий уровень» и progress bar «N / 15».
 
+## AI provider abstraction (с 2026-05-01)
+
+Текстовые вызовы идут через диспетчер в `src/lib/gemini.ts`:
+
+| Провайдер | Когда выбран | Модель |
+|---|---|---|
+| Groq (default) | `LLM_PROVIDER=groq` + `GROQ_API_KEY` | `llama-3.3-70b-versatile` (text), `openai/gpt-oss-120b` (json) |
+| Gemini (fallback) | при 429 от Groq, если `GEMINI_API_KEY` есть | `gemini-2.5-flash` |
+| Gemini (only) | `LLM_PROVIDER=gemini` или нет Groq-ключа | `gemini-2.5-flash` |
+
+- `chatWithAI()` — основная точка, через неё проходят `/api/learn/{chat,exercises,check-writing}`.
+- Vision (`analyzeImage()` для `/api/photo-check`) — **только Gemini**, у Groq нет vision.
+- TTS (`/api/learn/tts`) — **только Gemini** (`gemini-3.1-flash-tts-preview` единственный с kk нативно; Edge TTS точность ниже для уроков языка).
+- При `AIRateLimitError` от Groq диспетчер логирует `[ai-dispatch] Groq rate-limit → failover to Gemini` и повторяет вызов на Gemini.
+- `assertQuota()` (USD-cap, RPM/RPD) применяется только в Gemini-пути — Groq free-tier учитывается отдельной БД-записью с `provider='groq'` в `ai_generations`, но в USD-cap не входит.
+- Pricing для Groq в `ai-log.ts` оставлен справочно ($0.59/$0.79/M для llama-3.3, $0.15/$0.75/M для gpt-oss-120b) — на free-tier фактически $0.
+
+ENV-переменные: `GROQ_API_KEY`, `LLM_PROVIDER` (`groq`|`gemini`|`auto`), `GROQ_MODEL_TEXT`, `GROQ_MODEL_JSON`.
+
+## Telegram auto-postig (с 2026-05-01)
+
+Триггер: при переходе `news.status` → `published` или `events.status` → `upcoming|ongoing`. Реализация — `src/lib/auto-post.ts` + `src/lib/telegram.ts`.
+
+Хуки:
+- `POST /api/news` (создание сразу опубликованной)
+- `PUT /api/news/[id]` (только при переходе draft→published, не при повторном PUT)
+- `POST /api/events` + `PUT /api/events/[id]` (аналогично)
+- `GET/POST /api/cron/publish-scheduled` (отложенная публикация; постит каждый материал что вышел из draft)
+
+Формат поста — двуязычный (kk + ru как два отдельных сообщения, контролируется `TELEGRAM_POST_LOCALES=both|kk|ru`). Картинка — через `sendTelegramPhoto`: remote URL, при ошибке fallback на text. Локальные `/uploads/foo.jpg` шлём multipart с диска (cloudflared-туннель не обязателен).
+
+Fire-and-forget: `autoPostNews()` / `autoPostEvent()` не ждут результата, ошибки уходят в `console.warn`. Без `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` функции тихо пропускают.
+
+ENV: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_POST_LOCALES` (default `both`).
+
+⚠️ Аудита `social_posts` нет — пишем только в console. Если потребуется — добавить миграцию `sql/009_social_posts.sql` и логировать туда (как у smart-library-cbs).
+
 ## История существенных изменений
 
+- **2026-05-01** — Перенесён AI-стек и автопостинг из `smart-library-cbs`:
+  - **Groq как primary LLM** (`LLM_PROVIDER=groq`): `src/lib/llm/groq.ts` (OpenAI-compatible client с `AIRateLimitError`), диспетчер в `src/lib/gemini.ts` (Groq → Gemini failover при 429). Подключён ко всем `/api/learn/*` endpoints, vision и TTS остаются на Gemini.
+  - **Telegram автопостинг**: `src/lib/{telegram,auto-post}.ts`, хуки в `news`/`events` POST/PUT и в cron `publish-scheduled`. Двуязычный режим (kk + ru), fire-and-forget, gracefully skip если ENV не задан.
+  - ✅ Smoke (порт 3017): `/api/learn/chat` через Groq → 200 за 1.3s (vs Gemini ~3-5s); `/api/learn/exercises` → валидный JSON-массив 5 упражнений за 3.3s; `ai_generations` пишет `provider='groq'`. Cron без `CRON_SECRET` → 401.
+  - **Установлено**: `groq-sdk@1.1.2`. `.env.local` содержит ключ Groq (⚠️ слит в чат — ротировать на console.groq.com/keys перед деплоем).
 - **2026-04-29** — Закрыты все P0/P1 находки `docs/PROJECT_AUDIT_2026-04-28.md` (15 P0 + 38 P1):
   **Безопасность:**
   - JWT_SECRET ротирован (`openssl rand -hex 64` → `.env.local`).

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { requireAdminApi, apiError, isUuid } from '@/lib/api';
+import { autoPostNews } from '@/lib/auto-post';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,6 +23,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!isUuid(id)) return apiError(404, 'Not found');
   try {
     const body = await request.json();
+    // Сравниваем со старым значением, чтобы автопостить ТОЛЬКО при переходе draft→published,
+    // а не каждый раз при PUT уже опубликованной новости (иначе спам в канале).
+    const before = await db.findOne('news', { id });
+    const wasPublished = before?.status === 'published';
+
     const allowed: Record<string, unknown> = {};
     for (const k of ['title_kk','title_ru','content_kk','content_ru','excerpt_kk','excerpt_ru','image_url','video_url','status','slug','published_at','scheduled_at']) {
       if (k in body) allowed[k] = body[k];
@@ -35,6 +41,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (body.status === 'published' && !body.published_at) allowed.published_at = new Date().toISOString();
     const row = await db.update('news', id, allowed);
     if (!row) return apiError(404, 'Not found');
+    if (!wasPublished && row.status === 'published') {
+      autoPostNews(row as Parameters<typeof autoPostNews>[0]);
+    }
     return Response.json({ news: row });
   } catch (err) {
     return apiError(500, 'Failed to update news', String(err));

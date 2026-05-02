@@ -15,6 +15,7 @@
  */
 import { db } from '@/lib/db';
 import { apiError } from '@/lib/api';
+import { autoPostNews, autoPostEvent } from '@/lib/auto-post';
 
 function checkAuth(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -40,7 +41,7 @@ async function runPublishScheduled() {
   let publishedEvents = 0;
 
   if (db.isPostgres) {
-    const newsRes = await db.raw<{ id: string }>(
+    const newsRes = await db.raw<Record<string, unknown>>(
       `UPDATE news
           SET status = 'published',
               published_at = COALESCE(published_at, NOW()),
@@ -48,38 +49,46 @@ async function runPublishScheduled() {
         WHERE status = 'draft'
           AND scheduled_at IS NOT NULL
           AND scheduled_at <= NOW()
-        RETURNING id`,
+        RETURNING *`,
     );
     publishedNews = newsRes.length;
+    for (const row of newsRes) {
+      autoPostNews(row as Parameters<typeof autoPostNews>[0]);
+    }
 
-    const eventsRes = await db.raw<{ id: string }>(
+    const eventsRes = await db.raw<Record<string, unknown>>(
       `UPDATE events
           SET status = 'upcoming'
         WHERE status = 'draft'
           AND scheduled_at IS NOT NULL
           AND scheduled_at <= NOW()
-        RETURNING id`,
+        RETURNING *`,
     );
     publishedEvents = eventsRes.length;
+    for (const row of eventsRes) {
+      autoPostEvent(row as Parameters<typeof autoPostEvent>[0]);
+    }
   } else {
     // In-memory: итерируемся и апдейтим по id.
     const allNews = await db.query('news');
     for (const n of allNews) {
       if (n.status === 'draft' && n.scheduled_at && String(n.scheduled_at) <= nowIso) {
-        await db.update('news', String(n.id), {
+        const row = await db.update('news', String(n.id), {
           status: 'published',
           published_at: n.published_at || nowIso,
           updated_at: nowIso,
         });
         publishedNews++;
+        if (row) autoPostNews(row as Parameters<typeof autoPostNews>[0]);
       }
     }
 
     const allEvents = await db.query('events');
     for (const e of allEvents) {
       if (e.status === 'draft' && e.scheduled_at && String(e.scheduled_at) <= nowIso) {
-        await db.update('events', String(e.id), { status: 'upcoming' });
+        const row = await db.update('events', String(e.id), { status: 'upcoming' });
         publishedEvents++;
+        if (row) autoPostEvent(row as Parameters<typeof autoPostEvent>[0]);
       }
     }
   }
